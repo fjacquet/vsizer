@@ -1,0 +1,12 @@
+{
+  "appName": "vsizer",
+  "tagline": "RVTools / Live Optics → deck d'utilisation des clusters (100 % client)",
+  "footer": "100 % client · votre fichier ne quitte jamais votre navigateur",
+  "error": {
+    "title": "Une erreur est survenue"
+  },
+  "actions": {
+    "exportPptx": "Exporter PPTX",
+    "loadSample": "Charger un exemple"
+  }
+}

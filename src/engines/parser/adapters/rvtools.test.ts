@@ -1,0 +1,143 @@
+import { describe, expect, it } from 'vitest'
+import { buildXlsxBuffer } from '../../../test/fixtures/buildXlsx'
+import { parseXlsx } from '../parseXlsx'
+import { adaptRvtools, adaptRvtoolsVHost, adaptRvtoolsVInfo } from './rvtools'
+
+const rvtoolsWorkbook = (overrides?: {
+  vInfoRows?: ReadonlyArray<ReadonlyArray<unknown>>
+  vHostRows?: ReadonlyArray<ReadonlyArray<unknown>>
+}) =>
+  parseXlsx(
+    buildXlsxBuffer({
+      vInfo: overrides?.vInfoRows ?? [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory'],
+        ['vm-app-1', 'poweredOn', 'CL_DEMO_1', 4, 8192],
+        ['vm-db-1', 'poweredOff', 'CL_DEMO_1', 8, 16384],
+        ['vm-web-1', 'poweredOn', 'CL_DEMO_2', 2, 4096],
+      ],
+      vHost: overrides?.vHostRows ?? [
+        ['Host', 'Cluster', '# Cores', 'Speed (MHz)', '# CPU usage %', '# Mem usage %'],
+        ['esx-01', 'CL_DEMO_1', 24, 2400, 30.9, 28.9],
+        ['esx-02', 'CL_DEMO_1', 24, 2400, 25.1, 32.4],
+        ['esx-03', 'CL_DEMO_2', 16, 2200, 18.2, 22.5],
+      ],
+    }),
+  )
+
+describe('adaptRvtoolsVInfo', () => {
+  it('maps the canonical English RVTools columns', () => {
+    const wb = rvtoolsWorkbook()
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+
+    expect(rows).toHaveLength(3)
+    expect(rows[0]).toEqual({
+      vmName: 'vm-app-1',
+      cluster: 'CL_DEMO_1',
+      vcpu: 4,
+      vramMb: 8192,
+      activeMemMb: null,
+      poweredOn: true,
+    })
+    expect(rows[1]?.poweredOn).toBe(false)
+  })
+
+  it('tolerates French-localized column headers', () => {
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['Nom de la VM', 'Status', 'Grappe', 'vCPU', 'Mémoire'],
+        ['vm-fr', 'poweredOn', 'CL_FR', 6, 12288],
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    expect(rows[0]).toMatchObject({
+      vmName: 'vm-fr',
+      cluster: 'CL_FR',
+      vcpu: 6,
+      vramMb: 12288,
+      poweredOn: true,
+    })
+  })
+})
+
+describe('adaptRvtoolsVHost', () => {
+  it('maps the canonical English RVTools columns', () => {
+    const wb = rvtoolsWorkbook()
+    const sheet = wb.sheets.get('vHost')
+    if (!sheet) throw new Error('fixture missing vHost')
+    const rows = adaptRvtoolsVHost(sheet)
+
+    expect(rows).toHaveLength(3)
+    expect(rows[0]).toEqual({
+      hostName: 'esx-01',
+      cluster: 'CL_DEMO_1',
+      cores: 24,
+      speedMhz: 2400,
+      // 30.9 % → 0.309
+      cpuRatio: 0.309,
+      ramRatio: 0.289,
+    })
+  })
+
+  it('passes ratios through untouched when already in 0..1 form', () => {
+    const wb = rvtoolsWorkbook({
+      vHostRows: [
+        ['Host', 'Cluster', '# Cores', 'Speed', '# CPU usage %', '# Mem usage %'],
+        ['esx-norm', 'CL_X', 12, 2100, 0.42, 0.18],
+      ],
+    })
+    const sheet = wb.sheets.get('vHost')
+    if (!sheet) throw new Error('fixture missing vHost')
+    const rows = adaptRvtoolsVHost(sheet)
+    expect(rows[0]?.cpuRatio).toBe(0.42)
+    expect(rows[0]?.ramRatio).toBe(0.18)
+  })
+
+  it('clamps cores and speed to a minimum of 1 to satisfy the schema', () => {
+    const wb = rvtoolsWorkbook({
+      vHostRows: [
+        ['Host', 'Cluster', '# Cores', 'Speed', '# CPU usage %', '# Mem usage %'],
+        ['esx-bad', 'CL_X', 0, 0, 25, 25],
+      ],
+    })
+    const sheet = wb.sheets.get('vHost')
+    if (!sheet) throw new Error('fixture missing vHost')
+    const rows = adaptRvtoolsVHost(sheet)
+    expect(rows[0]?.cores).toBe(1)
+    expect(rows[0]?.speedMhz).toBe(1)
+  })
+})
+
+describe('adaptRvtools (orchestrator)', () => {
+  it('returns both row sets for a complete workbook', () => {
+    const result = adaptRvtools(rvtoolsWorkbook())
+    expect(result.vinfo).toHaveLength(3)
+    expect(result.vhost).toHaveLength(3)
+  })
+
+  it('returns empty arrays when the expected sheets are missing', () => {
+    const wb = parseXlsx(buildXlsxBuffer({ Random: [['foo']] }))
+    expect(adaptRvtools(wb)).toEqual({ vinfo: [], vhost: [] })
+  })
+
+  it('matches sheet names case-insensitively', () => {
+    const wb = parseXlsx(
+      buildXlsxBuffer({
+        VINFO: [
+          ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory'],
+          ['vm-1', 'poweredOn', 'CL', 2, 4096],
+        ],
+        vhost: [
+          ['Host', 'Cluster', '# Cores', 'Speed', '# CPU usage %', '# Mem usage %'],
+          ['h-1', 'CL', 12, 2400, 25, 30],
+        ],
+      }),
+    )
+    const out = adaptRvtools(wb)
+    expect(out.vinfo).toHaveLength(1)
+    expect(out.vhost).toHaveLength(1)
+  })
+})

@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { ClusterAggregate, VHostRow, VInfoRow } from '../../types'
+import type { ClusterAggregate, GlobalSummary, VHostRow, VInfoRow } from '../../types'
 
 /**
  * Runtime validators for the canonical row shapes. These are applied at the
@@ -39,6 +39,32 @@ export const ClusterAggregateSchema: z.ZodType<ClusterAggregate> = z.object({
   vmCount: z.number().int().nonnegative(),
   physicalGhz: z.number().nonnegative(),
   consumedGhz: z.number().nonnegative(),
+  // availableGhz can technically be negative if a host overcommits beyond
+  // its nominal speed (CPU% > 1.0 across the board). Don't gate on sign here.
+  availableGhz: z.number(),
+  meanCpuRatio: z.number().min(0).max(1.5),
+  maxCpuRatio: z.number().min(0).max(1.5),
+  minCpuRatio: z.number().min(0).max(1.5),
+  meanRamRatio: z.number().min(0).max(1.5),
+  maxRamRatio: z.number().min(0).max(1.5),
+  minRamRatio: z.number().min(0).max(1.5),
+  vcpuAllocated: z.number().int().nonnegative(),
+  vramAllocatedMb: z.number().nonnegative(),
+  activeMemMb: z.number().nonnegative().nullable(),
+  mhzPerVcpu: z.number().nonnegative(),
+})
+
+export const GlobalSummarySchema: z.ZodType<GlobalSummary> = z.object({
+  clusterCount: z.number().int().nonnegative(),
+  hostCount: z.number().int().nonnegative(),
+  vmCount: z.number().int().nonnegative(),
+  physicalGhz: z.number().nonnegative(),
+  consumedGhz: z.number().nonnegative(),
+  availableGhz: z.number(),
   meanCpuRatio: z.number().min(0).max(1.5),
   meanRamRatio: z.number().min(0).max(1.5),
+  vcpuAllocated: z.number().int().nonnegative(),
+  vramAllocatedMb: z.number().nonnegative(),
+  activeMemMb: z.number().nonnegative().nullable(),
+  mhzPerVcpu: z.number().nonnegative(),
 })

@@ -1,4 +1,4 @@
-export * from './aggregation/ghz'
+export * from './aggregation'
 export * from './parser/detectSource'
 export * from './parser/normalizeColumns'
 export * from './parser/parseXlsx'

@@ -86,8 +86,9 @@ export const adaptRvtools = (
 ): { vinfo: VInfoRow[]; vhost: VHostRow[] } => {
   // Accept both the canonical sheet names and the `RVTools_tab*` table-name
   // prefix that some builds and post-processed combined exports leave in
-  // place. Stay anchored to a known prefix list — we don't want a sheet
-  // called `vInformation` to silently match.
+  // place. `findSheet` already uses startsWith semantics, so the alias list
+  // here is a list of *prefixes*, not exact matches — keeps detectSource
+  // and the adapter aligned.
   const vinfoSheet = findSheet(workbook, ['vinfo', 'rvtools_tabvinfo'])
   const vhostSheet = findSheet(workbook, ['vhost', 'rvtools_tabvhost'])
   return {

@@ -53,6 +53,15 @@ describe('detectSource', () => {
     )
   })
 
+  it('also identifies "RVTools_tab*"-prefixed sheets with trailing suffixes', () => {
+    // A merged or post-processed combined export may suffix the table
+    // name (`RVTools_tabvInfo_v2`, `RVTools_tabvHost-extras`). Match the
+    // prefix the same way the canonical `vinfo` / `vhost` matcher does.
+    expect(
+      detectSource(wb({ RVTools_tabvInfo_v2: [['VM']], 'RVTools_tabvHost-extras': [['Host']] })),
+    ).toBe('rvtools')
+  })
+
   it('identifies the modern Live Optics format ("VMs" + "ESX Hosts")', () => {
     // Dell Live Optics exports from 2025+ use compact sheet names instead
     // of "VM Inventory" / "Host Inventory".

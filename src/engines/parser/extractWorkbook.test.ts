@@ -66,6 +66,16 @@ describe('extractWorkbookBytes', () => {
     expect(() => extractWorkbookBytes(zip, 'archive.zip')).toThrow(ZipExtractError)
   })
 
+  it('throws when the picked .xlsx entry is zero-length', () => {
+    // A zero-byte entry is truthy as a Uint8Array but unusable as a
+    // workbook. Better to throw a typed ZipExtractError now than to
+    // surface a cryptic SheetJS parse failure later.
+    const zip = buildZip({
+      'LiveOptics_3225699_VMWARE_02_16_2026.xlsx': new Uint8Array(0),
+    })
+    expect(() => extractWorkbookBytes(zip, 'archive.zip')).toThrow(ZipExtractError)
+  })
+
   it('rejects malformed zip archives with a clear ZipExtractError', () => {
     // Truncated / random bytes — fflate will throw mid-decoding.
     const garbage = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0xff, 0xff, 0xff, 0xff])

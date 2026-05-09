@@ -58,10 +58,14 @@ const extractFromZip = (bytes: Uint8Array): Uint8Array => {
   }
   const name = pickXlsxEntry(entries)
   const data = entries[name]
-  if (!data) {
-    // Defensive: pickXlsxEntry returned a name that's not in entries.
-    // Should never happen, but the type system doesn't know that.
-    throw new ZipExtractError(`Zip entry ${name} is empty`)
+  // `data === undefined` shouldn't happen (pickXlsxEntry returns a key
+  // that's in `entries`), but the type system doesn't know that. The
+  // zero-length branch is the realistic case: a corrupted bundle could
+  // legitimately ship a 0-byte entry, and we want a typed
+  // ZipExtractError now rather than a cryptic SheetJS parse failure
+  // later.
+  if (!data || data.length === 0) {
+    throw new ZipExtractError(`Zip entry ${name} is missing or empty`)
   }
   return data
 }

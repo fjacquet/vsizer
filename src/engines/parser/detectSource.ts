@@ -27,10 +27,13 @@ const norm = (s: string): string => s.toLowerCase().trim()
 export const detectSource = ({ sheets }: ParsedWorkbook): SourceFormat => {
   const names = [...sheets.keys()].map(norm)
 
+  // Prefix matching mirrors what `findSheet` already does for the
+  // canonical names — so a suffix on a merged/post-processed export
+  // (e.g. `RVTools_tabvInfo_v2`) doesn't slip through the cracks.
   const matchesVInfo = (n: string): boolean =>
-    n === 'vinfo' || n.startsWith('vinfo') || n === 'rvtools_tabvinfo'
+    n === 'vinfo' || n.startsWith('vinfo') || n.startsWith('rvtools_tabvinfo')
   const matchesVHost = (n: string): boolean =>
-    n === 'vhost' || n.startsWith('vhost') || n === 'rvtools_tabvhost'
+    n === 'vhost' || n.startsWith('vhost') || n.startsWith('rvtools_tabvhost')
   const hasRvtools = names.some(matchesVInfo) && names.some(matchesVHost)
   if (hasRvtools) return 'rvtools'
 

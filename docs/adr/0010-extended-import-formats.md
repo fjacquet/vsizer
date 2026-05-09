@@ -46,12 +46,14 @@ not acceptable for a tool whose pitch is "drop in your export".
 
 ### 1. RVTools `RVTools_tab*` aliases
 
-`detectSource` and `adaptRvtools` accept the two extra exact prefixes
+`detectSource` and `adaptRvtools` accept the two extra prefixes
 `rvtools_tabvinfo` / `rvtools_tabvhost`, in addition to the canonical
-`vinfo` / `vhost`. We deliberately keep the matcher anchored to the
-known prefix list rather than widening it to `n.includes('vinfo')` —
-that would match user-renamed sheets like `vInformation` or
-`vinfo-summary` and risk silently picking the wrong sheet.
+`vinfo` / `vhost`, and use the **same** `startsWith` matching the
+canonical path already uses (a post-processed combined export may
+suffix the table name as `RVTools_tabvInfo_v2`). We deliberately don't
+widen further to `n.includes('vinfo')` — that would match user-renamed
+sheets like `vInformation` or `myvinfostuff` and risk silently picking
+the wrong sheet.
 
 The internal column shapes are identical to the canonical RVTools
 build, so no adapter changes are needed beyond the sheet lookup.

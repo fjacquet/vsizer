@@ -44,4 +44,26 @@ describe('detectSource', () => {
   it('returns "unknown" when only one expected sheet is present', () => {
     expect(detectSource(wb({ vInfo: [['VM']] }))).toBe('unknown')
   })
+
+  it('identifies an RVTools workbook with "RVTools_tab*"-prefixed sheets', () => {
+    // Some RVTools builds (or post-processed exports) keep the internal
+    // table names as sheet names: RVTools_tabvInfo / RVTools_tabvHost.
+    expect(detectSource(wb({ RVTools_tabvInfo: [['VM']], RVTools_tabvHost: [['Host']] }))).toBe(
+      'rvtools',
+    )
+  })
+
+  it('identifies the modern Live Optics format ("VMs" + "ESX Hosts")', () => {
+    // Dell Live Optics exports from 2025+ use compact sheet names instead
+    // of "VM Inventory" / "Host Inventory".
+    expect(detectSource(wb({ VMs: [['VM Name']], 'ESX Hosts': [['Host Name']] }))).toBe(
+      'liveoptics',
+    )
+  })
+
+  it('matches the modern Live Optics sheet names case-insensitively', () => {
+    expect(detectSource(wb({ vms: [['VM Name']], 'esx hosts': [['Host Name']] }))).toBe(
+      'liveoptics',
+    )
+  })
 })

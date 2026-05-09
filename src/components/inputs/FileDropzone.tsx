@@ -9,7 +9,7 @@ export interface FileDropzoneProps {
   variant?: 'hero' | 'compact'
 }
 
-const ACCEPTED_EXTENSIONS = ['.xlsx', '.xlsm', '.xlsb', '.csv', '.ods']
+const ACCEPTED_EXTENSIONS = ['.xlsx', '.xlsm', '.xlsb', '.csv', '.ods', '.zip']
 const ACCEPT_ATTR = ACCEPTED_EXTENSIONS.join(',')
 
 const isAcceptable = (file: File): boolean => {

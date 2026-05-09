@@ -168,6 +168,29 @@ describe('adaptRvtools (orchestrator)', () => {
     expect(adaptRvtools(wb)).toEqual({ vinfo: [], vhost: [] })
   })
 
+  it('parses workbooks whose sheets carry the "RVTools_tab*" table-name prefix', () => {
+    // Some RVTools builds and post-processed combined exports leave the
+    // internal table names (RVTools_tabvInfo / RVTools_tabvHost) as sheet
+    // names. The contents are unchanged, only the sheet labels differ.
+    const wb = parseXlsx(
+      buildXlsxBuffer({
+        RVTools_tabvInfo: [
+          ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory'],
+          ['vm-prefixed', 'poweredOn', 'CL_PFX', 4, 8192],
+        ],
+        RVTools_tabvHost: [
+          ['Host', 'Cluster', '# Cores', 'Speed', '# Memory', 'CPU usage %', 'Memory usage %'],
+          ['esx-pfx', 'CL_PFX', 24, 2400, 524288, 30.9, 28.9],
+        ],
+      }),
+    )
+    const out = adaptRvtools(wb)
+    expect(out.vinfo).toHaveLength(1)
+    expect(out.vhost).toHaveLength(1)
+    expect(out.vinfo[0]?.vmName).toBe('vm-prefixed')
+    expect(out.vhost[0]?.hostName).toBe('esx-pfx')
+  })
+
   it('matches sheet names case-insensitively', () => {
     const wb = parseXlsx(
       buildXlsxBuffer({

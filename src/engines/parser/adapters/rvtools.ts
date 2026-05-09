@@ -84,8 +84,12 @@ export const adaptRvtoolsVHost = (sheet: ParsedSheet): VHostRow[] => {
 export const adaptRvtools = (
   workbook: ParsedWorkbook,
 ): { vinfo: VInfoRow[]; vhost: VHostRow[] } => {
-  const vinfoSheet = findSheet(workbook, ['vinfo'])
-  const vhostSheet = findSheet(workbook, ['vhost'])
+  // Accept both the canonical sheet names and the `RVTools_tab*` table-name
+  // prefix that some builds and post-processed combined exports leave in
+  // place. Stay anchored to a known prefix list — we don't want a sheet
+  // called `vInformation` to silently match.
+  const vinfoSheet = findSheet(workbook, ['vinfo', 'rvtools_tabvinfo'])
+  const vhostSheet = findSheet(workbook, ['vhost', 'rvtools_tabvhost'])
   return {
     vinfo: vinfoSheet ? adaptRvtoolsVInfo(vinfoSheet) : [],
     vhost: vhostSheet ? adaptRvtoolsVHost(vhostSheet) : [],

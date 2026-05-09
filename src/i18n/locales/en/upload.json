@@ -3,7 +3,7 @@
     "instruction": "Drop your RVTools or Live Optics export",
     "or": "or",
     "browse": "browse your files",
-    "accepted": "Accepted formats: .xlsx, .xlsm, .xlsb, .csv, .ods",
+    "accepted": "Accepted formats: .xlsx, .xlsm, .xlsb, .csv, .ods, .zip (Live Optics bundle)",
     "active": "Drop the file here"
   },
   "fileLoaded": {
@@ -12,6 +12,7 @@
   },
   "errors": {
     "rejected": "Unrecognized format. Drop an RVTools or Live Optics export.",
-    "parseFailed": "Failed to read the file: {{message}}"
+    "parseFailed": "Failed to read the file: {{message}}",
+    "zipExtractFailed": "Could not extract a workbook from the zip: {{message}}"
   }
 }

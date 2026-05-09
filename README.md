@@ -1,5 +1,16 @@
 # vsizer
 
+[![Deploy to GitHub Pages](https://github.com/fjacquet/vsizer/actions/workflows/static.yml/badge.svg?branch=main)](https://github.com/fjacquet/vsizer/actions/workflows/static.yml)
+[![Live app](https://img.shields.io/badge/live-fjacquet.github.io%2Fvsizer-2563eb)](https://fjacquet.github.io/vsizer/)
+[![Release](https://img.shields.io/github/v/release/fjacquet/vsizer?display_name=tag&sort=semver)](https://github.com/fjacquet/vsizer/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![React 19](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)](https://vite.dev/)
+[![Tested with Vitest](https://img.shields.io/badge/tested%20with-vitest-6e9f18?logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Code style: Biome](https://img.shields.io/badge/code%20style-biome-60a5fa?logo=biome&logoColor=white)](https://biomejs.dev/)
+[![Client-side only](https://img.shields.io/badge/processing-100%25%20client--side-22c55e)](#privacy-guarantee)
+
 > Drop your RVTools / Live Optics export, get a factual cluster utilization deck.
 > 100 % client-side — your file never leaves your browser.
 
@@ -105,6 +116,16 @@ verify if you're suspicious — that's a feature, not a bug.
 `.github/workflows/static.yml` runs `typecheck → lint → test:run → build`
 on every push to `main` and publishes `dist/` to GitHub Pages.
 
+## Documentation
+
+- [`docs/PRD.md`](docs/PRD.md) — product requirements and scope.
+- [`docs/adr/`](docs/adr/README.md) — architecture decision records (Nygard format,
+  append-only). Read the relevant ADR before changing non-trivial behaviour;
+  several encode product invariants and domain math (DR reservation,
+  vCPU/pCPU consolidation ratio, factual-only deck).
+- [`CLAUDE.md`](CLAUDE.md) — guidance for AI coding assistants and a quick
+  contributor's tour of the layering, conventions, and gotchas.
+
 ## License
 
-TBD.
+[MIT](LICENSE) © Frédéric Jacquet

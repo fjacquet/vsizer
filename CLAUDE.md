@@ -41,7 +41,15 @@ path aliases in both `vite.config.ts` and `tsconfig.app.json` — is:
   cluster utilization math, PPTX deck assembly. **All non-trivial logic belongs here.** These
   modules are the only ones gated by Vitest coverage thresholds (75% lines/functions/branches/
   statements via `vitest.config.ts`'s `include`). Write them as plain functions that take parsed
-  data and return results.
+  data and return results. Subdivision:
+  - `engines/parser/` — `parseXlsx` (SheetJS → raw sheets), `detectSource` (RVTools vs Live
+    Optics), `normalizeColumns` (per-source adapters → canonical column names), `schemas` (Zod
+    validation at the trust boundary).
+  - `engines/aggregation/` — `globals.ts` (estate-wide totals), `perCluster.ts` /
+    `aggregateClusters.ts` (per-cluster physical/consumed GHz, mean CPU%/RAM%, vCPU allocation,
+    DR-aware reservation), `vinfoMerge.ts` (joining vInfo into vHost rows), `ghz.ts` (MHz→GHz).
+  - `engines/export/pptx/` — `pptxgenjs` deck builder (title + overview + one slide per selected
+    cluster).
 - `@utils` (`src/utils/`) — small reusable helpers (formatters, csv export, validators); also
   covered by the 75% threshold.
 - `@store` (`src/store/`) — Zustand stores. `datasetStore.ts` is the single source of truth for
@@ -51,6 +59,27 @@ path aliases in both `vite.config.ts` and `tsconfig.app.json` — is:
 - `@hooks` (`src/hooks/`) — React hooks bridging stores/engines to components.
 - `@types` (`src/types/`) — canonical shared shapes (`VInfoRow`, `VHostRow`, `ClusterAggregate`).
   Validate external/untrusted shapes (uploaded workbooks) with Zod at the engine boundary.
+
+### Architecture decisions (`docs/adr/`)
+
+`docs/adr/` is the canonical decision log (Nygard format, append-only). **Read the relevant ADR
+before changing any non-trivial behaviour** — several encode product invariants and domain math
+that aren't obvious from the code alone:
+
+- **0001** — 100% client-side processing (the privacy invariant; no fetches with workbook bytes).
+- **0002** — SheetJS via the official tarball, not the npm package (CVE-affected).
+- **0003** — Factual-only PPTX: the deck strips editorial language and recommendations; the
+  narrative is the speaker's job. Don't reintroduce verdicts or "good/bad" framing in slide text.
+- **0004** — Memory-only state: never persist `vinfo`/`vhost` to `localStorage` or URL.
+- **0005** — Coverage gate scoped to `engines/` and `utils/` only.
+- **0006** — Two-state, single-column dashboard with fixed sidebar (no drill-down, no filters).
+- **0007** — Stretched-cluster DR reservation: a stretched cluster reserves N/2 hosts of CPU and
+  RAM headroom; the aggregation engine subtracts that before reporting available capacity.
+- **0008** — Auto dark mode with three-state toggle (light/dark/system); PPTX palette stays
+  Midnight Executive regardless.
+- **0009** — vCPU/pCPU consolidation ratio is computed DR-aware (uses post-reservation pCPU).
+
+`docs/PRD.md` carries the product requirements; consult it when scope of a feature is unclear.
 
 ### i18n
 
@@ -96,10 +125,11 @@ gate yet, so review the FR view manually until one is added.
   `resolveJsonModule`. Index access returns `T | undefined`; narrow before use rather than
   `!`-asserting (Biome warns on `noNonNullAssertion`). Import types with `import type`
   (verbatimModuleSyntax). Don't use enums or `namespace` blocks (erasableSyntaxOnly).
-- **Path aliases.** Use `@engines/aggregation/ghz`, `@utils/format`, `@store/datasetStore`, etc.
-  **Bare-form aliases (`@engines`, `@utils`) are not configured** — always include a sub-path or
-  import the file directly. Note also that the `@types/*` mapping shadows npm's `@types/*` package
-  namespace; importing from npm `@types/<pkg>` directly will misresolve.
+- **Path aliases.** Configured: `@/*`, `@engines/*`, `@components/*`, `@store/*`, `@types/*`,
+  `@utils/*`, `@hooks/*`. Use `@engines/aggregation/ghz`, `@utils/format`, `@store/datasetStore`,
+  etc. **Bare-form aliases (`@engines`, `@utils`) are not configured** — always include a sub-path
+  or import the file directly. Note also that the `@types/*` mapping shadows npm's `@types/*`
+  package namespace; importing from npm `@types/<pkg>` directly will misresolve.
 - **Biome formatting** (`biome.json`): single quotes (JS only — CSS uses double), no semicolons,
   2-space indent, 100-char lines. Imports are auto-organized. `noUnusedImports` and
   `noUnusedVariables` are errors in source but only warnings in test files.

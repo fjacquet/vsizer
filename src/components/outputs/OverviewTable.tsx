@@ -25,10 +25,13 @@ export function OverviewTable({ clusters }: OverviewTableProps) {
     <section className="panel" aria-labelledby="overview-table-heading">
       <header className="mb-3 flex items-baseline justify-between gap-3">
         <div>
-          <h2 id="overview-table-heading" className="text-lg font-semibold text-slate-100">
+          <h2
+            id="overview-table-heading"
+            className="text-lg font-semibold text-slate-900 dark:text-slate-100"
+          >
             {t('overview.title')}
           </h2>
-          <p className="text-xs text-slate-400">{t('overview.subtitle')}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{t('overview.subtitle')}</p>
         </div>
       </header>
 

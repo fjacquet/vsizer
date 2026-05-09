@@ -109,3 +109,8 @@ gate yet, so review the FR view manually until one is added.
   `src/components/`, etc. run but don't count toward thresholds.
 - **UI text** goes through `t()` with the right namespace. The shell already uses `common:` and
   `upload:` keys — match that pattern for new components.
+- **Theme is class-based** via `<html class="dark">` (set by the FOUC script in `index.html` and
+  by `useTheme()` at runtime). New components must double their color classes — every
+  `bg-surface-*` / `text-slate-100` / `border-surface-700` needs a light counterpart with the
+  `dark:` prefix carrying the dark version. The PPTX deck is palette-locked to Midnight Executive
+  regardless of dashboard theme (see ADR-0003 / ADR-0008).

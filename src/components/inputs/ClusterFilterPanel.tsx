@@ -43,10 +43,13 @@ export function ClusterFilterPanel({
     <section className="panel" aria-labelledby="cluster-filter-heading">
       <header className="mb-3 flex items-baseline justify-between gap-2">
         <div>
-          <h3 id="cluster-filter-heading" className="text-sm font-semibold text-slate-100">
+          <h3
+            id="cluster-filter-heading"
+            className="text-sm font-semibold text-slate-900 dark:text-slate-100"
+          >
             {t('filter.title')}
           </h3>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {t('filter.selectedCount', { count: explicitCount })}
             {selected.size === 0 ? ` · ${t('filter.allDefault')}` : ''}
           </p>
@@ -54,7 +57,7 @@ export function ClusterFilterPanel({
         <button
           type="button"
           onClick={onSelectNone}
-          className="text-xs text-slate-400 underline-offset-2 hover:underline disabled:opacity-50"
+          className="text-xs text-slate-500 underline-offset-2 hover:underline disabled:opacity-50 dark:text-slate-400"
           disabled={selected.size === 0}
         >
           {tc('actions.selectNone')}
@@ -66,7 +69,7 @@ export function ClusterFilterPanel({
           const isStretched = stretched.has(cluster.cluster)
           return (
             <li key={cluster.cluster}>
-              <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-700">
+              <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-surface-700">
                 <input
                   type="checkbox"
                   checked={checked}
@@ -74,7 +77,9 @@ export function ClusterFilterPanel({
                   className="h-4 w-4 accent-accent-500"
                   aria-label={cluster.cluster}
                 />
-                <span className="flex-1 truncate text-slate-200">{cluster.cluster}</span>
+                <span className="flex-1 truncate text-slate-700 dark:text-slate-200">
+                  {cluster.cluster}
+                </span>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -90,7 +95,7 @@ export function ClusterFilterPanel({
                   className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
                     isStretched
                       ? 'border-accent-500 bg-accent-500 text-primary-900'
-                      : 'border-surface-700 text-slate-500 hover:border-accent-500 hover:text-accent-500'
+                      : 'border-slate-300 text-slate-500 hover:border-accent-500 hover:text-accent-500 dark:border-surface-700'
                   }`}
                 >
                   {t('filter.drPillLabel')}

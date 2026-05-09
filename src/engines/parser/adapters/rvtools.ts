@@ -29,8 +29,20 @@ const VHOST_COLS = {
   // workbooks but is unambiguous within vHost). FR alias kept for
   // localized exports.
   memoryMb: ['# memory', 'memory', 'mémoire', 'mémoire (mo)', 'mem'],
-  cpuRatio: ['# cpu usage %', 'cpu usage %', 'cpu %', 'cpu usage', 'cpu use %'],
-  ramRatio: ['# mem usage %', 'mem usage %', 'memory %', 'mem usage', 'mem use %'],
+  // RVTools' default vHost columns are "CPU usage %" and "Memory usage %"
+  // (see .reference/build_pptx.py line 47-48). Earlier alias lists missed
+  // the canonical RAM spelling and silently parsed 0% — fixed.
+  cpuRatio: ['cpu usage %', '# cpu usage %', '% cpu', 'cpu %', 'cpu usage', 'cpu use %'],
+  ramRatio: [
+    'memory usage %',
+    '# memory usage %',
+    'mem usage %',
+    '# mem usage %',
+    '% memory',
+    'memory %',
+    'mem usage',
+    'mem use %',
+  ],
 } as const
 
 /**

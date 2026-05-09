@@ -50,20 +50,22 @@ interface UtilBlockProps {
 
 function UtilBlock({ title, subtitle, ratioMean, ratioMax, ratioMin, labels }: UtilBlockProps) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-surface-700 bg-surface-900/40 p-4">
+    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-surface-700 dark:bg-surface-900/40">
       <header>
-        <h4 className="text-sm font-semibold text-slate-100">{title}</h4>
-        <p className="text-xs text-slate-400">{subtitle}</p>
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h4>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>
       </header>
       <UtilizationBar ratio={ratioMean} peak={ratioMax} heightPx={14} label={title} />
       <div className="flex justify-between text-[10px] uppercase tracking-wider text-slate-500">
         <span>0 %</span>
         <span>100 %</span>
       </div>
-      <dl className="grid grid-cols-3 gap-2 border-t border-surface-700 pt-3 text-center">
+      <dl className="grid grid-cols-3 gap-2 border-t border-slate-200 pt-3 text-center dark:border-surface-700">
         <div>
           <dt className="text-[11px] uppercase tracking-wider text-slate-500">{labels.min}</dt>
-          <dd className="text-base font-semibold text-slate-300">{fmtPercentWhole(ratioMin)}</dd>
+          <dd className="text-base font-semibold text-slate-700 dark:text-slate-300">
+            {fmtPercentWhole(ratioMin)}
+          </dd>
         </div>
         <div>
           <dt className="text-[11px] uppercase tracking-wider text-slate-500">{labels.mean}</dt>
@@ -73,7 +75,9 @@ function UtilBlock({ title, subtitle, ratioMean, ratioMax, ratioMin, labels }: U
         </div>
         <div>
           <dt className="text-[11px] uppercase tracking-wider text-slate-500">{labels.max}</dt>
-          <dd className="text-base font-semibold text-slate-300">{fmtPercentWhole(ratioMax)}</dd>
+          <dd className="text-base font-semibold text-slate-700 dark:text-slate-300">
+            {fmtPercentWhole(ratioMax)}
+          </dd>
         </div>
       </dl>
     </div>
@@ -115,15 +119,15 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
       className="panel flex flex-col gap-5"
       aria-labelledby={`cluster-${cluster.cluster}-heading`}
     >
-      <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-surface-700 pb-3">
+      <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-slate-200 pb-3 dark:border-surface-700">
         <h3
           id={`cluster-${cluster.cluster}-heading`}
-          className="flex items-center gap-3 text-2xl font-bold text-slate-100"
+          className="flex items-center gap-3 text-2xl font-bold text-slate-900 dark:text-slate-100"
         >
           {cluster.cluster}
           {cluster.stretched ? <StretchedBadge /> : null}
         </h3>
-        <p className="text-xs text-slate-400">{headerSubtitle}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{headerSubtitle}</p>
       </header>
 
       {/* Row 1: 4 KPI cards */}
@@ -236,7 +240,7 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
       {/* RAM-disponible line — DR-aware, mirrors the PPTX (ADR-0007). */}
       <p
         className={`text-sm font-semibold ${
-          cluster.availableRamMb < 0 ? 'text-util-high' : 'text-slate-200'
+          cluster.availableRamMb < 0 ? 'text-util-high' : 'text-slate-700 dark:text-slate-200'
         }`}
       >
         {t('card.ramAvailable', { value: fmtMemMb(cluster.availableRamMb) })}

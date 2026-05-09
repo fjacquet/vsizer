@@ -125,6 +125,23 @@ describe('adaptRvtoolsVHost', () => {
     expect(rows[0]?.memoryMb).toBe(0)
   })
 
+  it('reads RVTools canonical "CPU usage %" and "Memory usage %" headers (regression)', () => {
+    // The legacy Python reference reads exactly these column names; an
+    // earlier alias list missed "Memory usage %" and silently produced
+    // ramRatio = 0 across the dashboard. Pin both spellings here.
+    const wb = rvtoolsWorkbook({
+      vHostRows: [
+        ['Host', 'Cluster', '# Cores', 'Speed', '# Memory', 'CPU usage %', 'Memory usage %'],
+        ['esx-canon', 'CL_X', 24, 2400, 524288, 32.5, 47.8],
+      ],
+    })
+    const sheet = wb.sheets.get('vHost')
+    if (!sheet) throw new Error('fixture missing vHost')
+    const rows = adaptRvtoolsVHost(sheet)
+    expect(rows[0]?.cpuRatio).toBeCloseTo(0.325, 4)
+    expect(rows[0]?.ramRatio).toBeCloseTo(0.478, 4)
+  })
+
   it('tolerates the FR alias "Mémoire"', () => {
     const wb = rvtoolsWorkbook({
       vHostRows: [

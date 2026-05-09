@@ -35,7 +35,7 @@ export function UploadSidebar() {
           <p className="mb-1 font-semibold uppercase tracking-wider text-accent-500">
             {t('fileLoaded.ariaLabel')}
           </p>
-          <p className="break-all text-slate-200">{file.name}</p>
+          <p className="break-all text-slate-700 dark:text-slate-200">{file.name}</p>
           <p className="text-slate-500">{Math.round(file.size / 1024).toLocaleString()} kB</p>
         </div>
       ) : null}

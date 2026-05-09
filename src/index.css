@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* Class-strategy dark variant: `dark:bg-X` activates when an ancestor has
+ * `class="dark"`. The FOUC script in index.html sets this before paint
+ * based on `localStorage['vsizer-theme']` and `prefers-color-scheme`. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* vsizer — Midnight Executive palette (matches PPTX export theme) */
 @theme {
   /* Navy primary scale */
@@ -39,13 +44,21 @@
 }
 
 @layer base {
+  /* Default = light. The FOUC script adds `class="dark"` on <html> when
+   * the resolved theme is dark, which activates `.dark` cascade below. */
   html {
+    color-scheme: light;
+  }
+  html.dark {
     color-scheme: dark;
   }
 
   body {
-    @apply bg-surface-900 text-slate-100 antialiased;
+    @apply bg-slate-50 text-slate-900 antialiased;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .dark body {
+    @apply bg-surface-900 text-slate-100;
   }
 
   #root {
@@ -57,15 +70,24 @@
 
 @layer components {
   .panel {
-    @apply rounded-lg border border-surface-700 bg-surface-800 p-4;
+    @apply rounded-lg border border-slate-200 bg-white p-4;
+  }
+  .dark .panel {
+    @apply border-surface-700 bg-surface-800;
   }
 
   .label {
-    @apply block text-sm font-medium text-slate-300;
+    @apply block text-sm font-medium text-slate-700;
+  }
+  .dark .label {
+    @apply text-slate-300;
   }
 
   .util-bar-track {
-    @apply h-2 w-full rounded-full bg-surface-700;
+    @apply h-2 w-full rounded-full bg-slate-200;
+  }
+  .dark .util-bar-track {
+    @apply bg-surface-700;
   }
 
   .util-bar-fill {

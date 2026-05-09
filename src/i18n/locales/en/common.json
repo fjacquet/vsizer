@@ -17,6 +17,12 @@
     "fr": "Français",
     "en": "English"
   },
+  "theme": {
+    "label": "Theme",
+    "auto": "Auto",
+    "light": "Light",
+    "dark": "Dark"
+  },
   "badge": {
     "stretched": "Stretched",
     "stretchedFull": "Stretched vSAN — 50% of capacity (CPU and RAM) reserved for DR"

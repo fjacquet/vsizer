@@ -150,7 +150,7 @@ describe('datasetStore', () => {
     // Toggle stretched on → re-aggregation should populate aggregates with
     // DR-aware figures.
     useDatasetStore.getState().toggleStretched('CL_X')
-    const aggAfter = useDatasetStore.getState().aggregates['CL_X']
+    const aggAfter = useDatasetStore.getState().aggregates.CL_X
     expect(aggAfter?.stretched).toBe(true)
     expect(aggAfter?.drReservedGhz).toBeCloseTo(28.8, 5) // 0.5 × 57.6
     expect(aggAfter?.drReservedRamMb).toBeCloseTo(262144, 0) // 0.5 × 524288

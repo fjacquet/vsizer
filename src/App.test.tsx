@@ -84,6 +84,8 @@ describe('App shell', () => {
     expect(screen.getByRole('button', { name: /exporter pptx|export pptx/i })).toBeInTheDocument()
     // Cluster name appears in the loaded view.
     expect(screen.getByRole('heading', { name: /CL_DEMO_1/ })).toBeInTheDocument()
+    // Theme toggle is reachable in the header.
+    expect(screen.getByRole('button', { name: /clair|light/i })).toBeInTheDocument()
   })
 })
 

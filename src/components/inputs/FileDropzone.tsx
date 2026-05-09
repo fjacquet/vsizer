@@ -75,8 +75,8 @@ export function FileDropzone({ onFile, disabled, variant = 'compact' }: FileDrop
     'flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed text-center transition-colors',
     heroSize ? 'p-12' : 'p-6',
     isDragging
-      ? 'border-accent-500 bg-primary-900/40'
-      : 'border-surface-700 bg-surface-800 hover:border-primary-400',
+      ? 'border-accent-500 bg-accent-500/10 dark:bg-primary-900/40'
+      : 'border-slate-300 bg-white hover:border-primary-400 dark:border-surface-700 dark:bg-surface-800',
     disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
   ].join(' ')
 
@@ -98,14 +98,14 @@ export function FileDropzone({ onFile, disabled, variant = 'compact' }: FileDrop
       aria-label={t('dropzone.instruction')}
     >
       <p
-        className={`font-semibold ${heroSize ? 'text-xl text-slate-100' : 'text-sm text-slate-200'}`}
+        className={`font-semibold ${heroSize ? 'text-xl text-slate-900 dark:text-slate-100' : 'text-sm text-slate-700 dark:text-slate-200'}`}
       >
         {isDragging ? t('dropzone.active') : t('dropzone.instruction')}
       </p>
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-slate-500 dark:text-slate-400">
         {t('dropzone.or')} <span className="underline">{t('dropzone.browse')}</span>
       </p>
-      <p className="text-[10px] text-slate-500">{t('dropzone.accepted')}</p>
+      <p className="text-[10px] text-slate-400 dark:text-slate-500">{t('dropzone.accepted')}</p>
       <input
         ref={inputRef}
         id={inputId}

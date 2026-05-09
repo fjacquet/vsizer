@@ -32,8 +32,8 @@ export function EmptyState() {
     <div className="flex flex-1 items-center justify-center p-6">
       <div className="flex w-full max-w-2xl flex-col items-center gap-6 text-center">
         <div>
-          <h1 className="text-4xl font-bold text-slate-100">{t('appName')}</h1>
-          <p className="mt-2 text-sm text-slate-400">{t('tagline')}</p>
+          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100">{t('appName')}</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{t('tagline')}</p>
         </div>
         <FileDropzone
           onFile={(f) => {
@@ -48,7 +48,7 @@ export function EmptyState() {
             void loadSample()
           }}
           disabled={isUploading}
-          className="text-sm text-slate-400 underline-offset-2 hover:underline disabled:opacity-50"
+          className="text-sm text-slate-500 underline-offset-2 hover:underline disabled:opacity-50 dark:text-slate-400"
         >
           {t('actions.loadSample')}
         </button>

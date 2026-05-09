@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { aggregateClusters } from '../engines/aggregation/aggregateClusters'
 import { aggregateGlobals } from '../engines/aggregation/globals'
+import { extractWorkbookBytes, ZipExtractError } from '../engines/parser/extractWorkbook'
 import { parseDataset } from '../engines/parser/normalizeColumns'
 import { useDatasetStore } from '../store/datasetStore'
 
@@ -29,7 +30,10 @@ export function useDatasetUpload(): {
       setIsUploading(true)
       try {
         const buffer = await file.arrayBuffer()
-        const parsed = parseDataset(buffer)
+        // Live Optics ships a 5-file zip; extract the *_VMWARE_*.xlsx entry
+        // before parsing. Plain .xlsx uploads pass through untouched.
+        const workbookBytes = extractWorkbookBytes(buffer, file.name)
+        const parsed = parseDataset(workbookBytes)
         if (parsed.source === 'unknown') {
           toast.error(t('validation:source.unknown'))
           return
@@ -62,7 +66,11 @@ export function useDatasetUpload(): {
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
-        toast.error(t('upload:errors.parseFailed', { message: msg }))
+        if (err instanceof ZipExtractError) {
+          toast.error(t('upload:errors.zipExtractFailed', { message: msg }))
+        } else {
+          toast.error(t('upload:errors.parseFailed', { message: msg }))
+        }
       } finally {
         setIsUploading(false)
       }

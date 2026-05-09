@@ -53,12 +53,17 @@ export const ClusterAggregateSchema: z.ZodType<ClusterAggregate> = z.object({
   consumedRamMb: z.number().nonnegative(),
   drReservedRamMb: z.number().nonnegative(),
   availableRamMb: z.number(),
-  meanCpuRatio: z.number().min(0).max(1.5),
-  maxCpuRatio: z.number().min(0).max(1.5),
-  minCpuRatio: z.number().min(0).max(1.5),
-  meanRamRatio: z.number().min(0).max(1.5),
-  maxRamRatio: z.number().min(0).max(1.5),
-  minRamRatio: z.number().min(0).max(1.5),
+  // Bound to 3.0, not 1.5: a stretched cluster scales raw measurements
+  // by `physicalGhz / (physicalGhz − drReservedGhz)` (= 2 for the V1
+  // 50 % reservation), so a host running near 100 % becomes ~200 % of
+  // usable capacity. Cap at 3.0 to absorb the same 1.05× source
+  // overshoot the original 1.5 cap was sized for. See ADR-0011.
+  meanCpuRatio: z.number().min(0).max(3),
+  maxCpuRatio: z.number().min(0).max(3),
+  minCpuRatio: z.number().min(0).max(3),
+  meanRamRatio: z.number().min(0).max(3),
+  maxRamRatio: z.number().min(0).max(3),
+  minRamRatio: z.number().min(0).max(3),
   vcpuAllocated: z.number().int().nonnegative(),
   vramAllocatedMb: z.number().nonnegative(),
   activeMemMb: z.number().nonnegative().nullable(),
@@ -81,8 +86,9 @@ export const GlobalSummarySchema: z.ZodType<GlobalSummary> = z.object({
   consumedRamMb: z.number().nonnegative(),
   drReservedRamMb: z.number().nonnegative(),
   availableRamMb: z.number(),
-  meanCpuRatio: z.number().min(0).max(1.5),
-  meanRamRatio: z.number().min(0).max(1.5),
+  // Same 0..3 bound as ClusterAggregateSchema — see ADR-0011.
+  meanCpuRatio: z.number().min(0).max(3),
+  meanRamRatio: z.number().min(0).max(3),
   vcpuAllocated: z.number().int().nonnegative(),
   vramAllocatedMb: z.number().nonnegative(),
   activeMemMb: z.number().nonnegative().nullable(),

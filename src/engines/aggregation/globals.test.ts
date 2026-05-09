@@ -136,13 +136,47 @@ describe('aggregateGlobals', () => {
     expect(out.meanCpuRatio).toBeCloseTo(105 / 1010, 5)
   })
 
-  it('weights meanRamRatio by host count', () => {
-    // 9 hosts at 0.1 RAM, 1 host at 1.0 RAM → (9×0.1 + 1×1.0) / 10 = 0.19
+  it('weights meanRamRatio by physical capacity (consumedRamMb / usableRamMb)', () => {
+    // CL_BIG: 1 000 000 MB physical, 100 000 MB consumed (10 %)
+    // CL_SMALL:    10 000 MB physical,   5 000 MB consumed (50 %)
+    // capacity-weighted estate mean = 105 000 / 1 010 000 ≈ 0.104.
+    // ADR-0011 replaced the old host-count-weighted average.
     const out = aggregateGlobals([
-      baseAggregate({ hostCount: 9, meanRamRatio: 0.1 }),
-      baseAggregate({ hostCount: 1, meanRamRatio: 1.0 }),
+      baseAggregate({
+        cluster: 'BIG',
+        hostCount: 10,
+        physicalRamMb: 1_000_000,
+        consumedRamMb: 100_000,
+      }),
+      baseAggregate({
+        cluster: 'SMALL',
+        hostCount: 1,
+        physicalRamMb: 10_000,
+        consumedRamMb: 5_000,
+      }),
     ])
-    expect(out.meanRamRatio).toBeCloseTo(0.19, 5)
+    expect(out.meanRamRatio).toBeCloseTo(105_000 / 1_010_000, 5)
+  })
+
+  it('makes meanCpuRatio / meanRamRatio DR-aware at the estate level', () => {
+    // 1 stretched cluster: 200 GHz physical, 50 consumed, 100 reserved
+    //   → consumedGhz/usableGhz = 50/(200-100) = 0.5
+    // RAM mirrors: 200 000 MB physical, 50 000 consumed, 100 000 reserved
+    //   → 50 000/(200 000-100 000) = 0.5
+    const out = aggregateGlobals([
+      baseAggregate({
+        cluster: 'CL',
+        physicalGhz: 200,
+        consumedGhz: 50,
+        drReservedGhz: 100,
+        physicalRamMb: 200_000,
+        consumedRamMb: 50_000,
+        drReservedRamMb: 100_000,
+        stretched: true,
+      }),
+    ])
+    expect(out.meanCpuRatio).toBeCloseTo(0.5, 5)
+    expect(out.meanRamRatio).toBeCloseTo(0.5, 5)
   })
 
   it('returns activeMemMb=null when no cluster reports it', () => {

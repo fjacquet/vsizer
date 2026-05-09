@@ -49,15 +49,28 @@ export const aggregateClusters = ({
       const drReservedGhz = isStretched ? 0.5 * h.physicalGhz : 0
       const availableGhz = h.physicalGhz - h.consumedGhz - drReservedGhz
 
-      const consumedRamMb = h.physicalRamMb * h.meanRamRatio
       const drReservedRamMb = isStretched ? 0.5 * h.physicalRamMb : 0
-      const availableRamMb = h.physicalRamMb - consumedRamMb - drReservedRamMb
+      const availableRamMb = h.physicalRamMb - h.consumedRamMb - drReservedRamMb
 
       // Cores side — same DR shape as GHz / RAM. usablePhysicalCores is the
       // denominator the consolidation ratio actually uses; surfaced as a
       // field so globals can sum without re-deriving the stretched flag.
       const usablePhysicalCores = isStretched ? 0.5 * h.physicalCores : h.physicalCores
       const vcpuPerPcpu = usablePhysicalCores === 0 ? 0 : vcpuAllocated / usablePhysicalCores
+
+      // ── DR-aware utilization ratios (ADR-0011) ───────────────────────
+      //
+      // Same volume of water in half the bucket = higher fill %. Apply
+      // the same multiplier to both the cluster mean and the per-host
+      // extremes so the bar chart and the headline KPI stay coherent.
+      // Factor = physical / (physical − reserved) — equals 2 for the V1
+      // 50 % reservation and 1 when not stretched.
+      const cpuDrFactor =
+        isStretched && h.physicalGhz > 0 ? h.physicalGhz / (h.physicalGhz - drReservedGhz) : 1
+      const ramDrFactor =
+        isStretched && h.physicalRamMb > 0
+          ? h.physicalRamMb / (h.physicalRamMb - drReservedRamMb)
+          : 1
 
       return {
         cluster: h.cluster,
@@ -70,15 +83,15 @@ export const aggregateClusters = ({
         consumedGhz: h.consumedGhz,
         availableGhz,
         physicalRamMb: h.physicalRamMb,
-        consumedRamMb,
+        consumedRamMb: h.consumedRamMb,
         drReservedRamMb,
         availableRamMb,
-        meanCpuRatio: h.meanCpuRatio,
-        maxCpuRatio: h.maxCpuRatio,
-        minCpuRatio: h.minCpuRatio,
-        meanRamRatio: h.meanRamRatio,
-        maxRamRatio: h.maxRamRatio,
-        minRamRatio: h.minRamRatio,
+        meanCpuRatio: h.meanCpuRatio * cpuDrFactor,
+        maxCpuRatio: h.maxCpuRatio * cpuDrFactor,
+        minCpuRatio: h.minCpuRatio * cpuDrFactor,
+        meanRamRatio: h.meanRamRatio * ramDrFactor,
+        maxRamRatio: h.maxRamRatio * ramDrFactor,
+        minRamRatio: h.minRamRatio * ramDrFactor,
         vcpuAllocated,
         vramAllocatedMb: v?.vramAllocatedMb ?? 0,
         activeMemMb: v?.activeMemMb ?? null,

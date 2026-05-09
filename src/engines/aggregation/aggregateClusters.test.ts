@@ -196,6 +196,118 @@ describe('aggregateClusters', () => {
     expect(out[0]?.vcpuPerPcpu).toBe(0)
   })
 
+  // ── DR-aware utilization ratios (ADR-0011) ───────────────────────────
+  //
+  // `meanCpuRatio` / `meanRamRatio` are capacity-weighted (consumed over
+  // *usable* physical capacity). Min/max scale by the same DR factor so
+  // the bar chart and the headline KPI stay consistent.
+
+  it('doubles meanCpuRatio when stretched (50 % CPU reservation, homogeneous)', () => {
+    // 1 host × 24 cores × 2.4 GHz × 25 % CPU = 14.4 GHz consumed, 57.6 physical
+    // Non-stretched: 14.4 / 57.6 = 0.25
+    // Stretched: 14.4 / (57.6 - 28.8) = 0.5
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', cpuRatio: 0.25 })],
+      vinfo: [],
+      stretchedClusters: new Set(['CL']),
+    })
+    expect(out[0]?.meanCpuRatio).toBeCloseTo(0.5, 5)
+  })
+
+  it('doubles meanRamRatio when stretched (50 % RAM reservation)', () => {
+    // 1 host × 524288 MB × 30 % RAM = 157286.4 MB consumed
+    // Non-stretched: 157286.4 / 524288 = 0.3
+    // Stretched: 157286.4 / (524288 - 262144) = 0.6
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', ramRatio: 0.3 })],
+      vinfo: [],
+      stretchedClusters: new Set(['CL']),
+    })
+    expect(out[0]?.meanRamRatio).toBeCloseTo(0.6, 5)
+  })
+
+  it('scales per-host max/min CPU ratios by the DR factor when stretched', () => {
+    // Two hosts at 0.1 / 0.5 → max=0.5, min=0.1. Stretched → 1.0 / 0.2.
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', cpuRatio: 0.1 }), host({ cluster: 'CL', cpuRatio: 0.5 })],
+      vinfo: [],
+      stretchedClusters: new Set(['CL']),
+    })
+    expect(out[0]?.maxCpuRatio).toBeCloseTo(1.0, 5)
+    expect(out[0]?.minCpuRatio).toBeCloseTo(0.2, 5)
+  })
+
+  it('scales per-host max/min RAM ratios by the DR factor when stretched', () => {
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', ramRatio: 0.2 }), host({ cluster: 'CL', ramRatio: 0.4 })],
+      vinfo: [],
+      stretchedClusters: new Set(['CL']),
+    })
+    expect(out[0]?.maxRamRatio).toBeCloseTo(0.8, 5)
+    expect(out[0]?.minRamRatio).toBeCloseTo(0.4, 5)
+  })
+
+  it('keeps ratios unchanged when not stretched (DR factor = 1)', () => {
+    const out = aggregateClusters({
+      vhost: [
+        host({ cluster: 'CL', cpuRatio: 0.1, ramRatio: 0.2 }),
+        host({ cluster: 'CL', cpuRatio: 0.5, ramRatio: 0.4 }),
+      ],
+      vinfo: [],
+    })
+    expect(out[0]?.meanCpuRatio).toBeCloseTo(0.3, 5)
+    expect(out[0]?.meanRamRatio).toBeCloseTo(0.3, 5)
+    expect(out[0]?.maxCpuRatio).toBe(0.5)
+    expect(out[0]?.minCpuRatio).toBe(0.1)
+    expect(out[0]?.maxRamRatio).toBe(0.4)
+    expect(out[0]?.minRamRatio).toBe(0.2)
+  })
+
+  it('uses capacity-weighted meanCpuRatio (heterogeneous cluster)', () => {
+    // Big host: 48 cores × 3.0 GHz = 144 GHz, 50 % CPU = 72 GHz consumed
+    // Small host: 12 cores × 2.0 GHz = 24 GHz, 10 % CPU = 2.4 GHz consumed
+    // Total: 168 GHz physical, 74.4 GHz consumed → 0.4429 capacity-weighted
+    // Host-mean (the old, naive formula) would give (0.5 + 0.1)/2 = 0.3
+    // The new code must report the capacity-weighted figure.
+    const out = aggregateClusters({
+      vhost: [
+        host({ cluster: 'CL', cores: 48, speedMhz: 3000, cpuRatio: 0.5 }),
+        host({ cluster: 'CL', cores: 12, speedMhz: 2000, cpuRatio: 0.1 }),
+      ],
+      vinfo: [],
+    })
+    expect(out[0]?.meanCpuRatio).toBeCloseTo(74.4 / 168, 5)
+  })
+
+  it('uses capacity-weighted meanRamRatio (heterogeneous cluster)', () => {
+    // Big host: 1 048 576 MB at 50 % → 524 288 MB consumed
+    // Small host: 262 144 MB at 10 % → 26 214.4 MB consumed
+    // Total: 1 310 720 MB physical, 550 502.4 MB consumed → 0.4200
+    // Host-mean would give (0.5 + 0.1)/2 = 0.3
+    const out = aggregateClusters({
+      vhost: [
+        host({ cluster: 'CL', memoryMb: 1_048_576, ramRatio: 0.5 }),
+        host({ cluster: 'CL', memoryMb: 262_144, ramRatio: 0.1 }),
+      ],
+      vinfo: [],
+    })
+    expect(out[0]?.meanRamRatio).toBeCloseTo(550502.4 / 1310720, 5)
+  })
+
+  it('falls back to host-mean RAM ratio when physicalRamMb is unknown (RVTools without # Memory)', () => {
+    // Without per-host memory we can't capacity-weight; preserve the
+    // signal by reporting the raw mean of host ratios.
+    const out = aggregateClusters({
+      vhost: [
+        host({ cluster: 'CL', memoryMb: 0, ramRatio: 0.4 }),
+        host({ cluster: 'CL', memoryMb: 0, ramRatio: 0.6 }),
+      ],
+      vinfo: [],
+    })
+    expect(out[0]?.physicalRamMb).toBe(0)
+    expect(out[0]?.meanRamRatio).toBeCloseTo(0.5, 5)
+  })
+
   it('handles a stretched cluster whose host-memory column is missing (physicalRamMb=0)', () => {
     const out = aggregateClusters({
       vhost: [host({ cluster: 'CL', memoryMb: 0 })],

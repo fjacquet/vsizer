@@ -130,9 +130,23 @@ export const adaptLiveOpticsModernVInfo = (sheet: ParsedSheet): VInfoRow[] => {
 }
 
 /**
+ * Normalize a host name for cross-sheet joining. DNS hostnames are
+ * case-insensitive, and `readString` already trims, but the ESX Hosts
+ * vs ESX Performance sheets are independently emitted by Dell's pipeline
+ * and could in principle drift in case. Lower-case normalization
+ * mirrors the case-insensitive matching `findColumn` and `findSheet`
+ * already use elsewhere in the parser.
+ */
+const normalizeHostKey = (raw: unknown): string => readString(raw).toLowerCase()
+
+/**
  * Build a hostName → { cpuRatio, ramRatio } lookup from the ESX Performance
  * sheet. Returns an empty map when the sheet is absent so the caller can
  * uniformly call `lookup.get(host) ?? { cpuRatio: 0, ramRatio: 0 }`.
+ *
+ * Keys are normalized via `normalizeHostKey` — both on insert here and
+ * on lookup in `adaptLiveOpticsModernVHost` — so a case/whitespace drift
+ * between the two sheets cannot silently zero the ratios out.
  */
 const buildPerfLookup = (
   sheet: ParsedSheet | undefined,
@@ -141,7 +155,7 @@ const buildPerfLookup = (
   if (!sheet) return lookup
   const cols = mapColumns(sheet.headers, PERF_COLS)
   for (const row of sheet.rows) {
-    const name = readString(readCol(row, cols.hostName))
+    const name = normalizeHostKey(readCol(row, cols.hostName))
     if (!name) continue
     lookup.set(name, {
       cpuRatio: toRatio(readNumber(readCol(row, cols.cpuRatio))),
@@ -168,7 +182,8 @@ export const adaptLiveOpticsModernVHost = (
     const memoryMibRaw = readNumber(readCol(row, cols.memoryMib))
     const memoryKibRaw = readNumber(readCol(row, cols.memoryKib))
     const memoryMb = memoryMibRaw > 0 ? memoryMibRaw : memoryKibRaw / 1024
-    const ratios = perf.get(hostName) ?? { cpuRatio: 0, ramRatio: 0 }
+    // Lookup uses the same normalization as `buildPerfLookup` insert.
+    const ratios = perf.get(hostName.toLowerCase()) ?? { cpuRatio: 0, ramRatio: 0 }
     return {
       hostName,
       cluster: readString(readCol(row, cols.cluster)),

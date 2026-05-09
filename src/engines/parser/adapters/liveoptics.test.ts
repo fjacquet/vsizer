@@ -242,6 +242,30 @@ describe('adaptLiveOpticsModernVHost', () => {
     expect(rows.find((r) => r.hostName === 'esx-b.lab')?.cpuRatio).toBe(0.5)
   })
 
+  it('joins ESX Performance to ESX Hosts case-insensitively (defensive)', () => {
+    // Dell exports observed in 2026 use byte-identical FQDNs across both
+    // sheets, but DNS hostnames are case-insensitive. A future build that
+    // upper-cases on one sheet and lower-cases on the other must not
+    // silently drop ratios to 0.
+    const wb = modernWorkbook({
+      hosts: [
+        ['Host Name', 'Cluster', 'CPU Cores', 'CPU Clock Speed (GHz)', 'Memory (KiB)'],
+        ['esx-A.LAB', 'CL_MOD', 12, 2.0, 134_217_728],
+      ],
+      esxPerf: [
+        ['Host', 'Cluster', 'Average CPU %', 'Average Memory %'],
+        // Same host, different case + trailing whitespace.
+        ['  ESX-a.lab  ', 'CL_MOD', 25, 40],
+      ],
+    })
+    const hosts = wb.sheets.get('ESX Hosts')
+    const perf = wb.sheets.get('ESX Performance')
+    if (!hosts || !perf) throw new Error('fixture missing ESX sheets')
+    const rows = adaptLiveOpticsModernVHost(hosts, perf)
+    expect(rows[0]?.cpuRatio).toBe(0.25)
+    expect(rows[0]?.ramRatio).toBe(0.4)
+  })
+
   it('falls back to cpuRatio=ramRatio=0 when ESX Performance is missing', () => {
     const wb = modernWorkbook()
     const hosts = wb.sheets.get('ESX Hosts')

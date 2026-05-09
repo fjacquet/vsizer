@@ -2,8 +2,10 @@
  * Per-cluster aggregate produced by the aggregation engine. One instance per
  * cluster maps 1:1 to one PPTX cluster slide and to one OverviewTable row.
  *
- * All ratios are 0..1 floats. Slight overruns above 1 are possible when the
- * source clamps imperfectly — the schema validator caps at 1.5.
+ * All CPU/RAM ratios are normally 0..1 floats. **In stretched clusters
+ * they're DR-aware** (ADR-0011): each ratio is the host-side measurement
+ * scaled by `physicalGhz / (physicalGhz − drReservedGhz)`, i.e. ×2 for the
+ * V1 50 % reservation. Hence the schema cap at 3.0, not 1.5.
  */
 export interface ClusterAggregate {
   cluster: string
@@ -38,7 +40,8 @@ export interface ClusterAggregate {
   /** Σ host.memoryMb across cluster's hosts. 0 when the parser couldn't
    *  read the host-memory column (older RVTools builds). */
   physicalRamMb: number
-  /** physicalRamMb × meanRamRatio. */
+  /** Σ (host.memoryMb × host.ramRatio) — capacity-weighted RAM
+   *  consumption (ADR-0011). Pre-DR-scaling, in MB. */
   consumedRamMb: number
   /** 0.5 × physicalRamMb when stretched, else 0. */
   drReservedRamMb: number
@@ -46,14 +49,24 @@ export interface ClusterAggregate {
    *  on overcommitted stretched clusters. */
   availableRamMb: number
 
-  // ── CPU ratios across hosts (0..1.5) ─────────────────────────────────
+  // ── CPU ratios — capacity-weighted, DR-aware (0..3) ──────────────────
+  /** `consumedGhz / usableGhz` (= consumedGhz / (physicalGhz − drReservedGhz)).
+   *  Identical to `mean(host.cpuRatio)` for homogeneous, non-stretched
+   *  clusters; differs for heterogeneous or stretched ones. See ADR-0011. */
   meanCpuRatio: number
+  /** Largest per-host CPU ratio, scaled by the cluster's DR factor when
+   *  stretched (×2 in V1 for the 50 % reservation). */
   maxCpuRatio: number
+  /** Smallest per-host CPU ratio, scaled by the cluster's DR factor. */
   minCpuRatio: number
 
-  // ── RAM ratios across hosts (0..1.5) ─────────────────────────────────
+  // ── RAM ratios — capacity-weighted, DR-aware (0..3) ──────────────────
+  /** `consumedRamMb / usableRamMb`. Falls back to `mean(host.ramRatio)`
+   *  when `physicalRamMb === 0` (older RVTools without `# Memory`). */
   meanRamRatio: number
+  /** Largest per-host RAM ratio, scaled by the cluster's DR factor. */
   maxRamRatio: number
+  /** Smallest per-host RAM ratio, scaled by the cluster's DR factor. */
   minRamRatio: number
 
   // ── VM allocations (powered-on VMs) ──────────────────────────────────

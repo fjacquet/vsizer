@@ -30,10 +30,14 @@ const emptySummary: GlobalSummary = {
  * Estate-wide rollup. Drives the GlobalKpiBar at the top of the dashboard
  * and the title-slide bottom strip in the PPTX.
  *
- * - `meanCpuRatio` is **capacity-weighted** — equivalent to
- *   `consumedGhz / physicalGhz` — so a small idle cluster doesn't drag
- *   the headline number down.
- * - `meanRamRatio` is **host-count-weighted** for V1.
+ * - `meanCpuRatio` is **capacity-weighted and DR-aware** —
+ *   `consumedGhz / (physicalGhz − drReservedGhz)`. A 30 % estate that
+ *   includes a stretched cluster will drift higher because the divisor
+ *   shrinks. See ADR-0011.
+ * - `meanRamRatio` is now also capacity-weighted and DR-aware —
+ *   `consumedRamMb / (physicalRamMb − drReservedRamMb)`. The previous
+ *   host-count weighting silently mixed clusters of different sizes; the
+ *   new formula is unambiguous.
  * - `activeMemMb` is `null` when no cluster reports active memory; otherwise
  *   it's the sum of clusters that did. This keeps RVTools-only inputs from
  *   silently zeroing the figure.
@@ -68,9 +72,14 @@ export const aggregateGlobals = (clusters: readonly ClusterAggregate[]): GlobalS
       ? null
       : reportedActive.reduce((acc, c) => acc + (c.activeMemMb ?? 0), 0)
 
-  const meanCpuRatio = physicalGhz === 0 ? 0 : consumedGhz / physicalGhz
-  const meanRamRatio =
-    hostCount === 0 ? 0 : sum(clusters.map((c) => c.meanRamRatio * c.hostCount)) / hostCount
+  // Capacity-weighted, DR-aware (ADR-0011). The divisor is the *usable*
+  // capacity sum, not the raw physical sum, so a stretched cluster's
+  // 50 % reservation makes the headline number rise — same volume of
+  // water in a smaller bucket.
+  const usableGhz = physicalGhz - drReservedGhz
+  const usableRamMb = physicalRamMb - drReservedRamMb
+  const meanCpuRatio = usableGhz <= 0 ? 0 : consumedGhz / usableGhz
+  const meanRamRatio = usableRamMb <= 0 ? 0 : consumedRamMb / usableRamMb
   const mhzPerVcpu = vcpuAllocated === 0 ? 0 : (consumedGhz * 1000) / vcpuAllocated
   const vcpuPerPcpu = usablePhysicalCores === 0 ? 0 : vcpuAllocated / usablePhysicalCores
 

@@ -1,4 +1,5 @@
 export * from './aggregation'
+export * from './export/pptx'
 export * from './parser/detectSource'
 export * from './parser/normalizeColumns'
 export * from './parser/parseXlsx'

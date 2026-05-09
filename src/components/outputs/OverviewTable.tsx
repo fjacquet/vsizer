@@ -62,10 +62,16 @@ export function OverviewTable({ clusters }: OverviewTableProps) {
             </th>
           </tr>
         </thead>
-        <tbody className="text-slate-200">
+        <tbody className="text-slate-700 dark:text-slate-200">
           {clusters.map((cluster, i) => (
-            <tr key={cluster.cluster} className={i % 2 === 0 ? 'bg-surface-900/30' : ''}>
-              <th scope="row" className="py-3 pr-2 font-semibold text-slate-100">
+            <tr
+              key={cluster.cluster}
+              className={i % 2 === 0 ? 'bg-slate-50 dark:bg-surface-900/30' : ''}
+            >
+              <th
+                scope="row"
+                className="py-3 pr-2 font-semibold text-slate-900 dark:text-slate-100"
+              >
                 <span className="inline-flex items-center gap-2">
                   {cluster.cluster}
                   {cluster.stretched ? <StretchedBadge /> : null}
@@ -117,7 +123,13 @@ export function OverviewTable({ clusters }: OverviewTableProps) {
                 </div>
               </td>
               <td className="py-3 text-right font-semibold">
-                <div className={cluster.availableGhz < 0 ? 'text-util-high' : 'text-slate-100'}>
+                <div
+                  className={
+                    cluster.availableGhz < 0
+                      ? 'text-util-high'
+                      : 'text-slate-900 dark:text-slate-100'
+                  }
+                >
                   {fmtGhzValue(cluster.availableGhz)}
                 </div>
                 <div

@@ -13,6 +13,18 @@ export interface ClusterAggregate {
   vmCount: number
 
   // ── CPU capacity ─────────────────────────────────────────────────────
+  /** Σ host.cores across cluster's hosts (raw physical-core count). */
+  physicalCores: number
+  /** Cores actually usable for workload after a stretched-cluster
+   *  reservation: `stretched ? 0.5 × physicalCores : physicalCores`.
+   *  Drives the consolidation ratio; surfaced explicitly so the global
+   *  rollup can sum without re-deriving the stretched flag. */
+  usablePhysicalCores: number
+  /** vCPU consolidation ratio: `vcpuAllocated / usablePhysicalCores`.
+   *  `0` when `usablePhysicalCores === 0` (no Infinity at the UI). On a
+   *  stretched cluster this is exactly **double** the non-stretched
+   *  value — see ADR-0009. */
+  vcpuPerPcpu: number
   /** Σ physicalGhz across hosts (nominal speed × cores / 1000). */
   physicalGhz: number
   /** Σ consumedGhz across hosts (physicalGhz × cpuRatio). */

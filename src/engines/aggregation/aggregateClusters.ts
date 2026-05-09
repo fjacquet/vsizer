@@ -53,10 +53,19 @@ export const aggregateClusters = ({
       const drReservedRamMb = isStretched ? 0.5 * h.physicalRamMb : 0
       const availableRamMb = h.physicalRamMb - consumedRamMb - drReservedRamMb
 
+      // Cores side — same DR shape as GHz / RAM. usablePhysicalCores is the
+      // denominator the consolidation ratio actually uses; surfaced as a
+      // field so globals can sum without re-deriving the stretched flag.
+      const usablePhysicalCores = isStretched ? 0.5 * h.physicalCores : h.physicalCores
+      const vcpuPerPcpu = usablePhysicalCores === 0 ? 0 : vcpuAllocated / usablePhysicalCores
+
       return {
         cluster: h.cluster,
         hostCount: h.hostCount,
         vmCount: v?.vmCount ?? 0,
+        physicalCores: h.physicalCores,
+        usablePhysicalCores,
+        vcpuPerPcpu,
         physicalGhz: h.physicalGhz,
         consumedGhz: h.consumedGhz,
         availableGhz,

@@ -6,6 +6,9 @@ const emptySummary: GlobalSummary = {
   clusterCount: 0,
   hostCount: 0,
   vmCount: 0,
+  physicalCores: 0,
+  usablePhysicalCores: 0,
+  vcpuPerPcpu: 0,
   physicalGhz: 0,
   consumedGhz: 0,
   availableGhz: 0,
@@ -42,6 +45,8 @@ const emptySummary: GlobalSummary = {
 export const aggregateGlobals = (clusters: readonly ClusterAggregate[]): GlobalSummary => {
   if (clusters.length === 0) return { ...emptySummary }
 
+  const physicalCores = sum(clusters.map((c) => c.physicalCores))
+  const usablePhysicalCores = sum(clusters.map((c) => c.usablePhysicalCores))
   const physicalGhz = sum(clusters.map((c) => c.physicalGhz))
   const consumedGhz = sum(clusters.map((c) => c.consumedGhz))
   const availableGhz = sum(clusters.map((c) => c.availableGhz))
@@ -67,11 +72,15 @@ export const aggregateGlobals = (clusters: readonly ClusterAggregate[]): GlobalS
   const meanRamRatio =
     hostCount === 0 ? 0 : sum(clusters.map((c) => c.meanRamRatio * c.hostCount)) / hostCount
   const mhzPerVcpu = vcpuAllocated === 0 ? 0 : (consumedGhz * 1000) / vcpuAllocated
+  const vcpuPerPcpu = usablePhysicalCores === 0 ? 0 : vcpuAllocated / usablePhysicalCores
 
   return {
     clusterCount: clusters.length,
     hostCount,
     vmCount,
+    physicalCores,
+    usablePhysicalCores,
+    vcpuPerPcpu,
     physicalGhz,
     consumedGhz,
     availableGhz,

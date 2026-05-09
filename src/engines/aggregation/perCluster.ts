@@ -12,6 +12,8 @@ import { consumedGhz as consumedGhzOf, physicalGhz as physicalGhzOf } from './gh
 export interface ClusterHostStats {
   cluster: string
   hostCount: number
+  /** Σ host.cores across this cluster's hosts. */
+  physicalCores: number
   physicalGhz: number
   consumedGhz: number
   availableGhz: number
@@ -57,9 +59,11 @@ export const aggregateHostsPerCluster = (vhost: VHostRow[]): ClusterHostStats[] 
     const physical = sum(hosts.map((h) => physicalGhzOf(h.speedMhz, h.cores)))
     const consumed = sum(hosts.map((h) => consumedGhzOf(h.speedMhz, h.cores, h.cpuRatio)))
     const physicalRamMb = sum(hosts.map((h) => h.memoryMb))
+    const physicalCores = sum(hosts.map((h) => h.cores))
     out.push({
       cluster,
       hostCount: hosts.length,
+      physicalCores,
       physicalGhz: physical,
       consumedGhz: consumed,
       availableGhz: physical - consumed,

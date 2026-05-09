@@ -7,6 +7,7 @@ import {
   fmtMhzPptx,
   fmtPctOneDecimal,
   fmtPctWhole,
+  fmtRatioPptx,
 } from './format'
 
 // U+202F NARROW NO-BREAK SPACE — the thousands separator format.ts emits.
@@ -88,6 +89,21 @@ describe('fmtMemMb', () => {
 
   it('returns em-dash for non-finite input', () => {
     expect(fmtMemMb(Number.NaN)).toBe('—')
+  })
+})
+
+describe('fmtRatioPptx', () => {
+  it('renders ratio with NBSP-separated colon', () => {
+    const out = fmtRatioPptx(4.2)
+    expect(out).toMatch(/^4[.,]2.:.1$/) // NBSP between digits and ":" and "1"
+    // Verify the actual NBSP byte:
+    expect(out).toContain(`${NBSP}:${NBSP}1`)
+  })
+
+  it('returns em-dash for zero, NaN, Infinity', () => {
+    expect(fmtRatioPptx(0)).toBe('—')
+    expect(fmtRatioPptx(Number.NaN)).toBe('—')
+    expect(fmtRatioPptx(Number.POSITIVE_INFINITY)).toBe('—')
   })
 })
 

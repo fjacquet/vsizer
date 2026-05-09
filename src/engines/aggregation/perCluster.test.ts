@@ -84,6 +84,15 @@ describe('aggregateHostsPerCluster', () => {
     expect(out?.physicalRamMb).toBe(1_048_576) // 1 TB total
   })
 
+  it('sums physicalCores across hosts in the cluster', () => {
+    const [out] = aggregateHostsPerCluster([
+      host({ hostName: 'h-1', cluster: 'CL', cores: 24 }),
+      host({ hostName: 'h-2', cluster: 'CL', cores: 24 }),
+      host({ hostName: 'h-3', cluster: 'CL', cores: 16 }),
+    ])
+    expect(out?.physicalCores).toBe(64)
+  })
+
   it('reports physicalRamMb = 0 when no host had a memory column', () => {
     const [out] = aggregateHostsPerCluster([
       host({ hostName: 'h-1', cluster: 'CL', memoryMb: 0 }),

@@ -149,6 +149,53 @@ describe('aggregateClusters', () => {
     expect(out[0]?.availableRamMb).toBeLessThan(0)
   })
 
+  // ── vCPU/pCPU consolidation ratio (ADR-0009) ─────────────────────────
+
+  it('computes vcpuPerPcpu = vcpuAllocated / physicalCores (non-stretched)', () => {
+    // 1 host × 24 cores; 96 vCPU allocated → 4.0 : 1
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', cores: 24 })],
+      vinfo: Array.from({ length: 24 }, (_, i) => ({
+        vmName: `vm-${i}`,
+        cluster: 'CL',
+        vcpu: 4,
+        vramMb: 1024,
+        activeMemMb: null,
+        poweredOn: true,
+      })),
+    })
+    expect(out[0]?.physicalCores).toBe(24)
+    expect(out[0]?.usablePhysicalCores).toBe(24)
+    expect(out[0]?.vcpuPerPcpu).toBeCloseTo(4.0, 5)
+  })
+
+  it('doubles vcpuPerPcpu when the cluster is stretched (50 % cores reserved)', () => {
+    // Same workload as above; stretching halves usablePhysicalCores → ratio 8.0
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', cores: 24 })],
+      vinfo: Array.from({ length: 24 }, (_, i) => ({
+        vmName: `vm-${i}`,
+        cluster: 'CL',
+        vcpu: 4,
+        vramMb: 1024,
+        activeMemMb: null,
+        poweredOn: true,
+      })),
+      stretchedClusters: new Set(['CL']),
+    })
+    expect(out[0]?.physicalCores).toBe(24)
+    expect(out[0]?.usablePhysicalCores).toBe(12)
+    expect(out[0]?.vcpuPerPcpu).toBeCloseTo(8.0, 5)
+  })
+
+  it('clamps vcpuPerPcpu to 0 when no vCPU is allocated', () => {
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', cores: 24 })],
+      vinfo: [],
+    })
+    expect(out[0]?.vcpuPerPcpu).toBe(0)
+  })
+
   it('handles a stretched cluster whose host-memory column is missing (physicalRamMb=0)', () => {
     const out = aggregateClusters({
       vhost: [host({ cluster: 'CL', memoryMb: 0 })],

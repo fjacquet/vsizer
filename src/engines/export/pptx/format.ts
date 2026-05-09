@@ -56,6 +56,21 @@ export const fmtMemMb = (mb: number): string => {
 }
 
 /**
+ * Render a vCPU/pCPU consolidation ratio for the deck. Same shape as the
+ * dashboard helper but the colon is wrapped in narrow no-break spaces
+ * (U+202F) so the figure never wraps in a PowerPoint cell. fr-FR
+ * decimal separator (`"4,2 : 1"`).
+ */
+export const fmtRatioPptx = (ratio: number): string => {
+  if (!Number.isFinite(ratio) || ratio === 0) return '—'
+  const formatted = ratio.toLocaleString('fr-FR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  })
+  return `${formatted}${NBSP}:${NBSP}1`
+}
+
+/**
  * Format a host's GHz-per-core figure as `"X.XX GHz/core"`.
  * Used in the cluster-slide header.
  */

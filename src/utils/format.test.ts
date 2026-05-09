@@ -7,6 +7,7 @@ import {
   fmtMhzValue,
   fmtPercent,
   fmtPercentWhole,
+  fmtRatio,
 } from './format'
 
 describe('fmtInt', () => {
@@ -77,6 +78,22 @@ describe('fmtMhzValue', () => {
 
   it('returns em-dash for non-finite input', () => {
     expect(fmtMhzValue(Number.NaN)).toBe('—')
+  })
+})
+
+describe('fmtRatio', () => {
+  it('renders a 1-decimal ratio with " : 1" suffix (fr-FR comma)', () => {
+    expect(fmtRatio(4.2)).toMatch(/^4[.,]2 : 1$/)
+  })
+
+  it('rounds to one decimal', () => {
+    expect(fmtRatio(4.25)).toMatch(/^4[.,][23] : 1$/) // banker's rounding tolerance
+  })
+
+  it('returns em-dash for non-finite or zero ratios', () => {
+    expect(fmtRatio(0)).toBe('—')
+    expect(fmtRatio(Number.NaN)).toBe('—')
+    expect(fmtRatio(Number.POSITIVE_INFINITY)).toBe('—')
   })
 })
 

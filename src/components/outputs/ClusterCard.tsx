@@ -9,6 +9,7 @@ import {
   fmtMhzValue,
   fmtPercent,
   fmtPercentWhole,
+  fmtRatio,
 } from '../../utils/format'
 import { KpiCard } from '../common/KpiCard'
 import { StretchedBadge } from '../common/StretchedBadge'
@@ -130,8 +131,8 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
         <p className="text-xs text-slate-500 dark:text-slate-400">{headerSubtitle}</p>
       </header>
 
-      {/* Row 1: 4 KPI cards */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Row 1: 5 KPI cards (vCPU/pCPU added — DR-aware ratio per ADR-0009) */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <KpiCard
           accent={usageColor(cluster.meanCpuRatio)}
           big={fmtPercentWhole(cluster.meanCpuRatio)}
@@ -151,6 +152,11 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
           accent={THEME.teal}
           big={fmtMhzValue(cluster.mhzPerVcpu)}
           small={t('card.kpi.mhzPerVcpu')}
+        />
+        <KpiCard
+          accent={THEME.teal}
+          big={fmtRatio(cluster.vcpuPerPcpu)}
+          small={t('card.kpi.vcpuPerPcpu')}
         />
       </div>
 

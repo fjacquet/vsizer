@@ -41,7 +41,8 @@
       "cpuMean": "CPU moyen",
       "ramMean": "RAM moyenne",
       "ghzUsedVsPhys": "GHz utilisés / phys.",
-      "mhzPerVcpu": "réels par vCPU alloué"
+      "mhzPerVcpu": "réels par vCPU alloué",
+      "vcpuPerPcpu": "vCPU / cœur physique"
     },
     "blocks": {
       "cpuTitle": "CPU — utilisation moyenne",

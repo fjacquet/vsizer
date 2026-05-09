@@ -14,6 +14,10 @@ export interface GlobalSummary {
   vmCount: number
 
   // CPU
+  physicalCores: number
+  usablePhysicalCores: number
+  /** Estate-wide consolidation ratio: Σ vcpuAllocated / Σ usablePhysicalCores. */
+  vcpuPerPcpu: number
   physicalGhz: number
   consumedGhz: number
   availableGhz: number

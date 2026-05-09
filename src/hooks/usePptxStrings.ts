@@ -82,6 +82,7 @@ export function usePptxStrings(sourceFile: string, dateIso: string): PptxStrings
         ramMean: t('cluster.cards.ramMean'),
         ghzUsedVsPhys: t('cluster.cards.ghzUsedVsPhys'),
         mhzPerVcpu: t('cluster.cards.mhzPerVcpu'),
+        vcpuPerPcpu: t('cluster.cards.vcpuPerPcpu'),
       },
       blocks: {
         cpuTitle: t('cluster.blocks.cpuTitle'),

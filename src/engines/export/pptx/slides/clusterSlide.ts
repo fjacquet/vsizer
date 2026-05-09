@@ -8,6 +8,7 @@ import {
   fmtMhzPptx,
   fmtPctOneDecimal,
   fmtPctWhole,
+  fmtRatioPptx,
 } from '../format'
 import { usageColor } from '../primitives/colors'
 import { drawKpiCard } from '../primitives/kpiCard'
@@ -44,6 +45,8 @@ export interface ClusterSlideStrings {
     ghzUsedVsPhys: string
     /** "réels par vCPU alloué" — descriptive, not editorial. */
     mhzPerVcpu: string
+    /** "vCPU / cœur physique" — DR-aware consolidation ratio (ADR-0009). */
+    vcpuPerPcpu: string
   }
   blocks: {
     cpuTitle: string
@@ -337,7 +340,7 @@ export const addClusterSlide = (
     },
   )
 
-  // ---- Row 1: 4 KPI cards ------------------------------------------------
+  // ---- Row 1: 5 KPI cards ------------------------------------------------
   const cardY = 1.35
   const cardH = 1.05
   const ghzUsedPhysText = `${fmtIntPptx(cluster.consumedGhz)} / ${fmtIntPptx(cluster.physicalGhz)}`
@@ -362,9 +365,19 @@ export const addClusterSlide = (
       small: strings.cards.mhzPerVcpu,
       accent: THEME.teal,
     },
+    {
+      // vCPU/pCPU consolidation ratio — DR-aware, doubles for stretched
+      // clusters because `vcpuPerPcpu` was computed from the
+      // half-reservation upstream (ADR-0009).
+      big: fmtRatioPptx(cluster.vcpuPerPcpu),
+      small: strings.cards.vcpuPerPcpu,
+      accent: THEME.teal,
+    },
   ]
   let cx = 0.7
-  const cw = 2.95
+  // 5 cards in the 0.7–12.95 horizontal span with 0.15" gaps:
+  //   cw = (12.25 − 4 × 0.15) / 5 = 2.33
+  const cw = 2.33
   const cardGap = 0.15
   for (const card of cards) {
     drawKpiCard(slide, {

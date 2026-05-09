@@ -50,6 +50,21 @@ export const fmtPercentWhole = (ratio: number, locale = 'fr-FR'): string =>
     : '—'
 
 /**
+ * Render a vCPU/pCPU consolidation ratio as `"X.X : 1"`. Locale-aware
+ * decimal separator: fr-FR → `"4,2 : 1"`, en-US → `"4.2 : 1"`. Returns
+ * em-dash for non-finite or zero ratios — `"5 vCPU on 0 cores"` isn't
+ * meaningful, surface it as `—` rather than `Infinity` / `NaN`.
+ */
+export const fmtRatio = (ratio: number, locale = 'fr-FR'): string => {
+  if (!Number.isFinite(ratio) || ratio === 0) return '—'
+  const formatted = ratio.toLocaleString(locale, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  })
+  return `${formatted} : 1`
+}
+
+/**
  * Formats a memory amount given in MB with TB / GB / MB tiering.
  *   ≥ 1 048 576 MB → `"X.X TB"`
  *   ≥ 1 024 MB     → `"X.X GB"`

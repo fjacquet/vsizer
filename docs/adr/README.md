@@ -19,3 +19,4 @@ old one and update the old one's `Status` to `Superseded by ADR-NNNN`.
 | 0006 | Dashboard layout: two-state, single-column, fixed sidebar | Accepted |
 | 0007 | Stretched-cluster DR reservation (CPU and RAM)     | Accepted (amends 0006) |
 | 0008 | Auto dark mode (full light theme + 3-state toggle) | Accepted (amends 0006) |
+| 0009 | vCPU/pCPU consolidation ratio (DR-aware)           | Accepted (builds on 0007) |

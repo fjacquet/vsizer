@@ -16,10 +16,10 @@ const rvtoolsWorkbook = (overrides?: {
         ['vm-web-1', 'poweredOn', 'CL_DEMO_2', 2, 4096],
       ],
       vHost: overrides?.vHostRows ?? [
-        ['Host', 'Cluster', '# Cores', 'Speed (MHz)', '# CPU usage %', '# Mem usage %'],
-        ['esx-01', 'CL_DEMO_1', 24, 2400, 30.9, 28.9],
-        ['esx-02', 'CL_DEMO_1', 24, 2400, 25.1, 32.4],
-        ['esx-03', 'CL_DEMO_2', 16, 2200, 18.2, 22.5],
+        ['Host', 'Cluster', '# Cores', 'Speed (MHz)', '# Memory', '# CPU usage %', '# Mem usage %'],
+        ['esx-01', 'CL_DEMO_1', 24, 2400, 524288, 30.9, 28.9],
+        ['esx-02', 'CL_DEMO_1', 24, 2400, 524288, 25.1, 32.4],
+        ['esx-03', 'CL_DEMO_2', 16, 2200, 262144, 18.2, 22.5],
       ],
     }),
   )
@@ -76,6 +76,7 @@ describe('adaptRvtoolsVHost', () => {
       cluster: 'CL_DEMO_1',
       cores: 24,
       speedMhz: 2400,
+      memoryMb: 524288,
       // 30.9 % → 0.309
       cpuRatio: 0.309,
       ramRatio: 0.289,
@@ -85,8 +86,8 @@ describe('adaptRvtoolsVHost', () => {
   it('passes ratios through untouched when already in 0..1 form', () => {
     const wb = rvtoolsWorkbook({
       vHostRows: [
-        ['Host', 'Cluster', '# Cores', 'Speed', '# CPU usage %', '# Mem usage %'],
-        ['esx-norm', 'CL_X', 12, 2100, 0.42, 0.18],
+        ['Host', 'Cluster', '# Cores', 'Speed', '# Memory', '# CPU usage %', '# Mem usage %'],
+        ['esx-norm', 'CL_X', 12, 2100, 262144, 0.42, 0.18],
       ],
     })
     const sheet = wb.sheets.get('vHost')
@@ -99,8 +100,8 @@ describe('adaptRvtoolsVHost', () => {
   it('clamps cores and speed to a minimum of 1 to satisfy the schema', () => {
     const wb = rvtoolsWorkbook({
       vHostRows: [
-        ['Host', 'Cluster', '# Cores', 'Speed', '# CPU usage %', '# Mem usage %'],
-        ['esx-bad', 'CL_X', 0, 0, 25, 25],
+        ['Host', 'Cluster', '# Cores', 'Speed', '# Memory', '# CPU usage %', '# Mem usage %'],
+        ['esx-bad', 'CL_X', 0, 0, 0, 25, 25],
       ],
     })
     const sheet = wb.sheets.get('vHost')
@@ -108,6 +109,33 @@ describe('adaptRvtoolsVHost', () => {
     const rows = adaptRvtoolsVHost(sheet)
     expect(rows[0]?.cores).toBe(1)
     expect(rows[0]?.speedMhz).toBe(1)
+  })
+
+  it('falls back to memoryMb=0 when the column is missing', () => {
+    // Old RVTools build with no "# Memory" column.
+    const wb = rvtoolsWorkbook({
+      vHostRows: [
+        ['Host', 'Cluster', '# Cores', 'Speed', '# CPU usage %', '# Mem usage %'],
+        ['esx-old', 'CL_X', 12, 2100, 25, 30],
+      ],
+    })
+    const sheet = wb.sheets.get('vHost')
+    if (!sheet) throw new Error('fixture missing vHost')
+    const rows = adaptRvtoolsVHost(sheet)
+    expect(rows[0]?.memoryMb).toBe(0)
+  })
+
+  it('tolerates the FR alias "Mémoire"', () => {
+    const wb = rvtoolsWorkbook({
+      vHostRows: [
+        ['Nom hôte', 'Grappe', 'Cœurs', 'Vitesse', 'Mémoire', '# CPU usage %', '# Mem usage %'],
+        ['esx-fr', 'CL_FR', 12, 2100, 196608, 25, 30],
+      ],
+    })
+    const sheet = wb.sheets.get('vHost')
+    if (!sheet) throw new Error('fixture missing vHost')
+    const rows = adaptRvtoolsVHost(sheet)
+    expect(rows[0]?.memoryMb).toBe(196608)
   })
 })
 

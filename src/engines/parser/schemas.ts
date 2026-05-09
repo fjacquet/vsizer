@@ -28,6 +28,10 @@ export const VHostRowSchema: z.ZodType<VHostRow> = z.object({
   cluster: z.string(),
   cores: z.number().int().positive(),
   speedMhz: z.number().positive(),
+  // 0 is allowed: when the parser couldn't read the host-memory column,
+  // the cluster aggregate reports `physicalRamMb = 0` and the dashboard
+  // renders `—` rather than crashing.
+  memoryMb: z.number().nonnegative(),
   // Allow slight overrun (1.05) since some sources clamp at 100 % imperfectly.
   cpuRatio: z.number().min(0).max(1.5),
   ramRatio: z.number().min(0).max(1.5),
@@ -39,9 +43,13 @@ export const ClusterAggregateSchema: z.ZodType<ClusterAggregate> = z.object({
   vmCount: z.number().int().nonnegative(),
   physicalGhz: z.number().nonnegative(),
   consumedGhz: z.number().nonnegative(),
-  // availableGhz can technically be negative if a host overcommits beyond
-  // its nominal speed (CPU% > 1.0 across the board). Don't gate on sign here.
+  // availableGhz / availableRamMb can be negative when a stretched cluster
+  // is consumed past 50 % (the "DR at risk" signal). Don't gate on sign here.
   availableGhz: z.number(),
+  physicalRamMb: z.number().nonnegative(),
+  consumedRamMb: z.number().nonnegative(),
+  drReservedRamMb: z.number().nonnegative(),
+  availableRamMb: z.number(),
   meanCpuRatio: z.number().min(0).max(1.5),
   maxCpuRatio: z.number().min(0).max(1.5),
   minCpuRatio: z.number().min(0).max(1.5),
@@ -52,6 +60,8 @@ export const ClusterAggregateSchema: z.ZodType<ClusterAggregate> = z.object({
   vramAllocatedMb: z.number().nonnegative(),
   activeMemMb: z.number().nonnegative().nullable(),
   mhzPerVcpu: z.number().nonnegative(),
+  stretched: z.boolean(),
+  drReservedGhz: z.number().nonnegative(),
 })
 
 export const GlobalSummarySchema: z.ZodType<GlobalSummary> = z.object({
@@ -61,10 +71,16 @@ export const GlobalSummarySchema: z.ZodType<GlobalSummary> = z.object({
   physicalGhz: z.number().nonnegative(),
   consumedGhz: z.number().nonnegative(),
   availableGhz: z.number(),
+  physicalRamMb: z.number().nonnegative(),
+  consumedRamMb: z.number().nonnegative(),
+  drReservedRamMb: z.number().nonnegative(),
+  availableRamMb: z.number(),
   meanCpuRatio: z.number().min(0).max(1.5),
   meanRamRatio: z.number().min(0).max(1.5),
   vcpuAllocated: z.number().int().nonnegative(),
   vramAllocatedMb: z.number().nonnegative(),
   activeMemMb: z.number().nonnegative().nullable(),
   mhzPerVcpu: z.number().nonnegative(),
+  stretchedClusterCount: z.number().int().nonnegative(),
+  drReservedGhz: z.number().nonnegative(),
 })

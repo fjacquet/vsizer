@@ -17,3 +17,4 @@ old one and update the old one's `Status` to `Superseded by ADR-NNNN`.
 | 0004 | Memory-only state (no localStorage / URL)          | Accepted |
 | 0005 | Engines + utils as the only coverage-gated layers  | Accepted |
 | 0006 | Dashboard layout: two-state, single-column, fixed sidebar | Accepted |
+| 0007 | Stretched-cluster DR reservation (CPU and RAM)     | Accepted (amends 0006) |

@@ -9,33 +9,49 @@ const emptySummary: GlobalSummary = {
   physicalGhz: 0,
   consumedGhz: 0,
   availableGhz: 0,
+  physicalRamMb: 0,
+  consumedRamMb: 0,
+  drReservedRamMb: 0,
+  availableRamMb: 0,
   meanCpuRatio: 0,
   meanRamRatio: 0,
   vcpuAllocated: 0,
   vramAllocatedMb: 0,
   activeMemMb: null,
   mhzPerVcpu: 0,
+  stretchedClusterCount: 0,
+  drReservedGhz: 0,
 }
 
 /**
  * Estate-wide rollup. Drives the GlobalKpiBar at the top of the dashboard
- * and the title-slide subtitle in the PPTX.
+ * and the title-slide bottom strip in the PPTX.
  *
  * - `meanCpuRatio` is **capacity-weighted** — equivalent to
  *   `consumedGhz / physicalGhz` — so a small idle cluster doesn't drag
  *   the headline number down.
- * - `meanRamRatio` is **host-count-weighted** because we don't yet track
- *   absolute host RAM. A future enrichment of `VHostRow.memoryMb` would let
- *   us switch to capacity weighting here too.
+ * - `meanRamRatio` is **host-count-weighted** for V1.
  * - `activeMemMb` is `null` when no cluster reports active memory; otherwise
  *   it's the sum of clusters that did. This keeps RVTools-only inputs from
  *   silently zeroing the figure.
+ * - `availableGhz` and `availableRamMb` are sums of the already-DR-adjusted
+ *   per-cluster numbers — they automatically pick up the reservation.
+ * - `drReservedGhz` / `drReservedRamMb` are summed; `stretchedClusterCount`
+ *   is a count of clusters with `stretched === true`.
  */
 export const aggregateGlobals = (clusters: readonly ClusterAggregate[]): GlobalSummary => {
   if (clusters.length === 0) return { ...emptySummary }
 
   const physicalGhz = sum(clusters.map((c) => c.physicalGhz))
   const consumedGhz = sum(clusters.map((c) => c.consumedGhz))
+  const availableGhz = sum(clusters.map((c) => c.availableGhz))
+  const drReservedGhz = sum(clusters.map((c) => c.drReservedGhz))
+
+  const physicalRamMb = sum(clusters.map((c) => c.physicalRamMb))
+  const consumedRamMb = sum(clusters.map((c) => c.consumedRamMb))
+  const drReservedRamMb = sum(clusters.map((c) => c.drReservedRamMb))
+  const availableRamMb = sum(clusters.map((c) => c.availableRamMb))
+
   const hostCount = sum(clusters.map((c) => c.hostCount))
   const vmCount = sum(clusters.map((c) => c.vmCount))
   const vcpuAllocated = sum(clusters.map((c) => c.vcpuAllocated))
@@ -58,12 +74,18 @@ export const aggregateGlobals = (clusters: readonly ClusterAggregate[]): GlobalS
     vmCount,
     physicalGhz,
     consumedGhz,
-    availableGhz: physicalGhz - consumedGhz,
+    availableGhz,
+    physicalRamMb,
+    consumedRamMb,
+    drReservedRamMb,
+    availableRamMb,
     meanCpuRatio,
     meanRamRatio,
     vcpuAllocated,
     vramAllocatedMb,
     activeMemMb,
     mhzPerVcpu,
+    stretchedClusterCount: clusters.filter((c) => c.stretched).length,
+    drReservedGhz,
   }
 }

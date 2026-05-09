@@ -9,6 +9,10 @@ const makeAggregate = (overrides: Partial<ClusterAggregate>): ClusterAggregate =
   physicalGhz: 230.4,
   consumedGhz: 57.6,
   availableGhz: 172.8,
+  physicalRamMb: 2_097_152,
+  consumedRamMb: 650_117,
+  drReservedRamMb: 0,
+  availableRamMb: 1_447_035,
   meanCpuRatio: 0.25,
   maxCpuRatio: 0.32,
   minCpuRatio: 0.18,
@@ -19,6 +23,8 @@ const makeAggregate = (overrides: Partial<ClusterAggregate>): ClusterAggregate =
   vramAllocatedMb: 524288,
   activeMemMb: 65536,
   mhzPerVcpu: 120,
+  stretched: false,
+  drReservedGhz: 0,
   ...overrides,
 })
 
@@ -27,6 +33,7 @@ const host = (overrides: Partial<VHostRow>): VHostRow => ({
   cluster: 'CL_DEMO',
   cores: 24,
   speedMhz: 2400,
+  memoryMb: 524288,
   cpuRatio: 0.25,
   ramRatio: 0.31,
   ...overrides,
@@ -39,12 +46,18 @@ const globals: GlobalSummary = {
   physicalGhz: 460.8,
   consumedGhz: 115.2,
   availableGhz: 345.6,
+  physicalRamMb: 4_194_304,
+  consumedRamMb: 1_300_234,
+  drReservedRamMb: 0,
+  availableRamMb: 2_894_070,
   meanCpuRatio: 0.25,
   meanRamRatio: 0.31,
   vcpuAllocated: 960,
   vramAllocatedMb: 1_048_576,
   activeMemMb: 131_072,
   mhzPerVcpu: 120,
+  stretchedClusterCount: 0,
+  drReservedGhz: 0,
 }
 
 const strings: PptxStrings = {
@@ -57,6 +70,7 @@ const strings: PptxStrings = {
       hosts: 'hôtes',
       vms: 'VMs allumées',
       physicalGhz: 'capacité physique',
+      physicalRam: 'RAM physique',
       meanCpu: 'CPU moyen utilisé',
     },
   },
@@ -68,10 +82,11 @@ const strings: PptxStrings = {
       hostsVms: 'Hôtes / VMs',
       bars: '0%   ·   utilisation hôtes (haut: CPU, bas: RAM)   ·   100%',
       meanPeak: 'Moyenne / Pic',
-      available: 'GHz disponibles',
+      available: 'Disponibles',
     },
     cpuLabel: 'CPU',
     ramLabel: 'RAM',
+    stretchedBadge: 'Étendu',
     legend: {
       title: 'Légende :',
       low: '< 40%',
@@ -86,9 +101,18 @@ const strings: PptxStrings = {
       vmCount,
       totalCoresFormatted,
       ghzPerCoreFormatted,
-      totalMemFormatted,
-    }) =>
-      `${hostCount} hôtes · ${vmCount} VMs allumées · ${totalCoresFormatted} cores phys. (${ghzPerCoreFormatted}) · ${totalMemFormatted} RAM`,
+      physicalRamFormatted,
+      stretched,
+      drReservedGhzFormatted,
+      drReservedRamFormatted,
+    }) => {
+      const base = `${hostCount} hôtes · ${vmCount} VMs allumées · ${totalCoresFormatted} cores phys. (${ghzPerCoreFormatted}) · ${physicalRamFormatted} RAM`
+      return stretched
+        ? `${base} · DR : ${drReservedGhzFormatted} GHz / ${drReservedRamFormatted} RAM réservés`
+        : base
+    },
+    stretchedBadge: 'Étendu',
+    ramAvailableLine: (formatted: string) => `RAM disponible : ${formatted}`,
     cards: {
       cpuMean: 'CPU moyen',
       ramMean: 'RAM moyenne',
@@ -98,8 +122,10 @@ const strings: PptxStrings = {
     blocks: {
       cpuTitle: 'CPU — utilisation moyenne',
       ramTitle: 'RAM — utilisation moyenne',
-      cpuSubtitle: (consumed, physical) => `${consumed} consommés sur ${physical}`,
-      ramSubtitle: (consumed, total) => `${consumed} consommés sur ${total}`,
+      cpuSubtitle: (consumed, physical, dr) =>
+        `${consumed} consommés sur ${physical}${dr ? ` · ${dr} réservés DR` : ''}`,
+      ramSubtitle: (consumed, physical, dr) =>
+        `${consumed} consommés sur ${physical}${dr ? ` · ${dr} réservés DR` : ''}`,
       min: 'Min',
       mean: 'Moy',
       max: 'Max',

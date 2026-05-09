@@ -15,6 +15,9 @@ export interface ClusterHostStats {
   physicalGhz: number
   consumedGhz: number
   availableGhz: number
+  /** Σ host.memoryMb in MB across this cluster's hosts. 0 when none of
+   *  the hosts had a parseable memory column. */
+  physicalRamMb: number
   meanCpuRatio: number
   maxCpuRatio: number
   minCpuRatio: number
@@ -38,11 +41,12 @@ const sum = (xs: readonly number[]): number => xs.reduce((acc, n) => acc + n, 0)
 const mean = (xs: readonly number[]): number => (xs.length === 0 ? 0 : sum(xs) / xs.length)
 
 /**
- * Group hosts by cluster and compute per-cluster CPU/RAM statistics plus
- * physical and consumed GHz.
+ * Group hosts by cluster and compute per-cluster CPU/RAM statistics, plus
+ * physical and consumed GHz, plus the host-side physical RAM sum.
  *
  * Output is **not** sorted — `aggregateClusters` does the final stable sort
- * once the VM stats have been merged in.
+ * once the VM stats have been merged in. **No DR logic here** — this stays
+ * raw-stats-only; stretched-cluster reservations are applied one layer up.
  */
 export const aggregateHostsPerCluster = (vhost: VHostRow[]): ClusterHostStats[] => {
   const grouped = groupByCluster(vhost)
@@ -52,12 +56,14 @@ export const aggregateHostsPerCluster = (vhost: VHostRow[]): ClusterHostStats[] 
     const rams = hosts.map((h) => h.ramRatio)
     const physical = sum(hosts.map((h) => physicalGhzOf(h.speedMhz, h.cores)))
     const consumed = sum(hosts.map((h) => consumedGhzOf(h.speedMhz, h.cores, h.cpuRatio)))
+    const physicalRamMb = sum(hosts.map((h) => h.memoryMb))
     out.push({
       cluster,
       hostCount: hosts.length,
       physicalGhz: physical,
       consumedGhz: consumed,
       availableGhz: physical - consumed,
+      physicalRamMb,
       meanCpuRatio: mean(cpus),
       maxCpuRatio: Math.max(...cpus),
       minCpuRatio: Math.min(...cpus),

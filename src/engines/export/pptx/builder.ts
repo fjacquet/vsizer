@@ -5,14 +5,17 @@ import { addOverviewSlide, type OverviewSlideStrings } from './slides/overviewSl
 import { addTitleSlide, type TitleSlideStrings } from './slides/titleSlide'
 
 /**
- * Per-cluster host facts the cluster slide needs but which aren't in the
- * `ClusterAggregate` (we don't surface them on the dashboard). Computed
- * once by the builder from the host rows the parser already validated.
+ * Per-cluster host facts the cluster slide needs but which aren't directly
+ * named on `ClusterAggregate`. Computed once by the builder from the host
+ * rows the parser already validated.
  */
 export interface ClusterHostFacts {
   totalCores: number
   speedMhzAvg: number
-  totalMemMb: number
+  /** Physical RAM in MB across the cluster's hosts — read off the
+   *  aggregate's `physicalRamMb`, not faked from VM allocations.
+   *  See ADR-0007. */
+  physicalRamMb: number
 }
 
 export interface BuildPptxInput {
@@ -20,15 +23,13 @@ export interface BuildPptxInput {
   globals: GlobalSummary
   /** One per cluster the user wants in the export. */
   clusters: readonly ClusterAggregate[]
-  /** Raw host rows used to compute cluster-slide-only host facts (cores, GHz/core, RAM). */
+  /** Raw host rows used to compute cluster-slide-only host facts (cores, GHz/core). */
   vhost: readonly VHostRow[]
   /** All translated strings. Keep them in `pptx` namespace JSON files. */
   strings: PptxStrings
 }
 
 export interface PptxStrings {
-  /** "vsizer — Utilisation des clusters". Drives the title slide title and the
-   *  underlying file's metadata title. */
   deckTitle: string
   title: TitleSlideStrings
   overview: OverviewSlideStrings
@@ -37,12 +38,9 @@ export interface PptxStrings {
 
 /**
  * Compute the per-cluster host facts the cluster slide needs.
- * - `totalCores` = Σ cores across hosts in the cluster
- * - `speedMhzAvg` = mean nominal CPU speed across hosts in the cluster
- * - `totalMemMb` is **not** available in `VHostRow` (we only track CPU
- *   capacity), so we approximate it from `vramAllocatedMb` on the
- *   aggregate. Better than zero; revisit when `VHostRow` grows a memory
- *   field.
+ * `physicalRamMb` is read off the aggregate (which got it from the host
+ * rollup); we don't re-derive from `vramAllocatedMb` (those are the VM
+ * allocations, not host capacity).
  */
 const factsForCluster = (
   cluster: ClusterAggregate,
@@ -50,11 +48,11 @@ const factsForCluster = (
 ): ClusterHostFacts => {
   const matching = vhost.filter((h) => h.cluster === cluster.cluster)
   if (matching.length === 0) {
-    return { totalCores: 0, speedMhzAvg: 0, totalMemMb: cluster.vramAllocatedMb }
+    return { totalCores: 0, speedMhzAvg: 0, physicalRamMb: cluster.physicalRamMb }
   }
   const totalCores = matching.reduce((acc, h) => acc + h.cores, 0)
   const speedMhzAvg = matching.reduce((acc, h) => acc + h.speedMhz, 0) / matching.length
-  return { totalCores, speedMhzAvg, totalMemMb: cluster.vramAllocatedMb }
+  return { totalCores, speedMhzAvg, physicalRamMb: cluster.physicalRamMb }
 }
 
 /**
@@ -81,7 +79,7 @@ export const buildPptx = async (input: BuildPptxInput): Promise<ArrayBuffer> => 
       cluster,
       facts.totalCores,
       facts.speedMhzAvg,
-      facts.totalMemMb,
+      facts.physicalRamMb,
       input.strings.cluster,
     )
   }

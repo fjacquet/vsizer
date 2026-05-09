@@ -10,6 +10,10 @@ const baseAggregate = (overrides: Partial<ClusterAggregate>): ClusterAggregate =
   physicalGhz: 100,
   consumedGhz: 25,
   availableGhz: 75,
+  physicalRamMb: 524288,
+  consumedRamMb: 157286,
+  drReservedRamMb: 0,
+  availableRamMb: 367002,
   meanCpuRatio: 0.25,
   maxCpuRatio: 0.25,
   minCpuRatio: 0.25,
@@ -20,6 +24,8 @@ const baseAggregate = (overrides: Partial<ClusterAggregate>): ClusterAggregate =
   vramAllocatedMb: 0,
   activeMemMb: null,
   mhzPerVcpu: 0,
+  stretched: false,
+  drReservedGhz: 0,
   ...overrides,
 })
 
@@ -32,19 +38,39 @@ describe('aggregateGlobals', () => {
       physicalGhz: 0,
       consumedGhz: 0,
       availableGhz: 0,
+      physicalRamMb: 0,
+      consumedRamMb: 0,
+      drReservedRamMb: 0,
+      availableRamMb: 0,
       meanCpuRatio: 0,
       meanRamRatio: 0,
       vcpuAllocated: 0,
       vramAllocatedMb: 0,
       activeMemMb: null,
       mhzPerVcpu: 0,
+      stretchedClusterCount: 0,
+      drReservedGhz: 0,
     })
   })
 
   it('sums host, VM and capacity counts across clusters', () => {
     const out = aggregateGlobals([
-      baseAggregate({ cluster: 'A', hostCount: 4, vmCount: 60, physicalGhz: 230, consumedGhz: 50 }),
-      baseAggregate({ cluster: 'B', hostCount: 2, vmCount: 30, physicalGhz: 100, consumedGhz: 20 }),
+      baseAggregate({
+        cluster: 'A',
+        hostCount: 4,
+        vmCount: 60,
+        physicalGhz: 230,
+        consumedGhz: 50,
+        availableGhz: 180,
+      }),
+      baseAggregate({
+        cluster: 'B',
+        hostCount: 2,
+        vmCount: 30,
+        physicalGhz: 100,
+        consumedGhz: 20,
+        availableGhz: 80,
+      }),
     ])
     expect(out.clusterCount).toBe(2)
     expect(out.hostCount).toBe(6)
@@ -52,6 +78,45 @@ describe('aggregateGlobals', () => {
     expect(out.physicalGhz).toBe(330)
     expect(out.consumedGhz).toBe(70)
     expect(out.availableGhz).toBe(260)
+  })
+
+  it('sums RAM rollups across clusters', () => {
+    const out = aggregateGlobals([
+      baseAggregate({
+        cluster: 'A',
+        physicalRamMb: 1_000_000,
+        consumedRamMb: 300_000,
+        drReservedRamMb: 0,
+        availableRamMb: 700_000,
+      }),
+      baseAggregate({
+        cluster: 'B',
+        physicalRamMb: 500_000,
+        consumedRamMb: 150_000,
+        drReservedRamMb: 0,
+        availableRamMb: 350_000,
+      }),
+    ])
+    expect(out.physicalRamMb).toBe(1_500_000)
+    expect(out.consumedRamMb).toBe(450_000)
+    expect(out.drReservedRamMb).toBe(0)
+    expect(out.availableRamMb).toBe(1_050_000)
+  })
+
+  it('counts stretched clusters and sums their DR reservations', () => {
+    const out = aggregateGlobals([
+      baseAggregate({
+        cluster: 'A',
+        stretched: true,
+        drReservedGhz: 100,
+        drReservedRamMb: 500_000,
+      }),
+      baseAggregate({ cluster: 'B', stretched: false, drReservedGhz: 0, drReservedRamMb: 0 }),
+      baseAggregate({ cluster: 'C', stretched: true, drReservedGhz: 50, drReservedRamMb: 200_000 }),
+    ])
+    expect(out.stretchedClusterCount).toBe(2)
+    expect(out.drReservedGhz).toBe(150)
+    expect(out.drReservedRamMb).toBe(700_000)
   })
 
   it('weights meanCpuRatio by physical capacity (consumed / physical)', () => {
@@ -126,6 +191,7 @@ describe('plan reference numbers', () => {
       cluster: 'CL_REF',
       cores: CORES,
       speedMhz: SPEED_MHZ,
+      memoryMb: 524288,
       cpuRatio: CPU_RATIO,
       ramRatio: 0.3,
     }))

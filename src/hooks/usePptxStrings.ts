@@ -23,6 +23,7 @@ export function usePptxStrings(sourceFile: string, dateIso: string): PptxStrings
         hosts: t('title.kpiLabels.hosts'),
         vms: t('title.kpiLabels.vms'),
         physicalGhz: t('title.kpiLabels.physicalGhz'),
+        physicalRam: t('title.kpiLabels.physicalRam'),
         meanCpu: t('title.kpiLabels.meanCpu'),
       },
     },
@@ -38,6 +39,7 @@ export function usePptxStrings(sourceFile: string, dateIso: string): PptxStrings
       },
       cpuLabel: t('overview.cpuLabel'),
       ramLabel: t('overview.ramLabel'),
+      stretchedBadge: t('cluster.stretchedBadge'),
       legend: {
         title: t('overview.legend.title'),
         low: t('overview.legend.low'),
@@ -52,15 +54,29 @@ export function usePptxStrings(sourceFile: string, dateIso: string): PptxStrings
         vmCount,
         totalCoresFormatted,
         ghzPerCoreFormatted,
-        totalMemFormatted,
-      }) =>
-        t('cluster.subtitle', {
+        physicalRamFormatted,
+        stretched,
+        drReservedGhzFormatted,
+        drReservedRamFormatted,
+      }) => {
+        const base = t('cluster.subtitle', {
           hosts: hostCount,
           vms: vmCount,
           cores: totalCoresFormatted,
           ghzPerCore: ghzPerCoreFormatted,
-          ram: totalMemFormatted,
-        }),
+          ram: physicalRamFormatted,
+        })
+        if (!stretched) return base
+        return (
+          base +
+          t('cluster.subtitleStretchedSuffix', {
+            ghzReserved: drReservedGhzFormatted,
+            ramReserved: drReservedRamFormatted,
+          })
+        )
+      },
+      stretchedBadge: t('cluster.stretchedBadge'),
+      ramAvailableLine: (formatted: string) => t('cluster.ramAvailableLine', { value: formatted }),
       cards: {
         cpuMean: t('cluster.cards.cpuMean'),
         ramMean: t('cluster.cards.ramMean'),
@@ -70,9 +86,14 @@ export function usePptxStrings(sourceFile: string, dateIso: string): PptxStrings
       blocks: {
         cpuTitle: t('cluster.blocks.cpuTitle'),
         ramTitle: t('cluster.blocks.ramTitle'),
-        cpuSubtitle: (consumed, physical) =>
-          t('cluster.blocks.cpuSubtitle', { consumed, physical }),
-        ramSubtitle: (consumed, total) => t('cluster.blocks.ramSubtitle', { consumed, total }),
+        cpuSubtitle: (consumed, physical, drSuffix) => {
+          const base = t('cluster.blocks.cpuSubtitle', { consumed, physical })
+          return drSuffix ? base + t('cluster.blocks.drSuffix', { reserved: drSuffix }) : base
+        },
+        ramSubtitle: (consumed, physical, drSuffix) => {
+          const base = t('cluster.blocks.ramSubtitle', { consumed, physical })
+          return drSuffix ? base + t('cluster.blocks.drSuffix', { reserved: drSuffix }) : base
+        },
         min: t('cluster.blocks.min'),
         mean: t('cluster.blocks.mean'),
         max: t('cluster.blocks.max'),

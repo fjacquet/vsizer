@@ -24,6 +24,11 @@ const VHOST_COLS = {
   cluster: ['cluster', 'grappe'],
   cores: ['# cores', 'cores', 'core count', 'cœurs'],
   speedMhz: ['speed', 'speed (mhz)', 'cpu speed', 'vitesse'],
+  // Physical host memory in MB. RVTools default header is "# Memory".
+  // Older builds use "Memory" (collides with vInfo column name in some
+  // workbooks but is unambiguous within vHost). FR alias kept for
+  // localized exports.
+  memoryMb: ['# memory', 'memory', 'mémoire', 'mémoire (mo)', 'mem'],
   cpuRatio: ['# cpu usage %', 'cpu usage %', 'cpu %', 'cpu usage', 'cpu use %'],
   ramRatio: ['# mem usage %', 'mem usage %', 'memory %', 'mem usage', 'mem use %'],
 } as const
@@ -53,6 +58,7 @@ export const adaptRvtoolsVHost = (sheet: ParsedSheet): VHostRow[] => {
     cluster: readString(readCol(row, cols.cluster)),
     cores: Math.max(1, Math.trunc(readNumber(readCol(row, cols.cores)))),
     speedMhz: Math.max(1, readNumber(readCol(row, cols.speedMhz))),
+    memoryMb: Math.max(0, readNumber(readCol(row, cols.memoryMb))),
     cpuRatio: toRatio(readNumber(readCol(row, cols.cpuRatio))),
     ramRatio: toRatio(readNumber(readCol(row, cols.ramRatio))),
   }))

@@ -25,6 +25,9 @@ const VHOST_COLS = {
   cluster: ['cluster', 'cluster name'],
   cores: ['cores', 'core count', 'physical cores', 'logical processors'],
   speedMhz: ['cpu speed (mhz)', 'cpu mhz', 'speed (mhz)', 'processor speed'],
+  // Physical host memory. Live Optics typically uses "Memory (MB)" or
+  // "Total Memory (MB)" on the Host Inventory sheet.
+  memoryMb: ['memory (mb)', 'total memory (mb)', 'memory mb', 'host memory (mb)'],
   cpuRatio: ['cpu utilization %', 'cpu utilization', 'cpu usage %', 'avg cpu %'],
   ramRatio: ['memory utilization %', 'memory utilization', 'memory usage %', 'avg memory %'],
 } as const
@@ -58,6 +61,7 @@ export const adaptLiveOpticsVHost = (sheet: ParsedSheet): VHostRow[] => {
     cluster: readString(readCol(row, cols.cluster)),
     cores: Math.max(1, Math.trunc(readNumber(readCol(row, cols.cores)))),
     speedMhz: Math.max(1, readNumber(readCol(row, cols.speedMhz))),
+    memoryMb: Math.max(0, readNumber(readCol(row, cols.memoryMb))),
     cpuRatio: toRatio(readNumber(readCol(row, cols.cpuRatio))),
     ramRatio: toRatio(readNumber(readCol(row, cols.ramRatio))),
   }))

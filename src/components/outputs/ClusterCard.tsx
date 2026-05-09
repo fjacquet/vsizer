@@ -11,6 +11,7 @@ import {
   fmtPercentWhole,
 } from '../../utils/format'
 import { KpiCard } from '../common/KpiCard'
+import { StretchedBadge } from '../common/StretchedBadge'
 import { UtilizationBar } from '../common/UtilizationBar'
 
 export interface ClusterCardProps {
@@ -27,14 +28,15 @@ const computeFacts = (
 ): {
   totalCores: number
   speedMhzAvg: number
-  totalMemMb: number
+  /** Physical host RAM (sum of host.memoryMb), read off the aggregate. */
+  physicalRamMb: number
 } => {
   if (hostsInCluster.length === 0) {
-    return { totalCores: 0, speedMhzAvg: 0, totalMemMb: cluster.vramAllocatedMb }
+    return { totalCores: 0, speedMhzAvg: 0, physicalRamMb: cluster.physicalRamMb }
   }
   const totalCores = hostsInCluster.reduce((s, h) => s + h.cores, 0)
   const speedMhzAvg = hostsInCluster.reduce((s, h) => s + h.speedMhz, 0) / hostsInCluster.length
-  return { totalCores, speedMhzAvg, totalMemMb: cluster.vramAllocatedMb }
+  return { totalCores, speedMhzAvg, physicalRamMb: cluster.physicalRamMb }
 }
 
 interface UtilBlockProps {
@@ -91,8 +93,22 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
   const { t } = useTranslation('dashboard')
   const facts = computeFacts(hostsInCluster, cluster)
 
-  const consumedRamMb = facts.totalMemMb * cluster.meanRamRatio
   const reservedGhz = (cluster.vcpuAllocated * facts.speedMhzAvg) / 1000
+
+  const headerSubtitleBase = t('card.headerSubtitle', {
+    hosts: fmtInt(cluster.hostCount),
+    vms: fmtInt(cluster.vmCount),
+    cores: fmtInt(facts.totalCores),
+    ghzPerCore: facts.speedMhzAvg > 0 ? `${(facts.speedMhzAvg / 1000).toFixed(2)} GHz/core` : '—',
+    ram: fmtMemMb(facts.physicalRamMb),
+  })
+  const headerSubtitle = cluster.stretched
+    ? headerSubtitleBase +
+      t('card.headerSubtitleStretchedSuffix', {
+        ghzReserved: fmtGhzValue(cluster.drReservedGhz),
+        ramReserved: fmtMemMb(cluster.drReservedRamMb),
+      })
+    : headerSubtitleBase
 
   return (
     <article
@@ -100,18 +116,14 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
       aria-labelledby={`cluster-${cluster.cluster}-heading`}
     >
       <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-surface-700 pb-3">
-        <h3 id={`cluster-${cluster.cluster}-heading`} className="text-2xl font-bold text-slate-100">
+        <h3
+          id={`cluster-${cluster.cluster}-heading`}
+          className="flex items-center gap-3 text-2xl font-bold text-slate-100"
+        >
           {cluster.cluster}
+          {cluster.stretched ? <StretchedBadge /> : null}
         </h3>
-        <p className="text-xs text-slate-400">
-          {t('card.headerSubtitle', {
-            hosts: fmtInt(cluster.hostCount),
-            vms: fmtInt(cluster.vmCount),
-            cores: fmtInt(facts.totalCores),
-            ghzPerCore:
-              facts.speedMhzAvg > 0 ? `${(facts.speedMhzAvg / 1000).toFixed(2)} GHz/core` : '—',
-          })}
-        </p>
+        <p className="text-xs text-slate-400">{headerSubtitle}</p>
       </header>
 
       {/* Row 1: 4 KPI cards */}
@@ -138,14 +150,21 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
         />
       </div>
 
-      {/* Row 2: 2 utilization blocks */}
+      {/* Row 2: 2 utilization blocks (subtitles call out DR reservation when stretched) */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <UtilBlock
           title={t('card.blocks.cpuTitle')}
-          subtitle={t('card.blocks.cpuSubtitle', {
-            consumed: fmtGhzValue(cluster.consumedGhz),
-            physical: fmtGhzValue(cluster.physicalGhz),
-          })}
+          subtitle={
+            t('card.blocks.cpuSubtitle', {
+              consumed: fmtGhzValue(cluster.consumedGhz),
+              physical: fmtGhzValue(cluster.physicalGhz),
+            }) +
+            (cluster.stretched
+              ? t('card.blocks.drSuffix', {
+                  reserved: fmtGhzValue(cluster.drReservedGhz),
+                })
+              : '')
+          }
           ratioMean={cluster.meanCpuRatio}
           ratioMax={cluster.maxCpuRatio}
           ratioMin={cluster.minCpuRatio}
@@ -157,10 +176,17 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
         />
         <UtilBlock
           title={t('card.blocks.ramTitle')}
-          subtitle={t('card.blocks.ramSubtitle', {
-            consumed: fmtMemMb(consumedRamMb),
-            total: fmtMemMb(facts.totalMemMb),
-          })}
+          subtitle={
+            t('card.blocks.ramSubtitle', {
+              consumed: fmtMemMb(cluster.consumedRamMb),
+              physical: fmtMemMb(cluster.physicalRamMb),
+            }) +
+            (cluster.stretched
+              ? t('card.blocks.drSuffix', {
+                  reserved: fmtMemMb(cluster.drReservedRamMb),
+                })
+              : '')
+          }
           ratioMean={cluster.meanRamRatio}
           ratioMax={cluster.maxRamRatio}
           ratioMin={cluster.minRamRatio}
@@ -196,12 +222,25 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
           </div>
           <div>
             <dt className="text-xs text-ice">{t('card.banner.availableGhz')}</dt>
-            <dd className="text-xl font-bold text-accent-500">
+            <dd
+              className={`text-xl font-bold ${
+                cluster.availableGhz < 0 ? 'text-util-high' : 'text-accent-500'
+              }`}
+            >
               {fmtGhzValue(cluster.availableGhz)}
             </dd>
           </div>
         </dl>
       </div>
+
+      {/* RAM-disponible line — DR-aware, mirrors the PPTX (ADR-0007). */}
+      <p
+        className={`text-sm font-semibold ${
+          cluster.availableRamMb < 0 ? 'text-util-high' : 'text-slate-200'
+        }`}
+      >
+        {t('card.ramAvailable', { value: fmtMemMb(cluster.availableRamMb) })}
+      </p>
     </article>
   )
 }

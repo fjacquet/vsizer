@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { THEME } from '../../engines/export/pptx/theme'
 import type { GlobalSummary } from '../../types'
-import { fmtGhzValue, fmtInt, fmtPercentWhole } from '../../utils/format'
+import { fmtGhzValue, fmtInt, fmtMemMb, fmtPercentWhole } from '../../utils/format'
 import { KpiCard } from '../common/KpiCard'
 
 export interface GlobalKpiBarProps {
@@ -9,14 +9,18 @@ export interface GlobalKpiBarProps {
 }
 
 /**
- * Top-of-page bandeau showing four estate-wide KPIs. Same fields as the
- * PPTX title slide's bottom tiles so the dashboard's first viewport mirrors
- * the deck's first slide (ADR-0006).
+ * Top-of-page bandeau showing five estate-wide KPIs (counts · capacity ·
+ * headline ratio). Same fields as the PPTX title slide's bottom tiles so
+ * the dashboard's first viewport mirrors the deck's first slide
+ * (ADR-0006). Physical RAM joined the tile set in ADR-0007.
  */
 export function GlobalKpiBar({ globals }: GlobalKpiBarProps) {
   const { t } = useTranslation('dashboard')
   return (
-    <section aria-labelledby="global-kpi-heading" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <section
+      aria-labelledby="global-kpi-heading"
+      className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+    >
       <h2 id="global-kpi-heading" className="sr-only">
         {t('globalKpi.hosts')}
       </h2>
@@ -26,6 +30,11 @@ export function GlobalKpiBar({ globals }: GlobalKpiBarProps) {
         accent={THEME.gold}
         big={fmtGhzValue(globals.physicalGhz)}
         small={t('globalKpi.physicalGhz')}
+      />
+      <KpiCard
+        accent={THEME.gold}
+        big={fmtMemMb(globals.physicalRamMb)}
+        small={t('globalKpi.physicalRam')}
       />
       <KpiCard
         accent={THEME.gold}

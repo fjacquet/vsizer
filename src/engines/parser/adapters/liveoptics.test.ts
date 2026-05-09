@@ -21,11 +21,12 @@ const liveOpticsWorkbook = (overrides?: {
           'Cluster',
           'Cores',
           'CPU Speed (MHz)',
+          'Memory (MB)',
           'CPU Utilization %',
           'Memory Utilization %',
         ],
-        ['esx-01', 'CL_DEMO_1', 24, 2400, 30.9, 28.9],
-        ['esx-02', 'CL_DEMO_1', 24, 2400, 25.1, 32.4],
+        ['esx-01', 'CL_DEMO_1', 24, 2400, 524288, 30.9, 28.9],
+        ['esx-02', 'CL_DEMO_1', 24, 2400, 524288, 25.1, 32.4],
       ],
     }),
   )
@@ -74,7 +75,7 @@ describe('adaptLiveOpticsVInfo', () => {
 })
 
 describe('adaptLiveOpticsVHost', () => {
-  it('converts percent CPU/RAM to 0..1 ratios', () => {
+  it('converts percent CPU/RAM to 0..1 ratios and reads memoryMb', () => {
     const wb = liveOpticsWorkbook()
     const sheet = wb.sheets.get('Host Inventory')
     if (!sheet) throw new Error('fixture missing Host Inventory')
@@ -84,9 +85,30 @@ describe('adaptLiveOpticsVHost', () => {
       cluster: 'CL_DEMO_1',
       cores: 24,
       speedMhz: 2400,
+      memoryMb: 524288,
       cpuRatio: 0.309,
       ramRatio: 0.289,
     })
+  })
+
+  it('falls back to memoryMb=0 when the column is missing', () => {
+    const wb = liveOpticsWorkbook({
+      hostRows: [
+        [
+          'Host Name',
+          'Cluster',
+          'Cores',
+          'CPU Speed (MHz)',
+          'CPU Utilization %',
+          'Memory Utilization %',
+        ],
+        ['esx-old', 'CL_X', 12, 2100, 25, 30],
+      ],
+    })
+    const sheet = wb.sheets.get('Host Inventory')
+    if (!sheet) throw new Error('fixture missing Host Inventory')
+    const rows = adaptLiveOpticsVHost(sheet)
+    expect(rows[0]?.memoryMb).toBe(0)
   })
 })
 

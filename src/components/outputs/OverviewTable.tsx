@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { ClusterAggregate } from '../../types'
-import { fmtGhzValue, fmtInt, fmtPercentWhole } from '../../utils/format'
+import { fmtGhzValue, fmtInt, fmtMemMb, fmtPercentWhole } from '../../utils/format'
+import { StretchedBadge } from '../common/StretchedBadge'
 import { UtilizationBar } from '../common/UtilizationBar'
 
 export interface OverviewTableProps {
@@ -62,7 +63,10 @@ export function OverviewTable({ clusters }: OverviewTableProps) {
           {clusters.map((cluster, i) => (
             <tr key={cluster.cluster} className={i % 2 === 0 ? 'bg-surface-900/30' : ''}>
               <th scope="row" className="py-3 pr-2 font-semibold text-slate-100">
-                {cluster.cluster}
+                <span className="inline-flex items-center gap-2">
+                  {cluster.cluster}
+                  {cluster.stretched ? <StretchedBadge /> : null}
+                </span>
               </th>
               <td className="py-3 pr-2 text-xs text-slate-400">
                 {fmtInt(cluster.hostCount)} · {fmtInt(cluster.vmCount)}
@@ -109,8 +113,17 @@ export function OverviewTable({ clusters }: OverviewTableProps) {
                   })}
                 </div>
               </td>
-              <td className="py-3 text-right font-semibold text-slate-100">
-                {fmtGhzValue(cluster.availableGhz)}
+              <td className="py-3 text-right font-semibold">
+                <div className={cluster.availableGhz < 0 ? 'text-util-high' : 'text-slate-100'}>
+                  {fmtGhzValue(cluster.availableGhz)}
+                </div>
+                <div
+                  className={`text-xs ${
+                    cluster.availableRamMb < 0 ? 'text-util-high' : 'text-slate-400'
+                  }`}
+                >
+                  {fmtMemMb(cluster.availableRamMb)}
+                </div>
               </td>
             </tr>
           ))}

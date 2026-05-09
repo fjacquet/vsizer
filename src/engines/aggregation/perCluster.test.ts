@@ -7,6 +7,7 @@ const host = (overrides: Partial<VHostRow>): VHostRow => ({
   cluster: 'CL_DEFAULT',
   cores: 24,
   speedMhz: 2400,
+  memoryMb: 524288, // 512 GB
   cpuRatio: 0.2,
   ramRatio: 0.3,
   ...overrides,
@@ -73,5 +74,21 @@ describe('aggregateHostsPerCluster', () => {
     expect(out?.maxCpuRatio).toBe(0.42)
     expect(out?.minCpuRatio).toBe(0.42)
     expect(out?.meanRamRatio).toBe(0.18)
+  })
+
+  it('sums physicalRamMb across hosts in the cluster', () => {
+    const [out] = aggregateHostsPerCluster([
+      host({ hostName: 'h-1', cluster: 'CL', memoryMb: 524288 }), // 512 GB
+      host({ hostName: 'h-2', cluster: 'CL', memoryMb: 524288 }), // 512 GB
+    ])
+    expect(out?.physicalRamMb).toBe(1_048_576) // 1 TB total
+  })
+
+  it('reports physicalRamMb = 0 when no host had a memory column', () => {
+    const [out] = aggregateHostsPerCluster([
+      host({ hostName: 'h-1', cluster: 'CL', memoryMb: 0 }),
+      host({ hostName: 'h-2', cluster: 'CL', memoryMb: 0 }),
+    ])
+    expect(out?.physicalRamMb).toBe(0)
   })
 })

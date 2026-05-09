@@ -5,7 +5,10 @@ export interface ClusterFilterPanelProps {
   clusters: readonly ClusterAggregate[]
   /** Current selection. Empty set means "all clusters" by V1 contract. */
   selected: ReadonlySet<string>
+  /** Set of cluster names marked as stretched (ADR-0007). */
+  stretched: ReadonlySet<string>
   onToggle(cluster: string): void
+  onToggleStretched(cluster: string): void
   onSelectNone(): void
 }
 
@@ -14,12 +17,16 @@ export interface ClusterFilterPanelProps {
  * checkbox is checked because the empty-set means everything (selectIsSelected
  * in the store treats `size === 0` as truthy).
  *
- * The single allowed dashboard interaction (PRD §5.3 / ADR-0006).
+ * Each row also carries a small "DR" pill that toggles the stretched-cluster
+ * flag (ADR-0007). The DR action is independent from the export checkbox —
+ * a stretched cluster can be excluded from the export and vice versa.
  */
 export function ClusterFilterPanel({
   clusters,
   selected,
+  stretched,
   onToggle,
+  onToggleStretched,
   onSelectNone,
 }: ClusterFilterPanelProps) {
   const { t } = useTranslation('dashboard')
@@ -56,6 +63,7 @@ export function ClusterFilterPanel({
       <ul className="flex max-h-[360px] flex-col gap-1 overflow-y-auto pr-1">
         {clusters.map((cluster) => {
           const checked = isChecked(cluster.cluster)
+          const isStretched = stretched.has(cluster.cluster)
           return (
             <li key={cluster.cluster}>
               <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-surface-700">
@@ -67,6 +75,26 @@ export function ClusterFilterPanel({
                   aria-label={cluster.cluster}
                 />
                 <span className="flex-1 truncate text-slate-200">{cluster.cluster}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    // Stop the click from bubbling up to the <label> and
+                    // toggling the export checkbox.
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onToggleStretched(cluster.cluster)
+                  }}
+                  aria-pressed={isStretched}
+                  aria-label={isStretched ? t('filter.unmarkStretched') : t('filter.markStretched')}
+                  title={tc('badge.stretchedFull')}
+                  className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                    isStretched
+                      ? 'border-accent-500 bg-accent-500 text-primary-900'
+                      : 'border-surface-700 text-slate-500 hover:border-accent-500 hover:text-accent-500'
+                  }`}
+                >
+                  {t('filter.drPillLabel')}
+                </button>
                 <span className="text-[11px] text-slate-500">
                   {cluster.hostCount}h · {cluster.vmCount}v
                 </span>

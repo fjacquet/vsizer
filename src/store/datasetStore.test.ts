@@ -22,12 +22,18 @@ const sampleGlobals: GlobalSummary = {
   physicalGhz: 100,
   consumedGhz: 25,
   availableGhz: 75,
+  physicalRamMb: 524288,
+  consumedRamMb: 157286,
+  drReservedRamMb: 0,
+  availableRamMb: 367002,
   meanCpuRatio: 0.25,
   meanRamRatio: 0.3,
   vcpuAllocated: 4,
   vramAllocatedMb: 8192,
   activeMemMb: 1024,
   mhzPerVcpu: 6250,
+  stretchedClusterCount: 0,
+  drReservedGhz: 0,
 }
 
 describe('datasetStore', () => {
@@ -43,6 +49,7 @@ describe('datasetStore', () => {
     expect(s.vhost).toEqual([])
     expect(s.parseErrors).toEqual([])
     expect(s.selectedClusters.size).toBe(0)
+    expect(s.stretchedClusters.size).toBe(0)
     expect(s.aggregates).toEqual({})
     expect(s.globals).toBeNull()
   })
@@ -98,6 +105,7 @@ describe('datasetStore', () => {
       globals: sampleGlobals,
     })
     useDatasetStore.getState().toggleCluster('CL_DEMO_1')
+    useDatasetStore.getState().toggleStretched('CL_DEMO_1')
     expect(useDatasetStore.getState().vinfo).toHaveLength(1)
 
     useDatasetStore.getState().reset()
@@ -106,5 +114,49 @@ describe('datasetStore', () => {
     expect(after.vinfo).toEqual([])
     expect(after.globals).toBeNull()
     expect(after.selectedClusters.size).toBe(0)
+    expect(after.stretchedClusters.size).toBe(0)
+  })
+
+  // ── Stretched-cluster atomic re-aggregate (ADR-0007) ──────────────────
+
+  it('toggleStretched flips set membership', () => {
+    useDatasetStore.getState().toggleStretched('CL_A')
+    expect(useDatasetStore.getState().stretchedClusters.has('CL_A')).toBe(true)
+    useDatasetStore.getState().toggleStretched('CL_A')
+    expect(useDatasetStore.getState().stretchedClusters.has('CL_A')).toBe(false)
+  })
+
+  it('toggleStretched re-aggregates GHz and RAM atomically', () => {
+    // Arrange: a single cluster's worth of host + VM data, set up so we can
+    // measure the math change before/after toggling.
+    const vhost = [
+      {
+        hostName: 'esx-1',
+        cluster: 'CL_X',
+        cores: 24,
+        speedMhz: 2400,
+        memoryMb: 524288,
+        cpuRatio: 0.25,
+        ramRatio: 0.3,
+      },
+    ]
+    useDatasetStore.getState().setDataset({
+      file: sampleFile,
+      parsed: { source: 'rvtools', vinfo: [], vhost, errors: [] },
+      aggregates: {},
+      globals: sampleGlobals,
+    })
+
+    // Toggle stretched on → re-aggregation should populate aggregates with
+    // DR-aware figures.
+    useDatasetStore.getState().toggleStretched('CL_X')
+    const aggAfter = useDatasetStore.getState().aggregates['CL_X']
+    expect(aggAfter?.stretched).toBe(true)
+    expect(aggAfter?.drReservedGhz).toBeCloseTo(28.8, 5) // 0.5 × 57.6
+    expect(aggAfter?.drReservedRamMb).toBeCloseTo(262144, 0) // 0.5 × 524288
+    expect(aggAfter?.availableGhz).toBeCloseTo(57.6 - 14.4 - 28.8, 5)
+
+    // Globals also reflect the rollup.
+    expect(useDatasetStore.getState().globals?.stretchedClusterCount).toBe(1)
   })
 })

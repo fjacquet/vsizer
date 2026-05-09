@@ -7,6 +7,7 @@ const host = (overrides: Partial<VHostRow>): VHostRow => ({
   cluster: 'CL_DEFAULT',
   cores: 24,
   speedMhz: 2400,
+  memoryMb: 524288, // 512 GB
   cpuRatio: 0.2,
   ramRatio: 0.3,
   ...overrides,
@@ -96,5 +97,67 @@ describe('aggregateClusters', () => {
     expect(out[0]?.maxCpuRatio).toBe(0.5)
     expect(out[0]?.minCpuRatio).toBe(0.1)
     expect(out[0]?.meanCpuRatio).toBeCloseTo(0.3, 5)
+  })
+
+  // ── Stretched-cluster DR (ADR-0007) ──────────────────────────────────
+
+  it('computes 0 DR reservation when not stretched', () => {
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', cpuRatio: 0.25 })],
+      vinfo: [],
+    })
+    expect(out[0]?.stretched).toBe(false)
+    expect(out[0]?.drReservedGhz).toBe(0)
+    expect(out[0]?.drReservedRamMb).toBe(0)
+  })
+
+  it('reserves 50 % of physicalGhz and physicalRamMb when stretched', () => {
+    // 1 host × 24 × 2.4 GHz = 57.6 GHz physical, 25 % CPU = 14.4 consumed
+    // 1 host × 524288 MB physical RAM, 30 % RAM = 157286.4 consumed
+    // Stretched: drReservedGhz = 28.8, drReservedRamMb = 262144
+    //   availableGhz   = 57.6 − 14.4 − 28.8 = 14.4
+    //   availableRamMb = 524288 − 157286.4 − 262144 = 104857.6
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', cpuRatio: 0.25, ramRatio: 0.3 })],
+      vinfo: [],
+      stretchedClusters: new Set(['CL']),
+    })
+    expect(out[0]?.stretched).toBe(true)
+    expect(out[0]?.drReservedGhz).toBeCloseTo(28.8, 5)
+    expect(out[0]?.drReservedRamMb).toBeCloseTo(262144, 0)
+    expect(out[0]?.availableGhz).toBeCloseTo(14.4, 5)
+    expect(out[0]?.availableRamMb).toBeCloseTo(104857.6, 0)
+  })
+
+  it('surfaces a negative availableGhz when a stretched cluster overcommits CPU past 50 %', () => {
+    // 60 % CPU on a stretched cluster: physical 57.6, consumed 34.56,
+    // dr reserved 28.8 → available = -5.76 (DR at risk).
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', cpuRatio: 0.6 })],
+      vinfo: [],
+      stretchedClusters: new Set(['CL']),
+    })
+    expect(out[0]?.availableGhz).toBeLessThan(0)
+  })
+
+  it('surfaces a negative availableRamMb when a stretched cluster overcommits RAM past 50 %', () => {
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', ramRatio: 0.6 })],
+      vinfo: [],
+      stretchedClusters: new Set(['CL']),
+    })
+    expect(out[0]?.availableRamMb).toBeLessThan(0)
+  })
+
+  it('handles a stretched cluster whose host-memory column is missing (physicalRamMb=0)', () => {
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL', memoryMb: 0 })],
+      vinfo: [],
+      stretchedClusters: new Set(['CL']),
+    })
+    expect(out[0]?.physicalRamMb).toBe(0)
+    expect(out[0]?.consumedRamMb).toBe(0)
+    expect(out[0]?.drReservedRamMb).toBe(0)
+    expect(out[0]?.availableRamMb).toBe(0)
   })
 })

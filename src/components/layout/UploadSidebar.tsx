@@ -20,7 +20,9 @@ export function UploadSidebar() {
   const aggregates = useDatasetStore((s) => s.aggregates)
   const clusters = useMemo(() => sortAggregates(aggregates), [aggregates])
   const selected = useDatasetStore((s) => s.selectedClusters)
+  const stretched = useDatasetStore((s) => s.stretchedClusters)
   const toggleCluster = useDatasetStore((s) => s.toggleCluster)
+  const toggleStretched = useDatasetStore((s) => s.toggleStretched)
   const clearSelection = useDatasetStore((s) => s.clearSelection)
 
   return (
@@ -47,7 +49,9 @@ export function UploadSidebar() {
       <ClusterFilterPanel
         clusters={clusters}
         selected={selected}
+        stretched={stretched}
         onToggle={toggleCluster}
+        onToggleStretched={toggleStretched}
         onSelectNone={clearSelection}
       />
     </aside>

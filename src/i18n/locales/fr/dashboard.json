@@ -3,6 +3,7 @@
     "hosts": "hôtes",
     "vms": "VMs allumées",
     "physicalGhz": "capacité physique",
+    "physicalRam": "RAM physique",
     "meanCpu": "CPU moyen utilisé"
   },
   "overview": {
@@ -13,7 +14,7 @@
       "hostsVms": "Hôtes / VMs",
       "cpu": "CPU",
       "ram": "RAM",
-      "available": "GHz disponibles"
+      "available": "Disponibles"
     },
     "meanPeak": "{{mean}} · pic {{peak}}"
   },
@@ -21,10 +22,14 @@
     "title": "Clusters à exporter",
     "selectedCount_one": "{{count}} cluster sélectionné",
     "selectedCount_other": "{{count}} clusters sélectionnés",
-    "allDefault": "Tous inclus par défaut"
+    "allDefault": "Tous inclus par défaut",
+    "markStretched": "Marquer comme étendu",
+    "unmarkStretched": "Retirer l'étendu",
+    "drPillLabel": "DR"
   },
   "card": {
-    "headerSubtitle": "{{hosts}} hôtes · {{vms}} VMs allumées · {{cores}} cores phys. · {{ghzPerCore}}",
+    "headerSubtitle": "{{hosts}} hôtes · {{vms}} VMs allumées · {{cores}} cores phys. · {{ghzPerCore}} · {{ram}} RAM",
+    "headerSubtitleStretchedSuffix": " · DR : {{ghzReserved}} GHz / {{ramReserved}} RAM réservés",
     "kpi": {
       "cpuMean": "CPU moyen",
       "ramMean": "RAM moyenne",
@@ -35,7 +40,8 @@
       "cpuTitle": "CPU — utilisation moyenne",
       "ramTitle": "RAM — utilisation moyenne",
       "cpuSubtitle": "{{consumed}} consommés sur {{physical}}",
-      "ramSubtitle": "{{consumed}} consommés sur {{total}}",
+      "ramSubtitle": "{{consumed}} consommés sur {{physical}}",
+      "drSuffix": " · {{reserved}} réservés DR",
       "min": "Min",
       "mean": "Moy",
       "max": "Max"
@@ -46,7 +52,8 @@
       "reservedCapacity": "Capacité réservée\n(vCPU × clock host)",
       "consumedGhz": "GHz consommés",
       "availableGhz": "GHz disponibles"
-    }
+    },
+    "ramAvailable": "RAM disponible : {{value}}"
   },
   "legend": {
     "title": "Légende :",

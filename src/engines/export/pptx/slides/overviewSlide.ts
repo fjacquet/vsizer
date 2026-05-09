@@ -1,6 +1,6 @@
 import type PptxGenJS from 'pptxgenjs'
 import type { ClusterAggregate } from '../../../../types'
-import { fmtGhzPptx, fmtPctWhole } from '../format'
+import { fmtGhzPptx, fmtMemMb, fmtPctWhole } from '../format'
 import { drawProgressBar } from '../primitives/progressBar'
 import { FONT, SLIDE_H, SLIDE_W, THEME } from '../theme'
 
@@ -13,12 +13,14 @@ export interface OverviewSlideStrings {
     /** "0%   ·   utilisation hôtes (haut: CPU, bas: RAM)   ·   100%" */
     bars: string
     meanPeak: string
-    /** Renamed from "Marge libérable" (editorial) → "GHz disponibles". */
+    /** Header for the rightmost stacked-availability column. */
     available: string
   }
   /** "CPU" / "RAM" labels next to each pair of bars. */
   cpuLabel: string
   ramLabel: string
+  /** Pill text rendered next to a stretched cluster's name. */
+  stretchedBadge: string
   /** Legend strings — same ordering as the colors array (low / mid / high / peak). */
   legend: {
     title: string
@@ -146,7 +148,7 @@ export const addOverviewSlide = (
       })
     }
 
-    // Cluster name
+    // Cluster name (+ inline [Étendu] tag when stretched)
     slide.addText(cluster.cluster, {
       x: nameX,
       y,
@@ -159,6 +161,20 @@ export const addOverviewSlide = (
       valign: 'middle',
       margin: 0,
     })
+    if (cluster.stretched) {
+      slide.addText(` [${strings.stretchedBadge}]`, {
+        x: nameX + 0.78,
+        y,
+        w: nameW - 0.78,
+        h: rowH,
+        fontFace: FONT,
+        fontSize: 8,
+        bold: true,
+        color: THEME.gold,
+        valign: 'middle',
+        margin: 0,
+      })
+    }
 
     // Hosts / VMs sub-info
     slide.addText(`${cluster.hostCount} hôtes\n${cluster.vmCount} VMs`, {
@@ -255,17 +271,30 @@ export const addOverviewSlide = (
       },
     )
 
-    // Available GHz (factual; was "Marge libérable" in the legacy deck)
+    // Available — stacked GHz on top, RAM below.
+    const ghzColor = cluster.availableGhz < 0 ? THEME.red : THEME.darkText
+    const ramColor = cluster.availableRamMb < 0 ? THEME.red : THEME.grey
     const availablePct = cluster.physicalGhz > 0 ? cluster.availableGhz / cluster.physicalGhz : 0
     slide.addText(`${fmtGhzPptx(cluster.availableGhz)} (${fmtPctWhole(availablePct)})`, {
       x: headX,
       y,
       w: headW,
-      h: rowH,
+      h: rowH / 2,
       fontFace: FONT,
       fontSize: 10,
       bold: true,
-      color: THEME.darkText,
+      color: ghzColor,
+      valign: 'middle',
+      margin: 0,
+    })
+    slide.addText(fmtMemMb(cluster.availableRamMb), {
+      x: headX,
+      y: y + rowH / 2,
+      w: headW,
+      h: rowH / 2,
+      fontFace: FONT,
+      fontSize: 9,
+      color: ramColor,
       valign: 'middle',
       margin: 0,
     })

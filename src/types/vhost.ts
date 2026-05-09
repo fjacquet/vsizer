@@ -10,6 +10,11 @@ export interface VHostRow {
   cores: number
   /** Nominal CPU speed in MHz. */
   speedMhz: number
+  /** Physical RAM of the host, in MB. RVTools `# Memory` / `Memory`,
+   *  Live Optics `Memory (MB)`. Falls back to 0 when the column is
+   *  missing — downstream rolls up to `physicalRamMb = 0` and the UI
+   *  shows `—` rather than crashing. */
+  memoryMb: number
   /** Mean CPU utilization in [0, 1] over the source's monitoring window. */
   cpuRatio: number
   /** Mean RAM utilization in [0, 1]. */

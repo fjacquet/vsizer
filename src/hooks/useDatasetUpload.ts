@@ -35,7 +35,15 @@ export function useDatasetUpload(): {
           return
         }
 
-        const clusters = aggregateClusters({ vinfo: parsed.vinfo, vhost: parsed.vhost })
+        // A fresh upload resets the stretched set (setDataset wipes it),
+        // but reading it here keeps the API consistent if a future "reload
+        // same file" path skips setDataset.
+        const stretchedClusters = useDatasetStore.getState().stretchedClusters
+        const clusters = aggregateClusters({
+          vinfo: parsed.vinfo,
+          vhost: parsed.vhost,
+          stretchedClusters,
+        })
         if (clusters.length === 0) {
           toast.error(t('validation:rows.noClusters'))
           return

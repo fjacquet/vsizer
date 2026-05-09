@@ -1,6 +1,6 @@
 import type PptxGenJS from 'pptxgenjs'
 import type { GlobalSummary } from '../../../../types'
-import { fmtGhzPptx, fmtIntPptx, fmtPctWhole } from '../format'
+import { fmtGhzPptx, fmtIntPptx, fmtMemMb, fmtPctWhole } from '../format'
 import { drawKpiCardOnNavy } from '../primitives/kpiCard'
 import { FONT, SLIDE_H, SLIDE_W, THEME } from '../theme'
 
@@ -11,11 +11,12 @@ export interface TitleSlideStrings {
   eyebrow: string
   /** Subtitle line, typically "Source: <file>  ·  Date: <date>". */
   subtitle: string
-  /** Labels for the four bottom KPI tiles. */
+  /** Labels for the five bottom KPI tiles. */
   kpiLabels: {
     hosts: string
     vms: string
     physicalGhz: string
+    physicalRam: string
     meanCpu: string
   }
 }
@@ -99,12 +100,14 @@ export const addTitleSlide = (
     margin: 0,
   })
 
-  // Bottom KPI tiles — estate-wide. Four equal columns starting at x=0.7,
-  // total width 12, gap 0.15.
+  // Bottom KPI tiles — estate-wide. Five equal columns starting at x=0.7,
+  // total width 12, gap 0.15. Order mirrors the dashboard's GlobalKpiBar:
+  // counts on the left, capacity in the middle, headline ratio on the right.
   const tiles = [
     { big: fmtIntPptx(globals.hostCount), small: strings.kpiLabels.hosts },
     { big: fmtIntPptx(globals.vmCount), small: strings.kpiLabels.vms },
     { big: fmtGhzPptx(globals.physicalGhz), small: strings.kpiLabels.physicalGhz },
+    { big: fmtMemMb(globals.physicalRamMb), small: strings.kpiLabels.physicalRam },
     { big: fmtPctWhole(globals.meanCpuRatio), small: strings.kpiLabels.meanCpu },
   ]
 

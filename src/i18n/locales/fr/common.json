@@ -16,5 +16,9 @@
     "label": "Langue",
     "fr": "Français",
     "en": "English"
+  },
+  "badge": {
+    "stretched": "Étendu",
+    "stretchedFull": "vSAN étendu — 50 % de la capacité (CPU et RAM) réservée pour le DR"
   }
 }

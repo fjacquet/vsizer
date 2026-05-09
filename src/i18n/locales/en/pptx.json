@@ -8,6 +8,7 @@
       "hosts": "hosts",
       "vms": "powered-on VMs",
       "physicalGhz": "physical capacity",
+      "physicalRam": "physical RAM",
       "meanCpu": "mean CPU utilization"
     }
   },
@@ -19,7 +20,7 @@
       "hostsVms": "Hosts / VMs",
       "bars": "0%   ·   host utilization (top: CPU, bottom: RAM)   ·   100%",
       "meanPeak": "Mean / Peak",
-      "available": "Available GHz"
+      "available": "Available"
     },
     "cpuLabel": "CPU",
     "ramLabel": "RAM",
@@ -33,6 +34,9 @@
   },
   "cluster": {
     "subtitle": "{{hosts}} hosts · {{vms}} powered-on VMs · {{cores}} physical cores ({{ghzPerCore}}) · {{ram}} RAM",
+    "subtitleStretchedSuffix": " · DR: {{ghzReserved}} GHz / {{ramReserved}} RAM reserved",
+    "stretchedBadge": "Stretched",
+    "ramAvailableLine": "RAM available: {{value}}",
     "cards": {
       "cpuMean": "Mean CPU",
       "ramMean": "Mean RAM",
@@ -43,7 +47,8 @@
       "cpuTitle": "CPU — mean utilization",
       "ramTitle": "RAM — mean utilization",
       "cpuSubtitle": "{{consumed}} consumed of {{physical}}",
-      "ramSubtitle": "{{consumed}} consumed of {{total}}",
+      "ramSubtitle": "{{consumed}} consumed of {{physical}}",
+      "drSuffix": " · {{reserved}} reserved for DR",
       "min": "Min",
       "mean": "Mean",
       "max": "Max"
@@ -55,6 +60,6 @@
       "consumedGhz": "GHz consumed",
       "availableGhz": "GHz available"
     },
-    "footer": "Source: {{file}} — vHost (CPU/RAM usage %, Speed × Cores) + vInfo (vCPUs, Memory)"
+    "footer": "Source: {{file}} — vHost (CPU/RAM usage %, Speed × Cores, # Memory) + vInfo (vCPUs, Memory)"
   }
 }

@@ -1,5 +1,17 @@
 {
   "dropzone": {
-    "instruction": "Drop your RVTools / Live Optics export to begin."
+    "instruction": "Drop your RVTools or Live Optics export",
+    "or": "or",
+    "browse": "browse your files",
+    "accepted": "Accepted formats: .xlsx, .xlsm, .xlsb, .csv, .ods",
+    "active": "Drop the file here"
+  },
+  "fileLoaded": {
+    "ariaLabel": "Loaded file",
+    "remove": "Remove"
+  },
+  "errors": {
+    "rejected": "Unrecognized format. Drop an RVTools or Live Optics export.",
+    "parseFailed": "Failed to read the file: {{message}}"
   }
 }

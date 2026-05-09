@@ -1,1 +1,12 @@
-{}
+{
+  "source": {
+    "unknown": "Unrecognized format. The file contains neither RVTools sheets (vInfo, vHost) nor Live Optics sheets (VM Inventory, Host Inventory).",
+    "rvtoolsDetected": "RVTools format detected",
+    "liveopticsDetected": "Live Optics format detected"
+  },
+  "rows": {
+    "noClusters": "No clusters detected in this file.",
+    "noHosts": "No hosts could be read.",
+    "noVms": "No powered-on VMs could be read."
+  }
+}

@@ -16,3 +16,4 @@ old one and update the old one's `Status` to `Superseded by ADR-NNNN`.
 | 0003 | Factual-only PPTX (strip editorial language)       | Accepted |
 | 0004 | Memory-only state (no localStorage / URL)          | Accepted |
 | 0005 | Engines + utils as the only coverage-gated layers  | Accepted |
+| 0006 | Dashboard layout: two-state, single-column, fixed sidebar | Accepted |

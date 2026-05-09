@@ -1,1 +1,63 @@
-{}
+{
+  "globalKpi": {
+    "hosts": "hosts",
+    "vms": "powered-on VMs",
+    "physicalGhz": "physical capacity",
+    "meanCpu": "mean CPU utilization"
+  },
+  "overview": {
+    "title": "CPU & RAM utilization by cluster",
+    "subtitle": "Host-weighted mean · gold marker = peak",
+    "columns": {
+      "cluster": "Cluster",
+      "hostsVms": "Hosts / VMs",
+      "cpu": "CPU",
+      "ram": "RAM",
+      "available": "Available GHz"
+    },
+    "meanPeak": "{{mean}} · peak {{peak}}"
+  },
+  "filter": {
+    "title": "Clusters to export",
+    "selectedCount_one": "{{count}} cluster selected",
+    "selectedCount_other": "{{count}} clusters selected",
+    "allDefault": "All included by default"
+  },
+  "card": {
+    "headerSubtitle": "{{hosts}} hosts · {{vms}} powered-on VMs · {{cores}} physical cores · {{ghzPerCore}}",
+    "kpi": {
+      "cpuMean": "Mean CPU",
+      "ramMean": "Mean RAM",
+      "ghzUsedVsPhys": "GHz used / physical",
+      "mhzPerVcpu": "real per allocated vCPU"
+    },
+    "blocks": {
+      "cpuTitle": "CPU — mean utilization",
+      "ramTitle": "RAM — mean utilization",
+      "cpuSubtitle": "{{consumed}} consumed of {{physical}}",
+      "ramSubtitle": "{{consumed}} consumed of {{total}}",
+      "min": "Min",
+      "mean": "Mean",
+      "max": "Max"
+    },
+    "banner": {
+      "title": "KEY FIGURES",
+      "vcpuAllocated": "vCPU allocated",
+      "reservedCapacity": "Reserved capacity\n(vCPU × host clock)",
+      "consumedGhz": "GHz consumed",
+      "availableGhz": "GHz available"
+    }
+  },
+  "legend": {
+    "title": "Legend:",
+    "low": "< 40%",
+    "mid": "40-70%",
+    "high": "≥ 70%",
+    "peak": "Peak"
+  },
+  "errors": {
+    "title": "Partial read",
+    "rowsSkipped_one": "{{count}} row skipped",
+    "rowsSkipped_other": "{{count}} rows skipped"
+  }
+}

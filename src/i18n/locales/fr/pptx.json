@@ -1,1 +1,60 @@
-{}
+{
+  "deckTitle": "vsizer — Utilisation des clusters",
+  "title": {
+    "title": "vsizer — Utilisation des clusters",
+    "eyebrow": "ANALYSE DE CAPACITÉ — VMware",
+    "subtitle": "Source : {{file}} · Date : {{date}}",
+    "kpiLabels": {
+      "hosts": "hôtes",
+      "vms": "VMs allumées",
+      "physicalGhz": "capacité physique",
+      "meanCpu": "CPU moyen utilisé"
+    }
+  },
+  "overview": {
+    "title": "Utilisation CPU & RAM par cluster",
+    "subtitle": "Moyenne pondérée des hôtes · marqueur or = pic max",
+    "columns": {
+      "cluster": "Cluster",
+      "hostsVms": "Hôtes / VMs",
+      "bars": "0%   ·   utilisation hôtes (haut: CPU, bas: RAM)   ·   100%",
+      "meanPeak": "Moyenne / Pic",
+      "available": "GHz disponibles"
+    },
+    "cpuLabel": "CPU",
+    "ramLabel": "RAM",
+    "legend": {
+      "title": "Légende :",
+      "low": "< 40 %",
+      "mid": "40-70 %",
+      "high": "≥ 70 %",
+      "peak": "Pic max"
+    }
+  },
+  "cluster": {
+    "subtitle": "{{hosts}} hôtes · {{vms}} VMs allumées · {{cores}} cores phys. ({{ghzPerCore}}) · {{ram}} RAM",
+    "cards": {
+      "cpuMean": "CPU moyen",
+      "ramMean": "RAM moyenne",
+      "ghzUsedVsPhys": "GHz utilisés / phys.",
+      "mhzPerVcpu": "réels par vCPU alloué"
+    },
+    "blocks": {
+      "cpuTitle": "CPU — utilisation moyenne",
+      "ramTitle": "RAM — utilisation moyenne",
+      "cpuSubtitle": "{{consumed}} consommés sur {{physical}}",
+      "ramSubtitle": "{{consumed}} consommés sur {{total}}",
+      "min": "Min",
+      "mean": "Moy",
+      "max": "Max"
+    },
+    "banner": {
+      "title": "DONNÉES CLÉS",
+      "vcpuAllocated": "vCPU alloués",
+      "reservedCapacity": "Capacité réservée\n(vCPU × clock host)",
+      "consumedGhz": "GHz consommés",
+      "availableGhz": "GHz disponibles"
+    },
+    "footer": "Source : {{file}} — vHost (CPU/RAM usage %, Speed × Cores) + vInfo (vCPUs, Memory)"
+  }
+}

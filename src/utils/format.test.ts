@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { fmtGhz, fmtInt, fmtPercent } from './format'
+import {
+  fmtGhz,
+  fmtGhzValue,
+  fmtInt,
+  fmtMemMb,
+  fmtMhzValue,
+  fmtPercent,
+  fmtPercentWhole,
+} from './format'
 
 describe('fmtInt', () => {
   it('inserts a thousands separator for fr-FR', () => {
@@ -37,5 +45,55 @@ describe('fmtPercent', () => {
 
   it('returns an em-dash for non-finite input', () => {
     expect(fmtPercent(Number.NaN)).toBe('—')
+  })
+})
+
+describe('fmtPercentWhole', () => {
+  it('rounds to a whole percent', () => {
+    expect(fmtPercentWhole(0.234)).toContain('23')
+    expect(fmtPercentWhole(0.236)).toContain('24')
+  })
+
+  it('returns em-dash for non-finite input', () => {
+    expect(fmtPercentWhole(Number.NaN)).toBe('—')
+  })
+})
+
+describe('fmtGhzValue', () => {
+  it('rounds GHz to a whole number with the unit', () => {
+    expect(fmtGhzValue(2430.5)).toContain('GHz')
+    expect(fmtGhzValue(2430.5)).toContain('2')
+  })
+
+  it('returns em-dash for non-finite input', () => {
+    expect(fmtGhzValue(Number.NaN)).toBe('—')
+  })
+})
+
+describe('fmtMhzValue', () => {
+  it('rounds MHz to a whole number with the unit', () => {
+    expect(fmtMhzValue(384.6)).toBe('385 MHz')
+  })
+
+  it('returns em-dash for non-finite input', () => {
+    expect(fmtMhzValue(Number.NaN)).toBe('—')
+  })
+})
+
+describe('fmtMemMb', () => {
+  it('renders sub-GB amounts as MB', () => {
+    expect(fmtMemMb(512)).toContain('MB')
+  })
+
+  it('renders GB amounts with the GB unit', () => {
+    expect(fmtMemMb(8192)).toContain('GB')
+  })
+
+  it('renders TB amounts with the TB unit', () => {
+    expect(fmtMemMb(2 * 1024 * 1024)).toContain('TB')
+  })
+
+  it('returns em-dash for non-finite input', () => {
+    expect(fmtMemMb(Number.NaN)).toBe('—')
   })
 })

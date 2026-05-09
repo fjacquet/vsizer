@@ -1,1 +1,60 @@
-{}
+{
+  "deckTitle": "vsizer — Cluster utilization",
+  "title": {
+    "title": "vsizer — Cluster utilization",
+    "eyebrow": "CAPACITY ANALYSIS — VMware",
+    "subtitle": "Source: {{file}} · Date: {{date}}",
+    "kpiLabels": {
+      "hosts": "hosts",
+      "vms": "powered-on VMs",
+      "physicalGhz": "physical capacity",
+      "meanCpu": "mean CPU utilization"
+    }
+  },
+  "overview": {
+    "title": "CPU & RAM utilization by cluster",
+    "subtitle": "Host-weighted mean · gold marker = peak",
+    "columns": {
+      "cluster": "Cluster",
+      "hostsVms": "Hosts / VMs",
+      "bars": "0%   ·   host utilization (top: CPU, bottom: RAM)   ·   100%",
+      "meanPeak": "Mean / Peak",
+      "available": "Available GHz"
+    },
+    "cpuLabel": "CPU",
+    "ramLabel": "RAM",
+    "legend": {
+      "title": "Legend:",
+      "low": "< 40%",
+      "mid": "40-70%",
+      "high": "≥ 70%",
+      "peak": "Peak"
+    }
+  },
+  "cluster": {
+    "subtitle": "{{hosts}} hosts · {{vms}} powered-on VMs · {{cores}} physical cores ({{ghzPerCore}}) · {{ram}} RAM",
+    "cards": {
+      "cpuMean": "Mean CPU",
+      "ramMean": "Mean RAM",
+      "ghzUsedVsPhys": "GHz used / physical",
+      "mhzPerVcpu": "real per allocated vCPU"
+    },
+    "blocks": {
+      "cpuTitle": "CPU — mean utilization",
+      "ramTitle": "RAM — mean utilization",
+      "cpuSubtitle": "{{consumed}} consumed of {{physical}}",
+      "ramSubtitle": "{{consumed}} consumed of {{total}}",
+      "min": "Min",
+      "mean": "Mean",
+      "max": "Max"
+    },
+    "banner": {
+      "title": "KEY FIGURES",
+      "vcpuAllocated": "vCPU allocated",
+      "reservedCapacity": "Reserved capacity\n(vCPU × host clock)",
+      "consumedGhz": "GHz consumed",
+      "availableGhz": "GHz available"
+    },
+    "footer": "Source: {{file}} — vHost (CPU/RAM usage %, Speed × Cores) + vInfo (vCPUs, Memory)"
+  }
+}

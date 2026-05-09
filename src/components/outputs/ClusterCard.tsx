@@ -1,0 +1,207 @@
+import { useTranslation } from 'react-i18next'
+import { usageColor } from '../../engines/export/pptx/primitives/colors'
+import { THEME } from '../../engines/export/pptx/theme'
+import type { ClusterAggregate, VHostRow } from '../../types'
+import {
+  fmtGhzValue,
+  fmtInt,
+  fmtMemMb,
+  fmtMhzValue,
+  fmtPercent,
+  fmtPercentWhole,
+} from '../../utils/format'
+import { KpiCard } from '../common/KpiCard'
+import { UtilizationBar } from '../common/UtilizationBar'
+
+export interface ClusterCardProps {
+  cluster: ClusterAggregate
+  /** Subset of vhost rows belonging to this cluster — used for the header
+   *  facts (cores, GHz/core, RAM) the dashboard shows but the aggregate
+   *  doesn't carry. */
+  hostsInCluster: readonly VHostRow[]
+}
+
+const computeFacts = (
+  hostsInCluster: readonly VHostRow[],
+  cluster: ClusterAggregate,
+): {
+  totalCores: number
+  speedMhzAvg: number
+  totalMemMb: number
+} => {
+  if (hostsInCluster.length === 0) {
+    return { totalCores: 0, speedMhzAvg: 0, totalMemMb: cluster.vramAllocatedMb }
+  }
+  const totalCores = hostsInCluster.reduce((s, h) => s + h.cores, 0)
+  const speedMhzAvg = hostsInCluster.reduce((s, h) => s + h.speedMhz, 0) / hostsInCluster.length
+  return { totalCores, speedMhzAvg, totalMemMb: cluster.vramAllocatedMb }
+}
+
+interface UtilBlockProps {
+  title: string
+  subtitle: string
+  ratioMean: number
+  ratioMax: number
+  ratioMin: number
+  labels: { min: string; mean: string; max: string }
+}
+
+function UtilBlock({ title, subtitle, ratioMean, ratioMax, ratioMin, labels }: UtilBlockProps) {
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-surface-700 bg-surface-900/40 p-4">
+      <header>
+        <h4 className="text-sm font-semibold text-slate-100">{title}</h4>
+        <p className="text-xs text-slate-400">{subtitle}</p>
+      </header>
+      <UtilizationBar ratio={ratioMean} peak={ratioMax} heightPx={14} label={title} />
+      <div className="flex justify-between text-[10px] uppercase tracking-wider text-slate-500">
+        <span>0 %</span>
+        <span>100 %</span>
+      </div>
+      <dl className="grid grid-cols-3 gap-2 border-t border-surface-700 pt-3 text-center">
+        <div>
+          <dt className="text-[11px] uppercase tracking-wider text-slate-500">{labels.min}</dt>
+          <dd className="text-base font-semibold text-slate-300">{fmtPercentWhole(ratioMin)}</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] uppercase tracking-wider text-slate-500">{labels.mean}</dt>
+          <dd className="text-lg font-bold" style={{ color: `#${usageColor(ratioMean)}` }}>
+            {fmtPercent(ratioMean)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-[11px] uppercase tracking-wider text-slate-500">{labels.max}</dt>
+          <dd className="text-base font-semibold text-slate-300">{fmtPercentWhole(ratioMax)}</dd>
+        </div>
+      </dl>
+    </div>
+  )
+}
+
+/**
+ * Per-cluster card. Mirrors the PPTX cluster slide section-for-section
+ * (header → 4 KPI cards → 2 utilization blocks → factual data banner) so
+ * the dashboard preview equals the deck preview (ADR-0006).
+ *
+ * **No editorial language**: no "ronronne", no "RESIZE EN GHZ", no
+ * "Marge libérable" — the bottom banner is a neutral 4-tile data strip
+ * (ADR-0003).
+ */
+export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
+  const { t } = useTranslation('dashboard')
+  const facts = computeFacts(hostsInCluster, cluster)
+
+  const consumedRamMb = facts.totalMemMb * cluster.meanRamRatio
+  const reservedGhz = (cluster.vcpuAllocated * facts.speedMhzAvg) / 1000
+
+  return (
+    <article
+      className="panel flex flex-col gap-5"
+      aria-labelledby={`cluster-${cluster.cluster}-heading`}
+    >
+      <header className="flex flex-wrap items-baseline justify-between gap-3 border-b border-surface-700 pb-3">
+        <h3 id={`cluster-${cluster.cluster}-heading`} className="text-2xl font-bold text-slate-100">
+          {cluster.cluster}
+        </h3>
+        <p className="text-xs text-slate-400">
+          {t('card.headerSubtitle', {
+            hosts: fmtInt(cluster.hostCount),
+            vms: fmtInt(cluster.vmCount),
+            cores: fmtInt(facts.totalCores),
+            ghzPerCore:
+              facts.speedMhzAvg > 0 ? `${(facts.speedMhzAvg / 1000).toFixed(2)} GHz/core` : '—',
+          })}
+        </p>
+      </header>
+
+      {/* Row 1: 4 KPI cards */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KpiCard
+          accent={usageColor(cluster.meanCpuRatio)}
+          big={fmtPercentWhole(cluster.meanCpuRatio)}
+          small={t('card.kpi.cpuMean')}
+        />
+        <KpiCard
+          accent={usageColor(cluster.meanRamRatio)}
+          big={fmtPercentWhole(cluster.meanRamRatio)}
+          small={t('card.kpi.ramMean')}
+        />
+        <KpiCard
+          accent={THEME.navy}
+          big={`${fmtInt(cluster.consumedGhz)} / ${fmtInt(cluster.physicalGhz)}`}
+          small={t('card.kpi.ghzUsedVsPhys')}
+        />
+        <KpiCard
+          accent={THEME.teal}
+          big={fmtMhzValue(cluster.mhzPerVcpu)}
+          small={t('card.kpi.mhzPerVcpu')}
+        />
+      </div>
+
+      {/* Row 2: 2 utilization blocks */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <UtilBlock
+          title={t('card.blocks.cpuTitle')}
+          subtitle={t('card.blocks.cpuSubtitle', {
+            consumed: fmtGhzValue(cluster.consumedGhz),
+            physical: fmtGhzValue(cluster.physicalGhz),
+          })}
+          ratioMean={cluster.meanCpuRatio}
+          ratioMax={cluster.maxCpuRatio}
+          ratioMin={cluster.minCpuRatio}
+          labels={{
+            min: t('card.blocks.min'),
+            mean: t('card.blocks.mean'),
+            max: t('card.blocks.max'),
+          }}
+        />
+        <UtilBlock
+          title={t('card.blocks.ramTitle')}
+          subtitle={t('card.blocks.ramSubtitle', {
+            consumed: fmtMemMb(consumedRamMb),
+            total: fmtMemMb(facts.totalMemMb),
+          })}
+          ratioMean={cluster.meanRamRatio}
+          ratioMax={cluster.maxRamRatio}
+          ratioMin={cluster.minRamRatio}
+          labels={{
+            min: t('card.blocks.min'),
+            mean: t('card.blocks.mean'),
+            max: t('card.blocks.max'),
+          }}
+        />
+      </div>
+
+      {/* Row 3: factual data banner — replaces the editorial Python panel */}
+      <div className="rounded-lg bg-primary-900 p-5 text-slate-100">
+        <p className="mb-2 text-xs font-bold uppercase tracking-wider text-accent-500">
+          {t('card.banner.title')}
+        </p>
+        <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div>
+            <dt className="text-xs text-ice">{t('card.banner.vcpuAllocated')}</dt>
+            <dd className="text-xl font-bold text-accent-500">{fmtInt(cluster.vcpuAllocated)}</dd>
+          </div>
+          <div>
+            <dt className="whitespace-pre-line text-xs text-ice">
+              {t('card.banner.reservedCapacity')}
+            </dt>
+            <dd className="text-xl font-bold text-accent-500">{fmtGhzValue(reservedGhz)}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-ice">{t('card.banner.consumedGhz')}</dt>
+            <dd className="text-xl font-bold text-accent-500">
+              {fmtGhzValue(cluster.consumedGhz)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-ice">{t('card.banner.availableGhz')}</dt>
+            <dd className="text-xl font-bold text-accent-500">
+              {fmtGhzValue(cluster.availableGhz)}
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </article>
+  )
+}

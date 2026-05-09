@@ -1,1 +1,12 @@
-{}
+{
+  "source": {
+    "unknown": "Format non reconnu. Le fichier ne contient ni les feuilles RVTools (vInfo, vHost) ni Live Optics (VM Inventory, Host Inventory).",
+    "rvtoolsDetected": "Format RVTools détecté",
+    "liveopticsDetected": "Format Live Optics détecté"
+  },
+  "rows": {
+    "noClusters": "Aucun cluster détecté dans ce fichier.",
+    "noHosts": "Aucun hôte n'a été lu correctement.",
+    "noVms": "Aucune VM allumée n'a été lue correctement."
+  }
+}

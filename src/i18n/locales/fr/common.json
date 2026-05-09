@@ -7,6 +7,14 @@
   },
   "actions": {
     "exportPptx": "Exporter PPTX",
-    "loadSample": "Charger un exemple"
+    "loadSample": "Charger un exemple",
+    "reset": "Recommencer",
+    "selectAll": "Tout sélectionner",
+    "selectNone": "Tout désélectionner"
+  },
+  "lang": {
+    "label": "Langue",
+    "fr": "Français",
+    "en": "English"
   }
 }

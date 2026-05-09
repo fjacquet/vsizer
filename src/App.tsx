@@ -1,6 +1,10 @@
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary'
 import { useTranslation } from 'react-i18next'
 import { Toaster } from 'sonner'
+import { Cockpit } from './components/layout/Cockpit'
+import { EmptyState } from './components/layout/EmptyState'
+import { Header } from './components/layout/Header'
+import { selectHasDataset, useDatasetStore } from './store/datasetStore'
 
 /**
  * Top-level fallback shown when any child of `<ErrorBoundary>` throws.
@@ -19,24 +23,19 @@ export function FallbackError({ error }: FallbackProps) {
 }
 
 function App() {
-  const { t } = useTranslation(['common', 'upload'])
+  const { t } = useTranslation('common')
+  const hasDataset = useDatasetStore(selectHasDataset)
+
   return (
     <ErrorBoundary FallbackComponent={FallbackError}>
       <div className="flex min-h-screen flex-col">
-        <header className="border-b border-surface-700 bg-surface-800 px-6 py-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold text-slate-100">{t('common:appName')}</h1>
-              <p className="text-xs text-slate-400">{t('common:tagline')}</p>
-            </div>
-          </div>
-        </header>
-        <main className="flex-1 p-6">
-          <p className="text-slate-400">{t('upload:dropzone.instruction')}</p>
-        </main>
-        <footer className="border-t border-surface-700 px-6 py-2 text-xs text-slate-500">
-          {t('common:footer')}
-        </footer>
+        {hasDataset ? <Header /> : null}
+        {hasDataset ? <Cockpit /> : <EmptyState />}
+        {hasDataset ? (
+          <footer className="border-t border-surface-700 px-6 py-2 text-center text-xs text-slate-500">
+            {t('footer')}
+          </footer>
+        ) : null}
       </div>
       <Toaster theme="dark" position="bottom-right" />
     </ErrorBoundary>

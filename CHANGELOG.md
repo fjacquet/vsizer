@@ -5,6 +5,23 @@ All notable changes to vsizer are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] — 2026-05-09
+
+### Fixed
+
+- **Empty-state "Charger un exemple" / "Load a sample" button** — the
+  landing page advertised a sample loader but `public/samples/` only ever
+  shipped a `.gitkeep`, so clicking the button silently failed. A 40-VM /
+  9-host / 3-cluster synthetic RVTools workbook (~26 KB) is now generated
+  and committed at `public/samples/rvtools-sample.xlsx`. Hostnames, cluster
+  names, and VM names are fabricated — no real estate data.
+
+### Added
+
+- **`scripts/generate-sample.mjs`** — Node ESM generator for the sample
+  workbook (uses the same SheetJS dependency as the runtime). Re-run with
+  `npm run generate-sample`.
+
 ## [1.0.0] — 2026-05-09
 
 First public release. The pipeline is feature-complete for the original

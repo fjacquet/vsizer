@@ -1,7 +1,7 @@
 {
   "name": "vsizer",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Drop your RVTools / Live Optics export, get a factual cluster utilization deck. 100% client-side.",
   "scripts": {
@@ -14,7 +14,8 @@
     "format": "biome format --write .",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "generate-sample": "node scripts/generate-sample.mjs"
   },
   "dependencies": {
     "i18next": "^25.10.10",

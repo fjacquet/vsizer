@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { VInfoRow } from '../../types'
-import { aggregateVmsPerCluster } from './vinfoMerge'
+import { aggregateVmsPerCluster, topReadinessVmsByCluster } from './vinfoMerge'
 
 const vm = (overrides: Partial<VInfoRow>): VInfoRow => ({
   vmName: 'vm-default',
@@ -8,6 +8,7 @@ const vm = (overrides: Partial<VInfoRow>): VInfoRow => ({
   vcpu: 2,
   vramMb: 4096,
   activeMemMb: null,
+  cpuReadinessPercent: null,
   poweredOn: true,
   ...overrides,
 })
@@ -73,5 +74,112 @@ describe('aggregateVmsPerCluster', () => {
     const byName = new Map(out.map((c) => [c.cluster, c]))
     expect(byName.get('CL_A')?.vcpuAllocated).toBe(6)
     expect(byName.get('CL_B')?.vcpuAllocated).toBe(1)
+  })
+
+  // ── ADR-0012: CPU Ready aggregation ─────────────────────────────────
+  describe('CPU Ready aggregation', () => {
+    it('marks readinessAvailable=false when no VM reports a value', () => {
+      const [out] = aggregateVmsPerCluster([
+        vm({ cluster: 'CL', cpuReadinessPercent: null }),
+        vm({ cluster: 'CL', cpuReadinessPercent: null }),
+      ])
+      expect(out?.readinessAvailable).toBe(false)
+      expect(out?.meanCpuReadinessPercent).toBeNull()
+      expect(out?.maxCpuReadinessPercent).toBeNull()
+      expect(out?.vmsAboveReadinessWarning).toBe(0)
+    })
+
+    it('computes mean / max only across reporting VMs (ignores nulls)', () => {
+      const [out] = aggregateVmsPerCluster([
+        vm({ cluster: 'CL', cpuReadinessPercent: 4 }),
+        vm({ cluster: 'CL', cpuReadinessPercent: null }),
+        vm({ cluster: 'CL', cpuReadinessPercent: 12 }),
+      ])
+      expect(out?.readinessAvailable).toBe(true)
+      // arithmetic mean over reporters: (4 + 12) / 2 = 8
+      expect(out?.meanCpuReadinessPercent).toBeCloseTo(8, 5)
+      expect(out?.maxCpuReadinessPercent).toBe(12)
+    })
+
+    it('treats explicit zero as a reporter (distinct from null)', () => {
+      const [out] = aggregateVmsPerCluster([
+        vm({ cluster: 'CL', cpuReadinessPercent: 0 }),
+        vm({ cluster: 'CL', cpuReadinessPercent: 0 }),
+      ])
+      expect(out?.readinessAvailable).toBe(true)
+      expect(out?.meanCpuReadinessPercent).toBe(0)
+      expect(out?.maxCpuReadinessPercent).toBe(0)
+      expect(out?.vmsAboveReadinessWarning).toBe(0)
+    })
+
+    it('counts VMs strictly above the warning threshold (5 %), not at it', () => {
+      const [out] = aggregateVmsPerCluster([
+        vm({ cluster: 'CL', cpuReadinessPercent: 5 }), // not counted (== warning)
+        vm({ cluster: 'CL', cpuReadinessPercent: 5.0001 }), // counted
+        vm({ cluster: 'CL', cpuReadinessPercent: 12 }), // counted
+        vm({ cluster: 'CL', cpuReadinessPercent: 4.99 }), // not counted
+      ])
+      expect(out?.vmsAboveReadinessWarning).toBe(2)
+    })
+
+    it('excludes powered-off VMs from CPU Ready stats too', () => {
+      const [out] = aggregateVmsPerCluster([
+        vm({ cluster: 'CL', poweredOn: true, cpuReadinessPercent: 8 }),
+        vm({ cluster: 'CL', poweredOn: false, cpuReadinessPercent: 99 }), // ignored
+      ])
+      expect(out?.meanCpuReadinessPercent).toBe(8)
+      expect(out?.maxCpuReadinessPercent).toBe(8)
+    })
+  })
+})
+
+// Top-N export of the most-contended VMs per cluster.
+describe('topReadinessVmsByCluster', () => {
+  it('returns an empty map when no VM in any cluster reports readiness', () => {
+    const out = topReadinessVmsByCluster([vm({ cluster: 'CL_A' }), vm({ cluster: 'CL_B' })])
+    expect(out.size).toBe(0)
+  })
+
+  it('omits clusters that have no readiness reporters', () => {
+    const out = topReadinessVmsByCluster([
+      vm({ cluster: 'CL_A', cpuReadinessPercent: 7 }),
+      vm({ cluster: 'CL_B' }), // no reporters → no entry
+    ])
+    expect([...out.keys()]).toEqual(['CL_A'])
+  })
+
+  it('sorts the per-cluster list by cpuReadinessPercent descending', () => {
+    const out = topReadinessVmsByCluster([
+      vm({ vmName: 'low', cluster: 'CL', cpuReadinessPercent: 2 }),
+      vm({ vmName: 'high', cluster: 'CL', cpuReadinessPercent: 18 }),
+      vm({ vmName: 'mid', cluster: 'CL', cpuReadinessPercent: 8 }),
+    ])
+    expect(out.get('CL')?.map((v) => v.vmName)).toEqual(['high', 'mid', 'low'])
+  })
+
+  it('caps the per-cluster list at topN (default 10)', () => {
+    const rows = Array.from({ length: 15 }, (_, i) =>
+      vm({ vmName: `vm-${i}`, cluster: 'CL', cpuReadinessPercent: i + 1 }),
+    )
+    const out = topReadinessVmsByCluster(rows)
+    expect(out.get('CL')).toHaveLength(10)
+  })
+
+  it('respects a custom topN', () => {
+    const rows = Array.from({ length: 15 }, (_, i) =>
+      vm({ vmName: `vm-${i}`, cluster: 'CL', cpuReadinessPercent: i + 1 }),
+    )
+    const out = topReadinessVmsByCluster(rows, 3)
+    expect(out.get('CL')).toHaveLength(3)
+    // The three largest values are 15, 14, 13.
+    expect(out.get('CL')?.map((v) => v.cpuReadinessPercent)).toEqual([15, 14, 13])
+  })
+
+  it('skips powered-off VMs', () => {
+    const out = topReadinessVmsByCluster([
+      vm({ vmName: 'on', cluster: 'CL', poweredOn: true, cpuReadinessPercent: 4 }),
+      vm({ vmName: 'off', cluster: 'CL', poweredOn: false, cpuReadinessPercent: 99 }),
+    ])
+    expect(out.get('CL')?.map((v) => v.vmName)).toEqual(['on'])
   })
 })

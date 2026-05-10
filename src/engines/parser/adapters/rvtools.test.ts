@@ -38,9 +38,119 @@ describe('adaptRvtoolsVInfo', () => {
       vcpu: 4,
       vramMb: 8192,
       activeMemMb: null,
+      // ADR-0012: column absent in this fixture → null preserved.
+      cpuReadinessPercent: null,
       poweredOn: true,
     })
     expect(rows[1]?.poweredOn).toBe(false)
+  })
+
+  // ADR-0012: parse the canonical RVTools 4.x "Overall Cpu Readiness" column.
+  it('reads the canonical "Overall Cpu Readiness" column from vInfo', () => {
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory', 'Overall Cpu Readiness'],
+        ['vm-busy', 'poweredOn', 'CL_X', 4, 8192, 12.4],
+        ['vm-idle', 'poweredOn', 'CL_X', 2, 4096, 0],
+        ['vm-blank', 'poweredOn', 'CL_X', 2, 4096, null],
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    expect(rows[0]?.cpuReadinessPercent).toBeCloseTo(12.4, 4)
+    // 0 is a legitimate report (VM ran ready 0 % of the time) and must
+    // NOT collapse to null — that distinction matters for the
+    // readinessAvailable flag in the aggregator (ADR-0012 §2).
+    expect(rows[1]?.cpuReadinessPercent).toBe(0)
+    // Blank cell within an existing column → null (not 0).
+    expect(rows[2]?.cpuReadinessPercent).toBeNull()
+  })
+
+  it('falls back through the alias list for "% Cpu Readiness" and "Cpu Readiness"', () => {
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory', 'Cpu Readiness'],
+        ['vm-alias', 'poweredOn', 'CL_X', 4, 8192, 6.7],
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    expect(rows[0]?.cpuReadinessPercent).toBeCloseTo(6.7, 4)
+  })
+
+  // ADR-0012 §2: corrupted cells must NOT silently parse to 0%.
+  // The shared `readNumber` helper would do so (its docstring says
+  // "invalid inputs surface as zeros"); we use a strict per-cell parser
+  // instead so absence stays absence — see parseReadinessCell rationale
+  // in rvtools.ts.
+  it('rejects Excel error sentinels (#REF!, #DIV/0!, #VALUE!, #NAME?, #NUM!) as null, not 0', () => {
+    const sentinels = ['#REF!', '#DIV/0!', '#VALUE!', '#NAME?', '#NUM!', '#ERROR!']
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory', 'Overall Cpu Readiness'],
+        ...sentinels.map((s, i) => [`vm-${i}`, 'poweredOn', 'CL_X', 2, 4096, s]),
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    for (const row of rows) {
+      expect(row.cpuReadinessPercent).toBeNull()
+    }
+  })
+
+  it('rejects manual placeholders ("N/A", "NA", "-", "--") as null, not 0', () => {
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory', 'Overall Cpu Readiness'],
+        ['vm-na', 'poweredOn', 'CL_X', 2, 4096, 'N/A'],
+        ['vm-na2', 'poweredOn', 'CL_X', 2, 4096, 'NA'],
+        ['vm-dash', 'poweredOn', 'CL_X', 2, 4096, '-'],
+        ['vm-ddash', 'poweredOn', 'CL_X', 2, 4096, '--'],
+        ['vm-blank', 'poweredOn', 'CL_X', 2, 4096, '   '],
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    for (const row of rows) {
+      expect(row.cpuReadinessPercent).toBeNull()
+    }
+  })
+
+  it('still parses a percent-suffixed numeric string and locale-comma decimals', () => {
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory', 'Overall Cpu Readiness'],
+        ['vm-pct', 'poweredOn', 'CL_X', 2, 4096, '7.5%'],
+        ['vm-comma', 'poweredOn', 'CL_X', 2, 4096, '7,5'],
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    expect(rows[0]?.cpuReadinessPercent).toBeCloseTo(7.5, 4)
+    expect(rows[1]?.cpuReadinessPercent).toBeCloseTo(7.5, 4)
+  })
+
+  it('rejects non-finite numeric inputs (Infinity, NaN) as null', () => {
+    // These shouldn't happen in real RVTools output but guard against
+    // post-processed CSV pipelines that injected them.
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory', 'Overall Cpu Readiness'],
+        ['vm-inf', 'poweredOn', 'CL_X', 2, 4096, Number.POSITIVE_INFINITY],
+        ['vm-nan', 'poweredOn', 'CL_X', 2, 4096, Number.NaN],
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    for (const row of rows) {
+      expect(row.cpuReadinessPercent).toBeNull()
+    }
   })
 
   it('tolerates French-localized column headers', () => {

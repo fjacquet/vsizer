@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import type { PptxStrings } from '../engines/export/pptx/builder'
+import type { SourceFormat } from '../engines/parser/detectSource'
 
 /**
  * Assemble a `PptxStrings` bag from i18next translations. Keeps the
@@ -9,9 +10,28 @@ import type { PptxStrings } from '../engines/export/pptx/builder'
  * Function-typed slots (subtitles) are wrappers around `t(..., vars)` so
  * the i18next interpolation runs at slide-build time with the actual
  * per-cluster numbers.
+ *
+ * `sourceFormat` is needed (since ADR-0012) to pick the right label for
+ * the "CPU Ready : non disponible" line — Live Optics workbooks omit
+ * the column entirely; older RVTools builds may also omit it. Picking
+ * the wrong label confuses the speaker about the cause of absence.
  */
-export function usePptxStrings(sourceFile: string, dateIso: string): PptxStrings {
+export function usePptxStrings(
+  sourceFile: string,
+  dateIso: string,
+  sourceFormat: SourceFormat,
+): PptxStrings {
   const { t } = useTranslation('pptx')
+
+  // Pre-resolve the source label so the slide layer (which doesn't know
+  // about SourceFormat) can render a single string. Live Optics is the
+  // common case for absence; RVTools-without-column or unknown-source
+  // fall through to the RVTools label since the user definitely
+  // uploaded a non-LiveOptics file.
+  const sourceLabel =
+    sourceFormat === 'liveoptics'
+      ? t('cluster.contentionLine.sourceLiveOptics')
+      : t('cluster.contentionLine.sourceRvtools')
 
   return {
     deckTitle: t('deckTitle'),
@@ -106,7 +126,28 @@ export function usePptxStrings(sourceFile: string, dateIso: string): PptxStrings
         consumedGhz: t('cluster.banner.consumedGhz'),
         availableGhz: t('cluster.banner.availableGhz'),
       },
+      contentionLine: {
+        available: ({ mean, max, count, threshold }) =>
+          t('cluster.contentionLine.available', { mean, max, count, threshold }),
+        // Pre-resolved against the actual SourceFormat so the slide
+        // layer renders a single string and the deck never claims
+        // "Live Optics" on an RVTools file with the column missing.
+        unavailable: t('cluster.contentionLine.unavailable', { source: sourceLabel }),
+      },
       footer: t('cluster.footer', { file: sourceFile }),
+    },
+    contention: {
+      title: ({ n, cluster }) => t('contention.title', { n, cluster }),
+      subtitle: t('contention.subtitle'),
+      columns: {
+        rank: t('contention.columns.rank'),
+        vmName: t('contention.columns.vmName'),
+        vcpu: t('contention.columns.vcpu'),
+        readiness: t('contention.columns.readiness'),
+        cluster: t('contention.columns.cluster'),
+      },
+      legendReference: t('contention.legendReference'),
+      footer: t('contention.footer', { file: sourceFile }),
     },
   }
 }

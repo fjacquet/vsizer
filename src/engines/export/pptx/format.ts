@@ -41,6 +41,15 @@ export const fmtPctOneDecimal = (ratio: number): string =>
   Number.isFinite(ratio) ? `${(ratio * 100).toFixed(1)}%` : '—'
 
 /**
+ * Format an already-percentage value (0..200) with one decimal and a
+ * trailing `%`. Distinct from `fmtPctOneDecimal` (which expects a 0..1
+ * ratio and multiplies by 100). Used for CPU Ready, where the source
+ * value is already in percent units (ADR-0012).
+ */
+export const fmtPercentOneDecimal = (percent: number): string =>
+  Number.isFinite(percent) ? `${percent.toFixed(1)}%` : '—'
+
+/**
  * Format a memory amount given in MB, with TB / GB / MB tiering. Reproduces
  * the legacy `fmt_mb` helper.
  *   ≥ 1 048 576 MB → "X.X TB"

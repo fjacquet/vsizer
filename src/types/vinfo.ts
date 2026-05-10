@@ -15,5 +15,12 @@ export interface VInfoRow {
   vramMb: number
   /** Active memory in MB, where reported by the source; null otherwise. */
   activeMemMb: number | null
+  /** Percentage of time this VM was ready to run but could not get
+   *  scheduled on a pCPU (0..100, theoretically up to ~200 when summed
+   *  across vCPUs). Source: RVTools `vInfo.Overall Cpu Readiness`
+   *  (= VMware `summary.quickStats.OverallCpuReadiness`, an
+   *  instantaneous ~20 s sample). Always `null` for Live Optics inputs
+   *  — the workbook does not expose it. See ADR-0012. */
+  cpuReadinessPercent: number | null
   poweredOn: boolean
 }

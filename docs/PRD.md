@@ -92,6 +92,11 @@ user can verify this themselves — that's a feature.
   that's the typical RVTools-only case; we don't fabricate the figure.
 - The estate-wide `meanCpuRatio` is **capacity-weighted** (`consumedGhz / physicalGhz`)
   so a small idle cluster doesn't drag the headline number down.
+- **CPU Ready (contention)** is parsed from RVTools' `vInfo.Overall Cpu Readiness`
+  per VM (instantaneous %), aggregated per cluster as mean / max / count of VMs
+  above the 5 % warning threshold, and exposed through `readinessAvailable`.
+  Live Optics workbooks do not expose this metric; aggregates report `null` and
+  the dashboard / deck render a factual "non disponible" line. See ADR-0012.
 
 ### 5.3 Dashboard
 

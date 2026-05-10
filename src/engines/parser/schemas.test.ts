@@ -14,6 +14,7 @@ describe('VInfoRowSchema', () => {
       vcpu: 4,
       vramMb: 8192,
       activeMemMb: null,
+      cpuReadinessPercent: null,
       poweredOn: true,
     }
     expect(VInfoRowSchema.parse(row)).toEqual(row)
@@ -27,6 +28,7 @@ describe('VInfoRowSchema', () => {
         vcpu: -2,
         vramMb: 8192,
         activeMemMb: null,
+        cpuReadinessPercent: null,
         poweredOn: true,
       }),
     ).toThrow()
@@ -34,6 +36,62 @@ describe('VInfoRowSchema', () => {
 
   it('rejects a row missing required fields', () => {
     expect(() => VInfoRowSchema.parse({ vmName: 'vm-1' })).toThrow()
+  })
+
+  // ADR-0012: cpuReadinessPercent bounds and asymmetric-source contract.
+  it('accepts a row reporting a CPU Ready value (RVTools)', () => {
+    const row = {
+      vmName: 'vm-1',
+      cluster: 'CL_DEMO_1',
+      vcpu: 4,
+      vramMb: 8192,
+      activeMemMb: null,
+      cpuReadinessPercent: 7.4,
+      poweredOn: true,
+    }
+    expect(VInfoRowSchema.parse(row)).toEqual(row)
+  })
+
+  it('accepts the upper bound of cpuReadinessPercent (200)', () => {
+    expect(
+      VInfoRowSchema.parse({
+        vmName: 'vm-1',
+        cluster: 'CL_DEMO_1',
+        vcpu: 8,
+        vramMb: 8192,
+        activeMemMb: null,
+        cpuReadinessPercent: 200,
+        poweredOn: true,
+      }),
+    ).toMatchObject({ cpuReadinessPercent: 200 })
+  })
+
+  it('rejects cpuReadinessPercent above the 200 cap', () => {
+    expect(() =>
+      VInfoRowSchema.parse({
+        vmName: 'vm-1',
+        cluster: 'CL_DEMO_1',
+        vcpu: 8,
+        vramMb: 8192,
+        activeMemMb: null,
+        cpuReadinessPercent: 200.01,
+        poweredOn: true,
+      }),
+    ).toThrow()
+  })
+
+  it('rejects negative cpuReadinessPercent', () => {
+    expect(() =>
+      VInfoRowSchema.parse({
+        vmName: 'vm-1',
+        cluster: 'CL_DEMO_1',
+        vcpu: 4,
+        vramMb: 8192,
+        activeMemMb: null,
+        cpuReadinessPercent: -0.1,
+        poweredOn: true,
+      }),
+    ).toThrow()
   })
 })
 
@@ -120,6 +178,10 @@ describe('ClusterAggregateSchema', () => {
     mhzPerVcpu: 120,
     stretched: false,
     drReservedGhz: 0,
+    meanCpuReadinessPercent: null,
+    maxCpuReadinessPercent: null,
+    vmsAboveReadinessWarning: 0,
+    readinessAvailable: false,
   }
 
   it('accepts a well-formed aggregate', () => {
@@ -144,6 +206,28 @@ describe('ClusterAggregateSchema', () => {
       drReservedRamMb: 1_048_576,
     }
     expect(ClusterAggregateSchema.parse(stretched)).toEqual(stretched)
+  })
+
+  // ADR-0012: cluster-level readiness fields propagate from VM-side stats.
+  it('accepts populated CPU Ready aggregates (RVTools input)', () => {
+    const withReadiness = {
+      ...goodAggregate,
+      meanCpuReadinessPercent: 6.4,
+      maxCpuReadinessPercent: 14.8,
+      vmsAboveReadinessWarning: 7,
+      readinessAvailable: true,
+    }
+    expect(ClusterAggregateSchema.parse(withReadiness)).toEqual(withReadiness)
+  })
+
+  it('rejects mean readiness above the 200 cap', () => {
+    expect(() =>
+      ClusterAggregateSchema.parse({
+        ...goodAggregate,
+        meanCpuReadinessPercent: 201,
+        readinessAvailable: true,
+      }),
+    ).toThrow()
   })
 })
 
@@ -171,6 +255,35 @@ describe('GlobalSummarySchema', () => {
       mhzPerVcpu: 384.79,
       stretchedClusterCount: 0,
       drReservedGhz: 0,
+      vmsAboveReadinessWarning: null,
+    }
+    expect(GlobalSummarySchema.parse(summary)).toEqual(summary)
+  })
+
+  it('accepts a populated estate readiness count', () => {
+    const summary = {
+      clusterCount: 18,
+      hostCount: 312,
+      vmCount: 6312,
+      physicalCores: 7488,
+      usablePhysicalCores: 7488,
+      vcpuPerPcpu: 0.84,
+      physicalGhz: 10560,
+      consumedGhz: 2428.8,
+      availableGhz: 8131.2,
+      physicalRamMb: 163_577_856,
+      consumedRamMb: 50_709_136,
+      drReservedRamMb: 0,
+      availableRamMb: 112_868_720,
+      meanCpuRatio: 0.23,
+      meanRamRatio: 0.31,
+      vcpuAllocated: 6312,
+      vramAllocatedMb: 4_194_304,
+      activeMemMb: null,
+      mhzPerVcpu: 384.79,
+      stretchedClusterCount: 0,
+      drReservedGhz: 0,
+      vmsAboveReadinessWarning: 24,
     }
     expect(GlobalSummarySchema.parse(summary)).toEqual(summary)
   })

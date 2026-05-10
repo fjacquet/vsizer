@@ -5,6 +5,52 @@ All notable changes to vsizer are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-05-10
+
+### Added
+
+- **CPU Ready contention surface** (ADR-0012) — RVTools' per-VM
+  `vInfo.Overall Cpu Readiness` is now parsed, aggregated per cluster
+  (mean / max / count of VMs above the configurable warning threshold,
+  default 5 %), and surfaced on each cluster card and slide as a
+  single factual line with VMware-standard color thresholds (<5 %
+  green / 5–10 % orange / >10 % red). For clusters with at least one
+  VM above the warning threshold, a conditional annex slide listing
+  the top 10 VMs is appended right after the cluster slide. Live
+  Optics inputs render `"CPU Ready : non disponible (source : Live
+  Optics)"` — the workbook does not expose the metric; the source
+  label is wired from the actual `SourceFormat` so an RVTools file
+  whose readiness column is missing reads as `(source : RVTools)`
+  rather than mis-attributing the absence. New shared module
+  `engines/aggregation/contention.ts` centralizes thresholds (warning
+  5 %, serious 10 %); new helper `contentionColor` mirrors the
+  existing `usageColor`. Top-N defaults to 10. Estate-level rollup
+  `vmsAboveReadinessWarning` is wired through `GlobalSummary` but
+  intentionally not surfaced on the dashboard or title slide in this
+  iteration (V2).
+
+### Engineering
+
+- **Strict CPU Ready cell parser** — the new
+  `parseReadinessCell` helper rejects Excel error sentinels
+  (`#REF!`, `#DIV/0!`, `#VALUE!`, `#NAME?`, `#NUM!`, `#ERROR!`),
+  manual placeholders (`N/A`, `NA`, `-`, `--`), and non-finite
+  numbers as `null` rather than collapsing them to `0` like the
+  shared `readNumber` helper. Inverts ADR-0012's "absence ≠ healthy"
+  contract that the generic helper would have broken (a corrupted
+  column would have read as "all VMs healthy, no annex slide").
+- **265 tests green** (was 227 in 1.0.1), coverage 98.36 % on
+  `engines/**` + `utils/**` (gate 75 %). New tests cover parser
+  strictness (Excel sentinels, locale variants, non-finite),
+  aggregator readiness statistics (no reporters / partial reporters /
+  explicit zero / strict count above warning / powered-off
+  excluded), top-N helper (sort desc, custom topN, skip
+  unreported), schema bounds [0, 200] for readiness, the new
+  `contentionColor` palette mapping, the deck builder smoke for
+  mixed RVTools-hot / RVTools-healthy / Live Optics datasets, and
+  both `fmtPercentValue` (UI) / `fmtPercentOneDecimal` (PPTX)
+  format helpers including locale variants.
+
 ## [1.0.1] — 2026-05-09
 
 ### Fixed

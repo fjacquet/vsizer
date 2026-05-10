@@ -98,6 +98,14 @@ export const aggregateClusters = ({
         mhzPerVcpu: computeMhzPerVcpu(h.consumedGhz, vcpuAllocated),
         stretched: isStretched,
         drReservedGhz,
+        // CPU Ready aggregates are sourced from the VM-side rollup; when
+        // the cluster has no VM rows they default to the unreported state
+        // (null / 0 / false), matching the asymmetric-source contract in
+        // ADR-0012 §2 — never imply "all healthy" from absence of data.
+        meanCpuReadinessPercent: v?.meanCpuReadinessPercent ?? null,
+        maxCpuReadinessPercent: v?.maxCpuReadinessPercent ?? null,
+        vmsAboveReadinessWarning: v?.vmsAboveReadinessWarning ?? 0,
+        readinessAvailable: v?.readinessAvailable ?? false,
       }
     })
     .sort((a, b) => a.cluster.localeCompare(b.cluster))

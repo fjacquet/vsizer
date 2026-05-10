@@ -12,6 +12,7 @@ const sampleVm: VInfoRow = {
   vcpu: 4,
   vramMb: 8192,
   activeMemMb: 1024,
+  cpuReadinessPercent: null,
   poweredOn: true,
 }
 
@@ -37,6 +38,7 @@ const sampleGlobals: GlobalSummary = {
   mhzPerVcpu: 6250,
   stretchedClusterCount: 0,
   drReservedGhz: 0,
+  vmsAboveReadinessWarning: null,
 }
 
 describe('datasetStore', () => {

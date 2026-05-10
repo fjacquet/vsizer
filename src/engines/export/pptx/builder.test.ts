@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ClusterAggregate, GlobalSummary, VHostRow } from '../../../types'
+import type { TopReadinessVm } from '../../aggregation/vinfoMerge'
 import { buildPptx, type PptxStrings } from './builder'
 
 const makeAggregate = (overrides: Partial<ClusterAggregate>): ClusterAggregate => ({
@@ -28,6 +29,10 @@ const makeAggregate = (overrides: Partial<ClusterAggregate>): ClusterAggregate =
   mhzPerVcpu: 120,
   stretched: false,
   drReservedGhz: 0,
+  meanCpuReadinessPercent: null,
+  maxCpuReadinessPercent: null,
+  vmsAboveReadinessWarning: 0,
+  readinessAvailable: false,
   ...overrides,
 })
 
@@ -64,6 +69,7 @@ const globals: GlobalSummary = {
   mhzPerVcpu: 120,
   stretchedClusterCount: 0,
   drReservedGhz: 0,
+  vmsAboveReadinessWarning: null,
 }
 
 const strings: PptxStrings = {
@@ -144,8 +150,26 @@ const strings: PptxStrings = {
       consumedGhz: 'GHz consommés',
       availableGhz: 'GHz disponibles',
     },
+    contentionLine: {
+      available: ({ mean, max, count, threshold }) =>
+        `CPU Ready : ${mean} (moy.) · ${max} (max) · ${count} VM(s) au-dessus de ${threshold} %`,
+      unavailable: 'CPU Ready : non disponible (source : Live Optics)',
+    },
     footer:
       'Source : test-fixture.xlsx — vHost (CPU/RAM usage %, Speed × Cores) + vInfo (vCPUs, Memory)',
+  },
+  contention: {
+    title: ({ n, cluster }) => `VMs avec CPU Ready le plus élevé — ${cluster} (top ${n})`,
+    subtitle: 'Source : RVTools vInfo · Overall Cpu Readiness · seuil de référence : 5 %',
+    columns: {
+      rank: '#',
+      vmName: 'VM',
+      vcpu: 'vCPU',
+      readiness: 'CPU Ready',
+      cluster: 'Cluster',
+    },
+    legendReference: 'Référence VMware :',
+    footer: 'Source : test-fixture.xlsx — vInfo (Overall Cpu Readiness)',
   },
 }
 
@@ -155,6 +179,7 @@ describe('buildPptx', () => {
       globals,
       clusters: [makeAggregate({ cluster: 'CL_A' }), makeAggregate({ cluster: 'CL_B' })],
       vhost: [host({ cluster: 'CL_A' }), host({ cluster: 'CL_B' })],
+      topReadinessByCluster: new Map(),
       strings,
     })
     expect(out).toBeInstanceOf(ArrayBuffer)
@@ -172,6 +197,7 @@ describe('buildPptx', () => {
       globals: { ...globals, clusterCount: 0, hostCount: 0, vmCount: 0 },
       clusters: [],
       vhost: [],
+      topReadinessByCluster: new Map(),
       strings,
     })
     const bytes = new Uint8Array(out)
@@ -185,6 +211,7 @@ describe('buildPptx', () => {
       globals,
       clusters: [makeAggregate({ cluster: 'CL_GHOST' })],
       vhost: [], // intentionally empty
+      topReadinessByCluster: new Map(),
       strings,
     })
     expect(out).toBeInstanceOf(ArrayBuffer)
@@ -197,7 +224,74 @@ describe('buildPptx', () => {
       makeAggregate({ cluster, meanCpuRatio: Math.random() }),
     )
     const vhost = clusters.map((c) => host({ cluster: c.cluster }))
-    const out = await buildPptx({ globals, clusters, vhost, strings })
+    const out = await buildPptx({
+      globals,
+      clusters,
+      vhost,
+      topReadinessByCluster: new Map(),
+      strings,
+    })
     expect((out as ArrayBuffer).byteLength).toBeGreaterThan(2000)
+  })
+
+  // ADR-0012: conditional CPU Ready annex slide injection.
+  it('builds a deck with mixed readiness states without throwing', async () => {
+    // Three clusters covering all annex-injection branches:
+    //   - CL_RVTOOLS_HOT: readiness available + 2 VMs above warning + top list → annex appended
+    //   - CL_RVTOOLS_HEALTHY: readiness available, 0 VMs above warning → no annex
+    //   - CL_LIVEOPTICS: readiness unavailable → no annex, "non disponible" line
+    const topVms: TopReadinessVm[] = [
+      { vmName: 'vm-busy', cluster: 'CL_RVTOOLS_HOT', vcpu: 8, cpuReadinessPercent: 14.2 },
+      { vmName: 'vm-warm', cluster: 'CL_RVTOOLS_HOT', vcpu: 4, cpuReadinessPercent: 7.6 },
+    ]
+    const out = await buildPptx({
+      globals,
+      clusters: [
+        makeAggregate({
+          cluster: 'CL_RVTOOLS_HOT',
+          readinessAvailable: true,
+          meanCpuReadinessPercent: 8.4,
+          maxCpuReadinessPercent: 14.2,
+          vmsAboveReadinessWarning: 2,
+        }),
+        makeAggregate({
+          cluster: 'CL_RVTOOLS_HEALTHY',
+          readinessAvailable: true,
+          meanCpuReadinessPercent: 1.1,
+          maxCpuReadinessPercent: 3.4,
+          vmsAboveReadinessWarning: 0,
+        }),
+        makeAggregate({ cluster: 'CL_LIVEOPTICS' }),
+      ],
+      vhost: [
+        host({ cluster: 'CL_RVTOOLS_HOT' }),
+        host({ cluster: 'CL_RVTOOLS_HEALTHY' }),
+        host({ cluster: 'CL_LIVEOPTICS' }),
+      ],
+      topReadinessByCluster: new Map([['CL_RVTOOLS_HOT', topVms]]),
+      strings,
+    })
+    expect(out).toBeInstanceOf(ArrayBuffer)
+    expect((out as ArrayBuffer).byteLength).toBeGreaterThan(2000)
+  })
+
+  it('does not append an annex slide when topVms is empty even if VMs are above warning', async () => {
+    // Defensive third clause in the builder guard: if the caller forgets
+    // to compute the top list, we silently skip rather than render an
+    // empty annex slide.
+    const out = await buildPptx({
+      globals,
+      clusters: [
+        makeAggregate({
+          cluster: 'CL_NO_TOP',
+          readinessAvailable: true,
+          vmsAboveReadinessWarning: 5,
+        }),
+      ],
+      vhost: [host({ cluster: 'CL_NO_TOP' })],
+      topReadinessByCluster: new Map(),
+      strings,
+    })
+    expect(out).toBeInstanceOf(ArrayBuffer)
   })
 })

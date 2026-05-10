@@ -10,6 +10,7 @@ const sampleVm: VInfoRow = {
   vcpu: 4,
   vramMb: 8192,
   activeMemMb: 1024,
+  cpuReadinessPercent: null,
   poweredOn: true,
 }
 
@@ -35,6 +36,7 @@ const sampleGlobals: GlobalSummary = {
   mhzPerVcpu: 6250,
   stretchedClusterCount: 0,
   drReservedGhz: 0,
+  vmsAboveReadinessWarning: null,
 }
 
 afterEach(() => {
@@ -80,6 +82,10 @@ describe('App shell', () => {
           mhzPerVcpu: 6250,
           stretched: false,
           drReservedGhz: 0,
+          meanCpuReadinessPercent: null,
+          maxCpuReadinessPercent: null,
+          vmsAboveReadinessWarning: 0,
+          readinessAvailable: false,
         },
       },
       globals: sampleGlobals,

@@ -19,6 +19,7 @@ const vm = (overrides: Partial<VInfoRow>): VInfoRow => ({
   vcpu: 2,
   vramMb: 4096,
   activeMemMb: null,
+  cpuReadinessPercent: null,
   poweredOn: true,
   ...overrides,
 })
@@ -161,6 +162,7 @@ describe('aggregateClusters', () => {
         vcpu: 4,
         vramMb: 1024,
         activeMemMb: null,
+        cpuReadinessPercent: null,
         poweredOn: true,
       })),
     })
@@ -179,6 +181,7 @@ describe('aggregateClusters', () => {
         vcpu: 4,
         vramMb: 1024,
         activeMemMb: null,
+        cpuReadinessPercent: null,
         poweredOn: true,
       })),
       stretchedClusters: new Set(['CL']),
@@ -318,5 +321,42 @@ describe('aggregateClusters', () => {
     expect(out[0]?.consumedRamMb).toBe(0)
     expect(out[0]?.drReservedRamMb).toBe(0)
     expect(out[0]?.availableRamMb).toBe(0)
+  })
+
+  // ── CPU Ready pass-through (ADR-0012) ────────────────────────────────
+
+  it('passes through CPU Ready stats from the VM-side rollup', () => {
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL' })],
+      vinfo: [
+        vm({ cluster: 'CL', cpuReadinessPercent: 4 }),
+        vm({ cluster: 'CL', cpuReadinessPercent: 12 }),
+      ],
+    })
+    expect(out[0]?.readinessAvailable).toBe(true)
+    expect(out[0]?.meanCpuReadinessPercent).toBeCloseTo(8, 5)
+    expect(out[0]?.maxCpuReadinessPercent).toBe(12)
+    expect(out[0]?.vmsAboveReadinessWarning).toBe(1)
+  })
+
+  it('reports readinessAvailable=false when no VM in the cluster reports it (Live Optics)', () => {
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL' })],
+      vinfo: [vm({ cluster: 'CL' }), vm({ cluster: 'CL' })],
+    })
+    expect(out[0]?.readinessAvailable).toBe(false)
+    expect(out[0]?.meanCpuReadinessPercent).toBeNull()
+    expect(out[0]?.maxCpuReadinessPercent).toBeNull()
+    expect(out[0]?.vmsAboveReadinessWarning).toBe(0)
+  })
+
+  it('reports readinessAvailable=false when a cluster has hosts but no VMs', () => {
+    const out = aggregateClusters({
+      vhost: [host({ cluster: 'CL' })],
+      vinfo: [],
+    })
+    expect(out[0]?.readinessAvailable).toBe(false)
+    expect(out[0]?.meanCpuReadinessPercent).toBeNull()
+    expect(out[0]?.vmsAboveReadinessWarning).toBe(0)
   })
 })

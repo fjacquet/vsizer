@@ -83,6 +83,25 @@ export interface ClusterAggregate {
    *  to avoid surfacing Infinity at the UI boundary. */
   mhzPerVcpu: number
 
+  // ── CPU Ready / contention (RVTools-only) ───────────────────────────
+  /** Arithmetic mean of per-VM `cpuReadinessPercent` across powered-on
+   *  VMs that reported it (in percent, 0..200). `null` when no VM in
+   *  the cluster reported readiness — typical for Live Optics inputs.
+   *  See ADR-0012 for why arithmetic (not vCPU-weighted). */
+  meanCpuReadinessPercent: number | null
+  /** Largest reported per-VM `cpuReadinessPercent` in the cluster, or
+   *  `null` when no VM reported. Restores distribution shape that the
+   *  mean alone hides. */
+  maxCpuReadinessPercent: number | null
+  /** Count of powered-on VMs whose readiness exceeds the warning
+   *  threshold (5 % per ADR-0012 / `CONTENTION_THRESHOLDS.warning`).
+   *  `0` when readiness is unreported (do not infer "all healthy"). */
+  vmsAboveReadinessWarning: number
+  /** `true` iff at least one powered-on VM in the cluster reported a
+   *  readiness value. Drives the slide / dashboard branch between the
+   *  metric line and the "non disponible" line. See ADR-0012 §2. */
+  readinessAvailable: boolean
+
   // ── Stretched-cluster DR (manual flag, V1) ───────────────────────────
   /** True when the user has marked this cluster as a 2-site stretched
    *  vSAN/vSphere cluster. Drives the 50 % DR reservation on both

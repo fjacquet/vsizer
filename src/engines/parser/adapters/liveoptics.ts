@@ -49,6 +49,13 @@ export const adaptLiveOpticsVInfo = (sheet: ParsedSheet): VInfoRow[] => {
       // Active-memory cells are blank for VMs that don't report it; preserve
       // null rather than coercing to 0 so the dashboard can show "—".
       activeMemMb: activeRaw == null ? null : readNumber(activeRaw),
+      // Live Optics workbooks (classic and modern) do not export CPU
+      // Ready / %RDY in any column — only utilization / IOPS / latency
+      // on the perf sheets. Set null unconditionally so the aggregator
+      // marks the cluster as `readinessAvailable: false` and the slide
+      // / dashboard render the factual "non disponible" line.
+      // See ADR-0012 §2.
+      cpuReadinessPercent: null,
       poweredOn: isPoweredOn(readString(readCol(row, cols.poweredOn))),
     }
   })
@@ -124,6 +131,9 @@ export const adaptLiveOpticsModernVInfo = (sheet: ParsedSheet): VInfoRow[] => {
       vcpu: Math.max(0, Math.trunc(readNumber(readCol(row, cols.vcpu)))),
       vramMb: Math.max(0, readNumber(readCol(row, cols.vramMb))),
       activeMemMb: activeRaw == null ? null : readNumber(activeRaw),
+      // Modern Live Optics layout shares the asymmetric-source contract
+      // with the classic one: no CPU Ready column, set null. ADR-0012 §2.
+      cpuReadinessPercent: null,
       poweredOn: isPoweredOn(readString(readCol(row, cols.poweredOn))),
     }
   })

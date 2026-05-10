@@ -40,4 +40,11 @@ export interface GlobalSummary {
   // Stretched-cluster rollup
   stretchedClusterCount: number
   drReservedGhz: number
+
+  /** Estate-wide count of powered-on VMs whose CPU Ready exceeds the
+   *  warning threshold (5 %). Sum across clusters that report
+   *  readiness; `null` when no cluster reports (Live Optics-only
+   *  estates). Wired but not surfaced on the title slide / KPI bar in
+   *  this iteration — see ADR-0012 §7 (V2 follow-up). */
+  vmsAboveReadinessWarning: number | null
 }

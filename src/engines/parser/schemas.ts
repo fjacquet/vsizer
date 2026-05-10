@@ -20,6 +20,11 @@ export const VInfoRowSchema: z.ZodType<VInfoRow> = z.object({
   vramMb: z.number().nonnegative(),
   // SheetJS leaves blanks as `null`; nullable() keeps that contract explicit.
   activeMemMb: z.number().nullable(),
+  // CPU Ready % from RVTools quickStats (ADR-0012). Bound at 200 to
+  // absorb the same source-side overshoot the ratio cap was raised to
+  // 3.0 for (ADR-0011): OverallCpuReadiness can sum vCPU contributions
+  // and briefly exceed 100 %. Always null on Live Optics inputs.
+  cpuReadinessPercent: z.number().min(0).max(200).nullable(),
   poweredOn: z.boolean(),
 })
 
@@ -70,6 +75,11 @@ export const ClusterAggregateSchema: z.ZodType<ClusterAggregate> = z.object({
   mhzPerVcpu: z.number().nonnegative(),
   stretched: z.boolean(),
   drReservedGhz: z.number().nonnegative(),
+  // CPU Ready aggregates (ADR-0012). Bound mirrors VInfoRow.
+  meanCpuReadinessPercent: z.number().min(0).max(200).nullable(),
+  maxCpuReadinessPercent: z.number().min(0).max(200).nullable(),
+  vmsAboveReadinessWarning: z.number().int().nonnegative(),
+  readinessAvailable: z.boolean(),
 })
 
 export const GlobalSummarySchema: z.ZodType<GlobalSummary> = z.object({
@@ -95,4 +105,8 @@ export const GlobalSummarySchema: z.ZodType<GlobalSummary> = z.object({
   mhzPerVcpu: z.number().nonnegative(),
   stretchedClusterCount: z.number().int().nonnegative(),
   drReservedGhz: z.number().nonnegative(),
+  // Sum across reporting clusters (ADR-0012 §7). Null when no cluster
+  // reported readiness (Live Optics-only estate). Wired but not
+  // currently surfaced — see ADR-0012 V2 follow-up note.
+  vmsAboveReadinessWarning: z.number().int().nonnegative().nullable(),
 })

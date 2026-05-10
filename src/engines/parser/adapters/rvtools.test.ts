@@ -38,9 +38,46 @@ describe('adaptRvtoolsVInfo', () => {
       vcpu: 4,
       vramMb: 8192,
       activeMemMb: null,
+      // ADR-0012: column absent in this fixture → null preserved.
+      cpuReadinessPercent: null,
       poweredOn: true,
     })
     expect(rows[1]?.poweredOn).toBe(false)
+  })
+
+  // ADR-0012: parse the canonical RVTools 4.x "Overall Cpu Readiness" column.
+  it('reads the canonical "Overall Cpu Readiness" column from vInfo', () => {
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory', 'Overall Cpu Readiness'],
+        ['vm-busy', 'poweredOn', 'CL_X', 4, 8192, 12.4],
+        ['vm-idle', 'poweredOn', 'CL_X', 2, 4096, 0],
+        ['vm-blank', 'poweredOn', 'CL_X', 2, 4096, null],
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    expect(rows[0]?.cpuReadinessPercent).toBeCloseTo(12.4, 4)
+    // 0 is a legitimate report (VM ran ready 0 % of the time) and must
+    // NOT collapse to null — that distinction matters for the
+    // readinessAvailable flag in the aggregator (ADR-0012 §2).
+    expect(rows[1]?.cpuReadinessPercent).toBe(0)
+    // Blank cell within an existing column → null (not 0).
+    expect(rows[2]?.cpuReadinessPercent).toBeNull()
+  })
+
+  it('falls back through the alias list for "% Cpu Readiness" and "Cpu Readiness"', () => {
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory', 'Cpu Readiness'],
+        ['vm-alias', 'poweredOn', 'CL_X', 4, 8192, 6.7],
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    expect(rows[0]?.cpuReadinessPercent).toBeCloseTo(6.7, 4)
   })
 
   it('tolerates French-localized column headers', () => {

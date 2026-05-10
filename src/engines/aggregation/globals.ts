@@ -24,6 +24,7 @@ const emptySummary: GlobalSummary = {
   mhzPerVcpu: 0,
   stretchedClusterCount: 0,
   drReservedGhz: 0,
+  vmsAboveReadinessWarning: null,
 }
 
 /**
@@ -72,6 +73,16 @@ export const aggregateGlobals = (clusters: readonly ClusterAggregate[]): GlobalS
       ? null
       : reportedActive.reduce((acc, c) => acc + (c.activeMemMb ?? 0), 0)
 
+  // CPU Ready estate-level rollup (ADR-0012 §7). Sum across reporting
+  // clusters; null when zero clusters report (Live Optics-only estate)
+  // — never collapse absence to 0, mirrors the activeMemMb contract.
+  // Wired but not currently surfaced; held for the V2 KPI tile.
+  const reportingReadiness = clusters.filter((c) => c.readinessAvailable)
+  const vmsAboveReadinessWarning =
+    reportingReadiness.length === 0
+      ? null
+      : reportingReadiness.reduce((acc, c) => acc + c.vmsAboveReadinessWarning, 0)
+
   // Capacity-weighted, DR-aware (ADR-0011). The divisor is the *usable*
   // capacity sum, not the raw physical sum, so a stretched cluster's
   // 50 % reservation makes the headline number rise — same volume of
@@ -105,5 +116,6 @@ export const aggregateGlobals = (clusters: readonly ClusterAggregate[]): GlobalS
     mhzPerVcpu,
     stretchedClusterCount: clusters.filter((c) => c.stretched).length,
     drReservedGhz,
+    vmsAboveReadinessWarning,
   }
 }

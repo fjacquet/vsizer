@@ -29,6 +29,10 @@ const baseAggregate = (overrides: Partial<ClusterAggregate>): ClusterAggregate =
   mhzPerVcpu: 0,
   stretched: false,
   drReservedGhz: 0,
+  meanCpuReadinessPercent: null,
+  maxCpuReadinessPercent: null,
+  vmsAboveReadinessWarning: 0,
+  readinessAvailable: false,
   ...overrides,
 })
 
@@ -56,7 +60,26 @@ describe('aggregateGlobals', () => {
       mhzPerVcpu: 0,
       stretchedClusterCount: 0,
       drReservedGhz: 0,
+      vmsAboveReadinessWarning: null,
     })
+  })
+
+  // ADR-0012: estate readiness rollup, asymmetric-source contract.
+  it('returns vmsAboveReadinessWarning=null when no cluster reports readiness', () => {
+    const out = aggregateGlobals([
+      baseAggregate({ readinessAvailable: false, vmsAboveReadinessWarning: 0 }),
+      baseAggregate({ readinessAvailable: false, vmsAboveReadinessWarning: 0 }),
+    ])
+    expect(out.vmsAboveReadinessWarning).toBeNull()
+  })
+
+  it('sums vmsAboveReadinessWarning across reporting clusters only', () => {
+    const out = aggregateGlobals([
+      baseAggregate({ cluster: 'A', readinessAvailable: true, vmsAboveReadinessWarning: 4 }),
+      baseAggregate({ cluster: 'B', readinessAvailable: false, vmsAboveReadinessWarning: 0 }),
+      baseAggregate({ cluster: 'C', readinessAvailable: true, vmsAboveReadinessWarning: 7 }),
+    ])
+    expect(out.vmsAboveReadinessWarning).toBe(11)
   })
 
   it('sums host, VM and capacity counts across clusters', () => {
@@ -245,6 +268,7 @@ describe('plan reference numbers', () => {
       vcpu: VCPU_EACH + (i < remainder ? 1 : 0),
       vramMb: 4096,
       activeMemMb: null,
+      cpuReadinessPercent: null,
       poweredOn: true,
     }))
 

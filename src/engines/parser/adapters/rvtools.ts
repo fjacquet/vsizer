@@ -16,6 +16,11 @@ const VINFO_COLS = {
   cluster: ['cluster', 'grappe'],
   vcpu: ['cpus', '# cpus', 'cpu', 'vcpu', 'vcpus'],
   vramMb: ['memory', 'memory (mb)', 'mem', 'mémoire'],
+  // CPU Ready (%RDY snapshot from VMware quickStats), per ADR-0012.
+  // The canonical RVTools 4.x header is "Overall Cpu Readiness"; the
+  // other aliases are forgiving fallbacks for translated or
+  // post-processed exports.
+  cpuReadinessPercent: ['overall cpu readiness', '% cpu readiness', 'cpu readiness'],
   poweredOn: ['powerstate', 'power state', 'état', 'status'],
 } as const
 
@@ -53,14 +58,23 @@ const VHOST_COLS = {
  */
 export const adaptRvtoolsVInfo = (sheet: ParsedSheet): VInfoRow[] => {
   const cols = mapColumns(sheet.headers, VINFO_COLS)
-  return sheet.rows.map((row) => ({
-    vmName: readString(readCol(row, cols.vmName)),
-    cluster: readString(readCol(row, cols.cluster)),
-    vcpu: Math.max(0, Math.trunc(readNumber(readCol(row, cols.vcpu)))),
-    vramMb: Math.max(0, readNumber(readCol(row, cols.vramMb))),
-    activeMemMb: null,
-    poweredOn: readString(readCol(row, cols.poweredOn)).toLowerCase() === 'poweredon',
-  }))
+  return sheet.rows.map((row) => {
+    // Preserve null when the column is absent (older RVTools build
+    // without quickStats) or the cell is blank (powered-off VM, not
+    // collected). Coercing blanks to 0 would defeat the asymmetric
+    // contract documented in ADR-0012 §2 — the aggregator
+    // distinguishes "no reporters" (null) from "reporter at zero".
+    const readyRaw = readCol(row, cols.cpuReadinessPercent)
+    return {
+      vmName: readString(readCol(row, cols.vmName)),
+      cluster: readString(readCol(row, cols.cluster)),
+      vcpu: Math.max(0, Math.trunc(readNumber(readCol(row, cols.vcpu)))),
+      vramMb: Math.max(0, readNumber(readCol(row, cols.vramMb))),
+      activeMemMb: null,
+      cpuReadinessPercent: readyRaw == null ? null : Math.max(0, readNumber(readyRaw)),
+      poweredOn: readString(readCol(row, cols.poweredOn)).toLowerCase() === 'poweredon',
+    }
+  })
 }
 
 export const adaptRvtoolsVHost = (sheet: ParsedSheet): VHostRow[] => {

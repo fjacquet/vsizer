@@ -51,8 +51,19 @@ describe('adaptLiveOpticsVInfo', () => {
       vcpu: 4,
       vramMb: 8192,
       activeMemMb: 1024,
+      // ADR-0012: Live Optics never exports CPU Ready → unconditional null.
+      cpuReadinessPercent: null,
       poweredOn: true,
     })
+  })
+
+  // ADR-0012: pin the asymmetric-source contract for the classic adapter.
+  it('always sets cpuReadinessPercent to null (Live Optics omits this metric)', () => {
+    const wb = liveOpticsWorkbook()
+    const sheet = wb.sheets.get('VM Inventory')
+    if (!sheet) throw new Error('fixture missing VM Inventory')
+    const rows = adaptLiveOpticsVInfo(sheet)
+    expect(rows.every((r) => r.cpuReadinessPercent === null)).toBe(true)
   })
 
   it('preserves null activeMemMb when the source cell is blank', () => {
@@ -192,10 +203,20 @@ describe('adaptLiveOpticsModernVInfo', () => {
       vcpu: 4,
       vramMb: 16384,
       activeMemMb: 1802,
+      // ADR-0012: modern Live Optics shares the asymmetric-source contract.
+      cpuReadinessPercent: null,
       poweredOn: true,
     })
     expect(rows[1]?.poweredOn).toBe(false)
     expect(rows[1]?.activeMemMb).toBeNull()
+  })
+
+  it('always sets cpuReadinessPercent to null on the modern layout (ADR-0012)', () => {
+    const wb = modernWorkbook()
+    const sheet = wb.sheets.get('VMs')
+    if (!sheet) throw new Error('fixture missing VMs')
+    const rows = adaptLiveOpticsModernVInfo(sheet)
+    expect(rows.every((r) => r.cpuReadinessPercent === null)).toBe(true)
   })
 })
 

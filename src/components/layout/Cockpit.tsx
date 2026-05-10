@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { topReadinessVmsByCluster } from '../../engines/aggregation/vinfoMerge'
 import { sortAggregates, useDatasetStore } from '../../store/datasetStore'
 import { ClusterCard } from '../outputs/ClusterCard'
 import { GlobalKpiBar } from '../outputs/GlobalKpiBar'
@@ -13,8 +14,14 @@ import { UploadSidebar } from './UploadSidebar'
 export function Cockpit() {
   const globals = useDatasetStore((s) => s.globals)
   const aggregates = useDatasetStore((s) => s.aggregates)
+  const vinfo = useDatasetStore((s) => s.vinfo)
   const vhost = useDatasetStore((s) => s.vhost)
   const clusters = useMemo(() => sortAggregates(aggregates), [aggregates])
+
+  // CPU Ready top-N per cluster, computed once per dataset. Empty for
+  // Live Optics inputs (all readiness values are null) — see ADR-0012 §4.
+  // Same helper feeds the PPTX export via useExport.
+  const topReadinessByCluster = useMemo(() => topReadinessVmsByCluster(vinfo), [vinfo])
 
   return (
     <div className="mx-auto flex w-full max-w-screen-2xl flex-col gap-6 p-6 lg:flex-row">
@@ -28,6 +35,7 @@ export function Cockpit() {
               key={cluster.cluster}
               cluster={cluster}
               hostsInCluster={vhost.filter((h) => h.cluster === cluster.cluster)}
+              topReadinessVms={topReadinessByCluster.get(cluster.cluster)}
             />
           ))}
         </section>

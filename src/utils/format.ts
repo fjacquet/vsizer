@@ -50,6 +50,17 @@ export const fmtPercentWhole = (ratio: number, locale = 'fr-FR'): string =>
     : '—'
 
 /**
+ * Format an already-percentage value (0..200) with one decimal and a
+ * trailing `%`. Distinct from `fmtPercent` (which expects a 0..1 ratio
+ * and multiplies by 100). Used for CPU Ready, where the source value is
+ * already in percent units (ADR-0012).
+ */
+export const fmtPercentValue = (percent: number, locale = 'fr-FR'): string =>
+  Number.isFinite(percent)
+    ? `${percent.toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} %`
+    : '—'
+
+/**
  * Render a vCPU/pCPU consolidation ratio as `"X.X : 1"`. Locale-aware
  * decimal separator: fr-FR → `"4,2 : 1"`, en-US → `"4.2 : 1"`. Returns
  * em-dash for non-finite or zero ratios — `"5 vCPU on 0 cores"` isn't

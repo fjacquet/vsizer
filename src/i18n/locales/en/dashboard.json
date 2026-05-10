@@ -54,7 +54,30 @@
       "consumedGhz": "GHz consumed",
       "availableGhz": "GHz available"
     },
-    "ramAvailable": "RAM available: {{value}}"
+    "ramAvailable": "RAM available: {{value}}",
+    "contentionLine": {
+      "available": "CPU Ready: {{mean}} (mean) · {{max}} (max) · {{count}} VM(s) above 5%",
+      "unavailable": "CPU Ready: unavailable (source: {{source}})",
+      "sourceLiveOptics": "Live Optics",
+      "sourceRvtools": "RVTools"
+    }
+  },
+  "contention": {
+    "title": "VMs with the highest CPU Ready",
+    "subtitle": "Source: RVTools vInfo · Overall Cpu Readiness · reference threshold: 5%",
+    "columns": {
+      "rank": "#",
+      "vmName": "VM",
+      "vcpu": "vCPU",
+      "readiness": "CPU Ready",
+      "cluster": "Cluster"
+    },
+    "legendReference": "VMware reference:",
+    "legend": {
+      "low": "<5%",
+      "mid": "5–10%",
+      "high": ">10%"
+    }
   },
   "legend": {
     "title": "Legend:",

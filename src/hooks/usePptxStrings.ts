@@ -106,7 +106,27 @@ export function usePptxStrings(sourceFile: string, dateIso: string): PptxStrings
         consumedGhz: t('cluster.banner.consumedGhz'),
         availableGhz: t('cluster.banner.availableGhz'),
       },
+      contentionLine: {
+        available: ({ mean, max, count }) =>
+          t('cluster.contentionLine.available', { mean, max, count }),
+        unavailable: ({ source }) => t('cluster.contentionLine.unavailable', { source }),
+        sourceLiveOptics: t('cluster.contentionLine.sourceLiveOptics'),
+        sourceRvtools: t('cluster.contentionLine.sourceRvtools'),
+      },
       footer: t('cluster.footer', { file: sourceFile }),
+    },
+    contention: {
+      title: ({ n, cluster }) => t('contention.title', { n, cluster }),
+      subtitle: t('contention.subtitle'),
+      columns: {
+        rank: t('contention.columns.rank'),
+        vmName: t('contention.columns.vmName'),
+        vcpu: t('contention.columns.vcpu'),
+        readiness: t('contention.columns.readiness'),
+        cluster: t('contention.columns.cluster'),
+      },
+      legendReference: t('contention.legendReference'),
+      footer: t('contention.footer', { file: sourceFile }),
     },
   }
 }

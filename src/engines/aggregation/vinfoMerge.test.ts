@@ -136,10 +136,7 @@ describe('aggregateVmsPerCluster', () => {
 // Top-N export of the most-contended VMs per cluster.
 describe('topReadinessVmsByCluster', () => {
   it('returns an empty map when no VM in any cluster reports readiness', () => {
-    const out = topReadinessVmsByCluster([
-      vm({ cluster: 'CL_A' }),
-      vm({ cluster: 'CL_B' }),
-    ])
+    const out = topReadinessVmsByCluster([vm({ cluster: 'CL_A' }), vm({ cluster: 'CL_B' })])
     expect(out.size).toBe(0)
   })
 

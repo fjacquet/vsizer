@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
-import { usageColor } from '../../engines/export/pptx/primitives/colors'
+import type { TopReadinessVm } from '../../engines/aggregation/vinfoMerge'
+import { contentionColor, usageColor } from '../../engines/export/pptx/primitives/colors'
 import { THEME } from '../../engines/export/pptx/theme'
 import type { ClusterAggregate, VHostRow } from '../../types'
 import {
@@ -8,12 +9,14 @@ import {
   fmtMemMb,
   fmtMhzValue,
   fmtPercent,
+  fmtPercentValue,
   fmtPercentWhole,
   fmtRatio,
 } from '../../utils/format'
 import { KpiCard } from '../common/KpiCard'
 import { StretchedBadge } from '../common/StretchedBadge'
 import { UtilizationBar } from '../common/UtilizationBar'
+import { ContentionAnnex } from './ContentionAnnex'
 
 export interface ClusterCardProps {
   cluster: ClusterAggregate
@@ -21,6 +24,9 @@ export interface ClusterCardProps {
    *  facts (cores, GHz/core, RAM) the dashboard shows but the aggregate
    *  doesn't carry. */
   hostsInCluster: readonly VHostRow[]
+  /** Top-N most-contended VMs in this cluster, sorted desc by readiness.
+   *  Empty / absent → no annex sub-section is rendered. ADR-0012 §4. */
+  topReadinessVms?: ReadonlyArray<TopReadinessVm>
 }
 
 const computeFacts = (
@@ -94,9 +100,13 @@ function UtilBlock({ title, subtitle, ratioMean, ratioMax, ratioMin, labels }: U
  * "Marge libérable" — the bottom banner is a neutral 4-tile data strip
  * (ADR-0003).
  */
-export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
+export function ClusterCard({ cluster, hostsInCluster, topReadinessVms }: ClusterCardProps) {
   const { t } = useTranslation('dashboard')
   const facts = computeFacts(hostsInCluster, cluster)
+  const showContentionAnnex =
+    cluster.readinessAvailable &&
+    cluster.vmsAboveReadinessWarning > 0 &&
+    (topReadinessVms?.length ?? 0) > 0
 
   const reservedGhz = (cluster.vcpuAllocated * facts.speedMhzAvg) / 1000
 
@@ -130,6 +140,30 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
         </h3>
         <p className="text-xs text-slate-500 dark:text-slate-400">{headerSubtitle}</p>
       </header>
+
+      {/* CPU Ready (contention) line — mirrors the PPTX cluster slide
+          (ADR-0012). When the source supplies readiness, render the
+          mean / max / count tuple with mean colorized via
+          contentionColor. Otherwise render the asymmetric-source
+          mention so the absence of data never reads as "all healthy". */}
+      {cluster.readinessAvailable && cluster.meanCpuReadinessPercent !== null ? (
+        <p
+          className="text-sm font-semibold"
+          style={{ color: `#${contentionColor(cluster.meanCpuReadinessPercent)}` }}
+        >
+          {t('card.contentionLine.available', {
+            mean: fmtPercentValue(cluster.meanCpuReadinessPercent),
+            max: fmtPercentValue(cluster.maxCpuReadinessPercent ?? cluster.meanCpuReadinessPercent),
+            count: cluster.vmsAboveReadinessWarning,
+          })}
+        </p>
+      ) : (
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          {t('card.contentionLine.unavailable', {
+            source: t('card.contentionLine.sourceLiveOptics'),
+          })}
+        </p>
+      )}
 
       {/* Row 1: 5 KPI cards (vCPU/pCPU added — DR-aware ratio per ADR-0009) */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
@@ -251,6 +285,11 @@ export function ClusterCard({ cluster, hostsInCluster }: ClusterCardProps) {
       >
         {t('card.ramAvailable', { value: fmtMemMb(cluster.availableRamMb) })}
       </p>
+
+      {/* Conditional CPU Ready annex — mirrors the PPTX top-N annex
+          slide. Three guards (ADR-0012 §4): readinessAvailable, count
+          above warning, non-empty top-N list. */}
+      {showContentionAnnex && topReadinessVms ? <ContentionAnnex topVms={topReadinessVms} /> : null}
     </article>
   )
 }

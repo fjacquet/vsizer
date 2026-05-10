@@ -2,10 +2,7 @@ import PptxGenJS from 'pptxgenjs'
 import type { ClusterAggregate, GlobalSummary, VHostRow } from '../../../types'
 import type { TopReadinessVm } from '../../aggregation/vinfoMerge'
 import { addClusterSlide, type ClusterSlideStrings } from './slides/clusterSlide'
-import {
-  addContentionAnnexSlide,
-  type ContentionAnnexStrings,
-} from './slides/contentionAnnex'
+import { addContentionAnnexSlide, type ContentionAnnexStrings } from './slides/contentionAnnex'
 import { addOverviewSlide, type OverviewSlideStrings } from './slides/overviewSlide'
 import { addTitleSlide, type TitleSlideStrings } from './slides/titleSlide'
 

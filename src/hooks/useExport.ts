@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { topReadinessVmsByCluster } from '../engines/aggregation/vinfoMerge'
 import { buildPptx } from '../engines/export/pptx/builder'
 import { useDatasetStore } from '../store/datasetStore'
 import { usePptxStrings } from './usePptxStrings'
@@ -50,6 +51,7 @@ export function useExport(): {
   const file = useDatasetStore((s) => s.file)
   const aggregates = useDatasetStore((s) => s.aggregates)
   const globals = useDatasetStore((s) => s.globals)
+  const vinfo = useDatasetStore((s) => s.vinfo)
   const vhost = useDatasetStore((s) => s.vhost)
   const selectedClusters = useDatasetStore((s) => s.selectedClusters)
 
@@ -57,6 +59,14 @@ export function useExport(): {
 
   const sourceFile = file?.name ?? '—'
   const strings = usePptxStrings(sourceFile, todayIso())
+
+  // CPU Ready top-N is computed from the parsed vInfo rows once per
+  // dataset (changes only when a new file is uploaded). Heavy enough
+  // to memoize: O(n log n) sort per cluster across all powered-on VMs.
+  // The map is empty for Live Optics inputs (all readiness values
+  // null) — see ADR-0012 §4. Passed as a ReadonlyMap to buildPptx,
+  // which conditionally injects the annex slide.
+  const topReadinessByCluster = useMemo(() => topReadinessVmsByCluster(vinfo), [vinfo])
 
   const canExport = globals !== null && Object.keys(aggregates).length > 0
 
@@ -73,6 +83,7 @@ export function useExport(): {
         globals,
         clusters: filtered,
         vhost,
+        topReadinessByCluster,
         strings,
       })
 
@@ -83,7 +94,17 @@ export function useExport(): {
     } finally {
       setIsExporting(false)
     }
-  }, [aggregates, canExport, globals, selectedClusters, sourceFile, strings, t, vhost])
+  }, [
+    aggregates,
+    canExport,
+    globals,
+    selectedClusters,
+    sourceFile,
+    strings,
+    t,
+    topReadinessByCluster,
+    vhost,
+  ])
 
   return { canExport, isExporting, exportPptx }
 }

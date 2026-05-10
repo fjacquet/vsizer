@@ -1,7 +1,7 @@
 import type PptxGenJS from 'pptxgenjs'
+import type { ClusterAggregate } from '../../../../types'
 import { CONTENTION_THRESHOLDS } from '../../../aggregation/contention'
 import type { TopReadinessVm } from '../../../aggregation/vinfoMerge'
-import type { ClusterAggregate } from '../../../../types'
 import { fmtIntPptx, fmtPercentOneDecimal } from '../format'
 import { contentionColor } from '../primitives/colors'
 import { FONT, SLIDE_H, SLIDE_W, THEME } from '../theme'
@@ -88,12 +88,7 @@ const HEADER_Y = ROW_Y0 - 0.32
  * `addShape` + `addText` cells) — there's no `addTable` usage in the
  * codebase and we keep the convention.
  */
-const drawRow = (
-  slide: Slide,
-  rank: number,
-  vm: TopReadinessVm,
-  zebra: boolean,
-): void => {
+const drawRow = (slide: Slide, rank: number, vm: TopReadinessVm, zebra: boolean): void => {
   const y = ROW_Y0 + rank * ROW_H
   if (zebra) {
     slide.addShape('rect', {

@@ -162,8 +162,7 @@ const strings: PptxStrings = {
   },
   contention: {
     title: ({ n, cluster }) => `VMs avec CPU Ready le plus élevé — ${cluster} (top ${n})`,
-    subtitle:
-      'Source : RVTools vInfo · Overall Cpu Readiness · seuil de référence : 5 %',
+    subtitle: 'Source : RVTools vInfo · Overall Cpu Readiness · seuil de référence : 5 %',
     columns: {
       rank: '#',
       vmName: 'VM',

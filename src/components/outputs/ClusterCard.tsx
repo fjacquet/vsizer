@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next'
+import { CONTENTION_THRESHOLDS } from '../../engines/aggregation/contention'
 import type { TopReadinessVm } from '../../engines/aggregation/vinfoMerge'
 import { contentionColor, usageColor } from '../../engines/export/pptx/primitives/colors'
 import { THEME } from '../../engines/export/pptx/theme'
+import type { SourceFormat } from '../../engines/parser/detectSource'
 import type { ClusterAggregate, VHostRow } from '../../types'
 import {
   fmtGhzValue,
@@ -27,6 +29,11 @@ export interface ClusterCardProps {
   /** Top-N most-contended VMs in this cluster, sorted desc by readiness.
    *  Empty / absent → no annex sub-section is rendered. ADR-0012 §4. */
   topReadinessVms?: ReadonlyArray<TopReadinessVm>
+  /** Format of the workbook the dataset came from. Drives the source
+   *  label on the "CPU Ready : non disponible" line so an RVTools
+   *  upload without the column doesn't read as a Live Optics file
+   *  (Hunter H2). */
+  sourceFormat: SourceFormat
 }
 
 const computeFacts = (
@@ -100,13 +107,26 @@ function UtilBlock({ title, subtitle, ratioMean, ratioMax, ratioMin, labels }: U
  * "Marge libérable" — the bottom banner is a neutral 4-tile data strip
  * (ADR-0003).
  */
-export function ClusterCard({ cluster, hostsInCluster, topReadinessVms }: ClusterCardProps) {
+export function ClusterCard({
+  cluster,
+  hostsInCluster,
+  topReadinessVms,
+  sourceFormat,
+}: ClusterCardProps) {
   const { t } = useTranslation('dashboard')
   const facts = computeFacts(hostsInCluster, cluster)
   const showContentionAnnex =
     cluster.readinessAvailable &&
     cluster.vmsAboveReadinessWarning > 0 &&
     (topReadinessVms?.length ?? 0) > 0
+  // Hunter H2: pick the source label from the actual dataset format,
+  // not a hard-coded "Live Optics". RVTools without the column or
+  // unknown-source falls through to the RVTools label since the user
+  // definitely uploaded a non-LiveOptics file.
+  const unavailableSourceLabel =
+    sourceFormat === 'liveoptics'
+      ? t('card.contentionLine.sourceLiveOptics')
+      : t('card.contentionLine.sourceRvtools')
 
   const reservedGhz = (cluster.vcpuAllocated * facts.speedMhzAvg) / 1000
 
@@ -155,13 +175,15 @@ export function ClusterCard({ cluster, hostsInCluster, topReadinessVms }: Cluste
             mean: fmtPercentValue(cluster.meanCpuReadinessPercent),
             max: fmtPercentValue(cluster.maxCpuReadinessPercent ?? cluster.meanCpuReadinessPercent),
             count: cluster.vmsAboveReadinessWarning,
+            // A6 / Hunter L4: pin the rendered threshold to the
+            // shared constant so a bump from 5 → 7 flows into both
+            // FR and EN strings without a translator-side update.
+            threshold: CONTENTION_THRESHOLDS.warning,
           })}
         </p>
       ) : (
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          {t('card.contentionLine.unavailable', {
-            source: t('card.contentionLine.sourceLiveOptics'),
-          })}
+          {t('card.contentionLine.unavailable', { source: unavailableSourceLabel })}
         </p>
       )}
 

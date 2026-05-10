@@ -6,6 +6,7 @@ import {
   fmtMemMb,
   fmtMhzValue,
   fmtPercent,
+  fmtPercentValue,
   fmtPercentWhole,
   fmtRatio,
 } from './format'
@@ -57,6 +58,35 @@ describe('fmtPercentWhole', () => {
 
   it('returns em-dash for non-finite input', () => {
     expect(fmtPercentWhole(Number.NaN)).toBe('—')
+  })
+})
+
+// ADR-0012: pre-percent formatter for CPU Ready (source value is
+// already in percent units, not a 0..1 ratio).
+describe('fmtPercentValue', () => {
+  it('renders an already-percent value with one decimal and "%" suffix (fr-FR)', () => {
+    // fr-FR uses a comma decimal separator: "8,4 %"
+    expect(fmtPercentValue(8.4)).toMatch(/^8[.,]4 %$/)
+  })
+
+  it('renders zero explicitly (distinct from absence)', () => {
+    expect(fmtPercentValue(0)).toMatch(/^0[.,]0 %$/)
+  })
+
+  it('does NOT multiply by 100 (distinct from fmtPercent)', () => {
+    // A 0.5 ratio would render as "50,0 %" via fmtPercent; here it
+    // stays at "0,5 %" because the input is already a percent.
+    expect(fmtPercentValue(0.5)).toMatch(/^0[.,]5 %$/)
+  })
+
+  it('honors the locale arg (en-US uses a dot decimal)', () => {
+    expect(fmtPercentValue(8.4, 'en-US')).toBe('8.4 %')
+  })
+
+  it('returns em-dash for non-finite input', () => {
+    expect(fmtPercentValue(Number.NaN)).toBe('—')
+    expect(fmtPercentValue(Number.POSITIVE_INFINITY)).toBe('—')
+    expect(fmtPercentValue(Number.NEGATIVE_INFINITY)).toBe('—')
   })
 })
 

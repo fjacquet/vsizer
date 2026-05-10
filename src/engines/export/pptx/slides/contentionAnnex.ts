@@ -190,6 +190,13 @@ export const addContentionAnnexSlide = (
   topVms: ReadonlyArray<TopReadinessVm>,
   strings: ContentionAnnexStrings,
 ): void => {
+  // Defensive guard: rendering an annex with zero rows produces a blank
+  // slide with title + legend + footer and nothing in between, which is
+  // a confusing artifact for any future caller that forgets the
+  // builder.ts gate. Today the only caller (builder.ts) checks this,
+  // but locking it here too keeps the contract local. Hunter L3.
+  if (topVms.length === 0) return
+
   const slide = pptx.addSlide()
 
   slide.addShape('rect', {

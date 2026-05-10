@@ -26,6 +26,13 @@ export interface ContentionAnnexProps {
 export function ContentionAnnex({ topVms }: ContentionAnnexProps) {
   const { t } = useTranslation('dashboard')
 
+  // Defensive guard mirroring `addContentionAnnexSlide` — rendering a
+  // zero-row table yields an empty section with a header, a column
+  // strip and a legend, which reads as a UI bug. The only caller
+  // (ClusterCard) already gates this; locking it here keeps the
+  // contract local. Hunter L3.
+  if (topVms.length === 0) return null
+
   return (
     <section
       className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-surface-700 dark:bg-surface-900/40"

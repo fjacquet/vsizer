@@ -151,11 +151,9 @@ const strings: PptxStrings = {
       availableGhz: 'GHz disponibles',
     },
     contentionLine: {
-      available: ({ mean, max, count }) =>
-        `CPU Ready : ${mean} (moy.) · ${max} (max) · ${count} VM(s) au-dessus de 5 %`,
-      unavailable: ({ source }) => `CPU Ready : non disponible (source : ${source})`,
-      sourceLiveOptics: 'Live Optics',
-      sourceRvtools: 'RVTools',
+      available: ({ mean, max, count, threshold }) =>
+        `CPU Ready : ${mean} (moy.) · ${max} (max) · ${count} VM(s) au-dessus de ${threshold} %`,
+      unavailable: 'CPU Ready : non disponible (source : Live Optics)',
     },
     footer:
       'Source : test-fixture.xlsx — vHost (CPU/RAM usage %, Speed × Cores) + vInfo (vCPUs, Memory)',

@@ -49,6 +49,7 @@ export function useExport(): {
 } {
   const { t } = useTranslation('common')
   const file = useDatasetStore((s) => s.file)
+  const source = useDatasetStore((s) => s.source)
   const aggregates = useDatasetStore((s) => s.aggregates)
   const globals = useDatasetStore((s) => s.globals)
   const vinfo = useDatasetStore((s) => s.vinfo)
@@ -58,7 +59,11 @@ export function useExport(): {
   const [isExporting, setIsExporting] = useState(false)
 
   const sourceFile = file?.name ?? '—'
-  const strings = usePptxStrings(sourceFile, todayIso())
+  // ADR-0012 / Hunter H2: usePptxStrings needs the source format to
+  // pick the right label for the "non disponible" line — picking
+  // "Live Optics" on an RVTools file with the column missing
+  // mis-attributes the cause of absence.
+  const strings = usePptxStrings(sourceFile, todayIso(), source)
 
   // CPU Ready top-N is computed from the parsed vInfo rows once per
   // dataset (changes only when a new file is uploaded). Heavy enough

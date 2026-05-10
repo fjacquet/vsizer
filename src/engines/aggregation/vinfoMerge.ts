@@ -66,6 +66,16 @@ const sumActiveMem = (rows: VInfoRow[]): number | null => {
  * Mean is **arithmetic** (not vCPU-weighted) — see ADR-0012 §3 for why
  * the dilution effect of weighting hurts exactly the cohort the metric
  * exists to detect.
+ *
+ * Implementation notes:
+ * - Reporter filter via type guard (`!= null` covers both null and
+ *   undefined; the `is number` predicate narrows the array element type
+ *   so the rest of the function reads `number` without an `as` cast,
+ *   matching CLAUDE.md's "narrow instead of assert" rule). The
+ *   `Number.isFinite` check defends against any NaN/Infinity that
+ *   slipped past the parser layer.
+ * - Max is computed via `reduce`, not `Math.max(...values)`, to avoid
+ *   the V8 ~65 535 spread-argument limit on hyperscaler-sized clusters.
  */
 const readinessStats = (
   rows: VInfoRow[],
@@ -75,15 +85,23 @@ const readinessStats = (
   countAboveWarning: number
   available: boolean
 } => {
-  const reporters = rows.filter((r) => r.cpuReadinessPercent !== null)
-  if (reporters.length === 0) {
+  const values: number[] = []
+  for (const r of rows) {
+    const v = r.cpuReadinessPercent
+    if (v != null && Number.isFinite(v)) values.push(v)
+  }
+  if (values.length === 0) {
     return { mean: null, max: null, countAboveWarning: 0, available: false }
   }
-  const values = reporters.map((r) => r.cpuReadinessPercent as number)
-  const mean = values.reduce((acc, n) => acc + n, 0) / values.length
-  const max = Math.max(...values)
-  const countAboveWarning = values.filter((v) => v > CONTENTION_THRESHOLDS.warning).length
-  return { mean, max, countAboveWarning, available: true }
+  let sum = 0
+  let max = Number.NEGATIVE_INFINITY
+  let countAboveWarning = 0
+  for (const v of values) {
+    sum += v
+    if (v > max) max = v
+    if (v > CONTENTION_THRESHOLDS.warning) countAboveWarning += 1
+  }
+  return { mean: sum / values.length, max, countAboveWarning, available: true }
 }
 
 /**
@@ -129,16 +147,22 @@ export const topReadinessVmsByCluster = (
   const grouped = groupByCluster(vinfo)
   const out = new Map<string, TopReadinessVm[]>()
   for (const [cluster, vms] of grouped) {
-    const top = vms
-      .filter((r) => r.cpuReadinessPercent !== null)
-      .map(
-        (r): TopReadinessVm => ({
+    // Single-pass narrow: `cpuReadinessPercent` is `number | null` on
+    // VInfoRow, so we widen via local `const v` and only push reporters
+    // that pass a finiteness check. Avoids the `as number` cast.
+    const reporters: TopReadinessVm[] = []
+    for (const r of vms) {
+      const v = r.cpuReadinessPercent
+      if (v != null && Number.isFinite(v)) {
+        reporters.push({
           vmName: r.vmName,
           cluster: r.cluster,
           vcpu: r.vcpu,
-          cpuReadinessPercent: r.cpuReadinessPercent as number,
-        }),
-      )
+          cpuReadinessPercent: v,
+        })
+      }
+    }
+    const top = reporters
       .sort((a, b) => b.cpuReadinessPercent - a.cpuReadinessPercent)
       .slice(0, topN)
     if (top.length > 0) out.set(cluster, top)

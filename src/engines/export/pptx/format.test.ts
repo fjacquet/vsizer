@@ -7,6 +7,7 @@ import {
   fmtMhzPptx,
   fmtPctOneDecimal,
   fmtPctWhole,
+  fmtPercentOneDecimal,
   fmtRatioPptx,
 } from './format'
 
@@ -70,6 +71,35 @@ describe('fmtPctOneDecimal', () => {
 
   it('returns em-dash for non-finite input', () => {
     expect(fmtPctOneDecimal(Number.NaN)).toBe('—')
+  })
+})
+
+// ADR-0012: pre-percent formatter for CPU Ready (source value is
+// already in percent units, not a 0..1 ratio).
+describe('fmtPercentOneDecimal', () => {
+  it('renders an already-percent value with one decimal and "%" suffix', () => {
+    expect(fmtPercentOneDecimal(8.4)).toBe('8.4%')
+  })
+
+  it('renders zero explicitly as "0.0%" (distinct from absence)', () => {
+    expect(fmtPercentOneDecimal(0)).toBe('0.0%')
+  })
+
+  it('rounds to one decimal', () => {
+    // Use a value that rounds cleanly across IEEE 754 representations
+    // (7.55 is actually 7.5499999... in float and goes down to "7.5").
+    expect(fmtPercentOneDecimal(7.65)).toBe('7.7%')
+  })
+
+  it('does NOT multiply by 100 (distinct from fmtPctOneDecimal)', () => {
+    // A 0.5 ratio would render as "50.0%" via fmtPctOneDecimal; here it
+    // stays at "0.5%" because the input is already a percent.
+    expect(fmtPercentOneDecimal(0.5)).toBe('0.5%')
+  })
+
+  it('returns em-dash for non-finite input', () => {
+    expect(fmtPercentOneDecimal(Number.NaN)).toBe('—')
+    expect(fmtPercentOneDecimal(Number.POSITIVE_INFINITY)).toBe('—')
   })
 })
 

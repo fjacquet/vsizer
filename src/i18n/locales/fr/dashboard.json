@@ -56,7 +56,7 @@
     },
     "ramAvailable": "RAM disponible : {{value}}",
     "contentionLine": {
-      "available": "CPU Ready : {{mean}} (moy.) · {{max}} (max) · {{count}} VM(s) au-dessus de 5 %",
+      "available": "CPU Ready : {{mean}} (moy.) · {{max}} (max) · {{count}} VM(s) au-dessus de {{threshold}} %",
       "unavailable": "CPU Ready : non disponible (source : {{source}})",
       "sourceLiveOptics": "Live Optics",
       "sourceRvtools": "RVTools"

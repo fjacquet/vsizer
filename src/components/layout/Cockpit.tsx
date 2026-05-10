@@ -14,6 +14,7 @@ import { UploadSidebar } from './UploadSidebar'
 export function Cockpit() {
   const globals = useDatasetStore((s) => s.globals)
   const aggregates = useDatasetStore((s) => s.aggregates)
+  const source = useDatasetStore((s) => s.source)
   const vinfo = useDatasetStore((s) => s.vinfo)
   const vhost = useDatasetStore((s) => s.vhost)
   const clusters = useMemo(() => sortAggregates(aggregates), [aggregates])
@@ -36,6 +37,7 @@ export function Cockpit() {
               cluster={cluster}
               hostsInCluster={vhost.filter((h) => h.cluster === cluster.cluster)}
               topReadinessVms={topReadinessByCluster.get(cluster.cluster)}
+              sourceFormat={source}
             />
           ))}
         </section>

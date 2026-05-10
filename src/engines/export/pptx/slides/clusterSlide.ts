@@ -1,5 +1,6 @@
 import type PptxGenJS from 'pptxgenjs'
 import type { ClusterAggregate } from '../../../../types'
+import { CONTENTION_THRESHOLDS } from '../../../aggregation/contention'
 import {
   fmtGhzPerCore,
   fmtGhzPptx,
@@ -67,21 +68,21 @@ export interface ClusterSlideStrings {
   /**
    * Single factual line under the KPI card row showing the CPU Ready
    * (contention) status of the cluster (ADR-0012). Two variants:
-   *   - `available`: cluster has reporting VMs; rendered as
-   *     "CPU Ready : {{mean}} (moy.) · {{max}} (max) · {{count}} VM(s) au-dessus de 5 %"
-   *     with mean/max colorized by `contentionColor` outside the string.
-   *   - `unavailable`: source does not expose the metric (Live Optics);
-   *     rendered as "CPU Ready : non disponible (source : {{source}})".
+   *   - `available({ mean, max, count, threshold })`: cluster has
+   *     reporting VMs; rendered with mean/max colorized by
+   *     `contentionColor` outside the string. The threshold value
+   *     comes from `CONTENTION_THRESHOLDS.warning` so an edit to the
+   *     constant flows into the rendered text without a string drift.
+   *   - `unavailable`: pre-resolved string (the source label is
+   *     injected at hook level — `usePptxStrings` picks
+   *     `sourceLiveOptics` vs `sourceRvtools` from the dataset's
+   *     actual `SourceFormat` so the deck never mis-attributes the
+   *     cause of absence).
    * The string never carries adjectives or verdict text — see ADR-0003.
    */
   contentionLine: {
-    available: (vars: { mean: string; max: string; count: number }) => string
-    unavailable: (vars: { source: string }) => string
-    /** Source label injected into the unavailable variant: "Live Optics"
-     *  / "RVTools". Kept distinct from the parser's source enum so the
-     *  string stays human-readable per locale. */
-    sourceLiveOptics: string
-    sourceRvtools: string
+    available: (vars: { mean: string; max: string; count: number; threshold: number }) => string
+    unavailable: string
   }
   /**
    * The factual bottom-banner labels that replace the legacy "Marge libérable"
@@ -373,13 +374,14 @@ export const addClusterSlide = (
   if (cluster.readinessAvailable && cluster.meanCpuReadinessPercent !== null) {
     const meanPct = cluster.meanCpuReadinessPercent
     const maxPct = cluster.maxCpuReadinessPercent ?? meanPct
-    // pptxgenjs accepts an array of text runs to color individual fragments
-    // inline — used here so the mean and max % stay color-coded by the
-    // `contentionColor` palette without hand-splitting the translation.
     const text = strings.contentionLine.available({
       mean: fmtPercentOneDecimal(meanPct),
       max: fmtPercentOneDecimal(maxPct),
       count: cluster.vmsAboveReadinessWarning,
+      // Pin the rendered threshold to the shared constant so an edit
+      // to CONTENTION_THRESHOLDS.warning flows into every locale
+      // string without a translator-side update (A6 / Hunter L4).
+      threshold: CONTENTION_THRESHOLDS.warning,
     })
     slide.addText(text, {
       x: 0.7,
@@ -394,20 +396,22 @@ export const addClusterSlide = (
       margin: 0,
     })
   } else {
-    slide.addText(
-      strings.contentionLine.unavailable({ source: strings.contentionLine.sourceLiveOptics }),
-      {
-        x: 0.7,
-        y: contentionLineY,
-        w: SLIDE_W - 1.4,
-        h: contentionLineH,
-        fontFace: FONT,
-        fontSize: 11,
-        color: THEME.grey,
-        valign: 'middle',
-        margin: 0,
-      },
-    )
+    // Pre-resolved by the strings hook against the actual SourceFormat
+    // (RVTools vs Live Optics) — the slide does not need to know the
+    // source enum, and the deck never mis-attributes absence as
+    // "Live Optics" on an RVTools file with the column missing
+    // (A2 / Hunter H2).
+    slide.addText(strings.contentionLine.unavailable, {
+      x: 0.7,
+      y: contentionLineY,
+      w: SLIDE_W - 1.4,
+      h: contentionLineH,
+      fontFace: FONT,
+      fontSize: 11,
+      color: THEME.grey,
+      valign: 'middle',
+      margin: 0,
+    })
   }
 
   // ---- Row 1: 5 KPI cards ------------------------------------------------

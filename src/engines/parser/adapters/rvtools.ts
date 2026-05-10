@@ -56,14 +56,52 @@ const VHOST_COLS = {
  * sensible neutrals (`0`, `''`, `null`) — the schema validator at the
  * `normalizeColumns` boundary is the gate for whether a row is acceptable.
  */
+/**
+ * Strict parser for the `Overall Cpu Readiness` cell. Distinguishes:
+ *   - `null`  → no reporter (column absent, blank cell, sentinel like
+ *               `"N/A"`, `"-"`, or any Excel error code `#REF!` /
+ *               `#DIV/0!` / `#VALUE!` / `#NAME?`)
+ *   - number  → real measurement (clamped to ≥ 0)
+ *
+ * The shared `readNumber` helper deliberately collapses every invalid
+ * input to `0` (its docstring says "invalid inputs surface as zeros that
+ * aggregation can ignore"). For utilization columns that's defensible.
+ * For CPU Ready it INVERTS ADR-0012's safety semantics: a `0` reads as
+ * "VM healthy", which is exactly the lie we must avoid when the source
+ * data is corrupted. So this column gets its own strict parser.
+ */
+const parseReadinessCell = (v: unknown): number | null => {
+  if (v == null) return null
+  if (typeof v === 'number') return Number.isFinite(v) ? Math.max(0, v) : null
+  if (typeof v === 'string') {
+    const trimmed = v.trim()
+    if (trimmed === '') return null
+    // Excel error sentinels (#REF!, #DIV/0!, #VALUE!, #NAME?, #NUM!, …)
+    // and the common manual placeholders. All collapse to "no reporter"
+    // rather than to 0, so a corrupted column never reads as "healthy".
+    if (trimmed.startsWith('#')) return null
+    const upper = trimmed.toUpperCase()
+    if (upper === '-' || upper === '--' || upper === 'N/A' || upper === 'NA') return null
+    // Reuse the locale-tolerant numeric parsing of the shared helper for
+    // strings that look like numbers (handles `%` suffix, fr-FR comma,
+    // narrow spaces). Then guard the result.
+    const cleaned = trimmed.replace(/[\s']/g, '').replace(/%$/, '').replace(',', '.')
+    const n = Number.parseFloat(cleaned)
+    return Number.isFinite(n) ? Math.max(0, n) : null
+  }
+  // Booleans / objects / etc. — never expected here; treat as "no
+  // reporter" rather than coercing.
+  return null
+}
+
 export const adaptRvtoolsVInfo = (sheet: ParsedSheet): VInfoRow[] => {
   const cols = mapColumns(sheet.headers, VINFO_COLS)
   return sheet.rows.map((row) => {
     // Preserve null when the column is absent (older RVTools build
-    // without quickStats) or the cell is blank (powered-off VM, not
-    // collected). Coercing blanks to 0 would defeat the asymmetric
-    // contract documented in ADR-0012 §2 — the aggregator
-    // distinguishes "no reporters" (null) from "reporter at zero".
+    // without quickStats) or the cell is blank/sentinel/error. Per
+    // ADR-0012 §2 the aggregator distinguishes "no reporters" (null)
+    // from "reporter at zero" — see `parseReadinessCell` above for the
+    // strictness rationale.
     const readyRaw = readCol(row, cols.cpuReadinessPercent)
     return {
       vmName: readString(readCol(row, cols.vmName)),
@@ -71,7 +109,7 @@ export const adaptRvtoolsVInfo = (sheet: ParsedSheet): VInfoRow[] => {
       vcpu: Math.max(0, Math.trunc(readNumber(readCol(row, cols.vcpu)))),
       vramMb: Math.max(0, readNumber(readCol(row, cols.vramMb))),
       activeMemMb: null,
-      cpuReadinessPercent: readyRaw == null ? null : Math.max(0, readNumber(readyRaw)),
+      cpuReadinessPercent: parseReadinessCell(readyRaw),
       poweredOn: readString(readCol(row, cols.poweredOn)).toLowerCase() === 'poweredon',
     }
   })

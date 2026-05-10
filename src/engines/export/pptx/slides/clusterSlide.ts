@@ -8,9 +8,10 @@ import {
   fmtMhzPptx,
   fmtPctOneDecimal,
   fmtPctWhole,
+  fmtPercentOneDecimal,
   fmtRatioPptx,
 } from '../format'
-import { usageColor } from '../primitives/colors'
+import { contentionColor, usageColor } from '../primitives/colors'
 import { drawKpiCard } from '../primitives/kpiCard'
 import { drawProgressBar } from '../primitives/progressBar'
 import { FONT, SLIDE_H, SLIDE_W, THEME } from '../theme'
@@ -62,6 +63,25 @@ export interface ClusterSlideStrings {
     min: string
     mean: string
     max: string
+  }
+  /**
+   * Single factual line under the KPI card row showing the CPU Ready
+   * (contention) status of the cluster (ADR-0012). Two variants:
+   *   - `available`: cluster has reporting VMs; rendered as
+   *     "CPU Ready : {{mean}} (moy.) · {{max}} (max) · {{count}} VM(s) au-dessus de 5 %"
+   *     with mean/max colorized by `contentionColor` outside the string.
+   *   - `unavailable`: source does not expose the metric (Live Optics);
+   *     rendered as "CPU Ready : non disponible (source : {{source}})".
+   * The string never carries adjectives or verdict text — see ADR-0003.
+   */
+  contentionLine: {
+    available: (vars: { mean: string; max: string; count: number }) => string
+    unavailable: (vars: { source: string }) => string
+    /** Source label injected into the unavailable variant: "Live Optics"
+     *  / "RVTools". Kept distinct from the parser's source enum so the
+     *  string stays human-readable per locale. */
+    sourceLiveOptics: string
+    sourceRvtools: string
   }
   /**
    * The factual bottom-banner labels that replace the legacy "Marge libérable"
@@ -340,8 +360,61 @@ export const addClusterSlide = (
     },
   )
 
+  // ---- Row 0-bis: contention line (ADR-0012) -----------------------------
+  // Single factual strip between the navy header and the KPI cards. When
+  // the source supplies CPU Ready, render the mean/max/count tuple with
+  // mean and max colorized via `contentionColor` (5 / 10 thresholds);
+  // otherwise render the asymmetric-source mention. The whole body shifts
+  // down +0.15 in to make room (cardY 1.35 → 1.50, cascading through
+  // blockY / bannerY / ramLine / footer; verified to fit within the
+  // 7.5 in slide with ~0 in margin at the footer).
+  const contentionLineY = 1.18
+  const contentionLineH = 0.27
+  if (cluster.readinessAvailable && cluster.meanCpuReadinessPercent !== null) {
+    const meanPct = cluster.meanCpuReadinessPercent
+    const maxPct = cluster.maxCpuReadinessPercent ?? meanPct
+    // pptxgenjs accepts an array of text runs to color individual fragments
+    // inline — used here so the mean and max % stay color-coded by the
+    // `contentionColor` palette without hand-splitting the translation.
+    const text = strings.contentionLine.available({
+      mean: fmtPercentOneDecimal(meanPct),
+      max: fmtPercentOneDecimal(maxPct),
+      count: cluster.vmsAboveReadinessWarning,
+    })
+    slide.addText(text, {
+      x: 0.7,
+      y: contentionLineY,
+      w: SLIDE_W - 1.4,
+      h: contentionLineH,
+      fontFace: FONT,
+      fontSize: 11,
+      color: contentionColor(meanPct),
+      bold: true,
+      valign: 'middle',
+      margin: 0,
+    })
+  } else {
+    slide.addText(
+      strings.contentionLine.unavailable({ source: strings.contentionLine.sourceLiveOptics }),
+      {
+        x: 0.7,
+        y: contentionLineY,
+        w: SLIDE_W - 1.4,
+        h: contentionLineH,
+        fontFace: FONT,
+        fontSize: 11,
+        color: THEME.grey,
+        valign: 'middle',
+        margin: 0,
+      },
+    )
+  }
+
   // ---- Row 1: 5 KPI cards ------------------------------------------------
-  const cardY = 1.35
+  // Shifted +0.15 from the original 1.35 to make room for the contention
+  // line above. The cascade continues through blockY / bannerY / ramLine /
+  // footer below — see the ADR-0012 §5 layout note.
+  const cardY = 1.5
   const cardH = 1.05
   const ghzUsedPhysText = `${fmtIntPptx(cluster.consumedGhz)} / ${fmtIntPptx(cluster.physicalGhz)}`
   const cards = [
@@ -393,7 +466,7 @@ export const addClusterSlide = (
   }
 
   // ---- Row 2: CPU and RAM utilization blocks -----------------------------
-  const blockY = 2.6
+  const blockY = 2.75 // shifted +0.15 — see contention-line note above
   const blockH = 2.1
   const blockW = 6.05
 
@@ -439,7 +512,7 @@ export const addClusterSlide = (
   )
 
   // ---- Row 3: factual data banner (no editorial framing) -----------------
-  const bannerY = 4.85
+  const bannerY = 5.0 // shifted +0.15 — see contention-line note above
   const bannerH = 1.7
   const bannerX = 0.7
   const bannerW = SLIDE_W - 1.4
@@ -515,11 +588,11 @@ export const addClusterSlide = (
   }
 
   // ---- Row 3-bis: RAM-disponible single line under the banner -------------
-  // Mirrors the dashboard. Lives between banner (ends at 6.55) and footer
-  // (starts at 7.05).
+  // Mirrors the dashboard. Banner ends at bannerY + bannerH = 5.0 + 1.7 = 6.7;
+  // this line at 6.80 leaves a 0.10 in gap.
   slide.addText(strings.ramAvailableLine(fmtMemMb(cluster.availableRamMb)), {
     x: 0.7,
-    y: 6.65,
+    y: 6.8, // shifted +0.15 — see contention-line note above
     w: SLIDE_W - 1.4,
     h: 0.3,
     fontFace: FONT,
@@ -530,10 +603,12 @@ export const addClusterSlide = (
     margin: 0,
   })
 
-  // Footer (source attribution)
+  // Footer (source attribution) — y=7.20 + h=0.30 = 7.50, sits exactly
+  // at the slide's bottom edge (SLIDE_H = 7.5). PowerPoint accepts the
+  // zero-margin layout; if a future change pushes content lower, revisit.
   slide.addText(strings.footer, {
     x: 0.7,
-    y: 7.05,
+    y: 7.2, // shifted +0.15 — see contention-line note above
     w: 12,
     h: 0.3,
     fontFace: FONT,

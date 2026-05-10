@@ -1,6 +1,11 @@
 import PptxGenJS from 'pptxgenjs'
 import type { ClusterAggregate, GlobalSummary, VHostRow } from '../../../types'
+import type { TopReadinessVm } from '../../aggregation/vinfoMerge'
 import { addClusterSlide, type ClusterSlideStrings } from './slides/clusterSlide'
+import {
+  addContentionAnnexSlide,
+  type ContentionAnnexStrings,
+} from './slides/contentionAnnex'
 import { addOverviewSlide, type OverviewSlideStrings } from './slides/overviewSlide'
 import { addTitleSlide, type TitleSlideStrings } from './slides/titleSlide'
 
@@ -25,6 +30,11 @@ export interface BuildPptxInput {
   clusters: readonly ClusterAggregate[]
   /** Raw host rows used to compute cluster-slide-only host facts (cores, GHz/core). */
   vhost: readonly VHostRow[]
+  /** Top-N most-contended VMs per cluster, indexed by cluster name.
+   *  Computed by the calling hook from `topReadinessVmsByCluster`.
+   *  Empty / absent → no annex slide is appended for that cluster.
+   *  See ADR-0012 §4. */
+  topReadinessByCluster: ReadonlyMap<string, ReadonlyArray<TopReadinessVm>>
   /** All translated strings. Keep them in `pptx` namespace JSON files. */
   strings: PptxStrings
 }
@@ -34,6 +44,8 @@ export interface PptxStrings {
   title: TitleSlideStrings
   overview: OverviewSlideStrings
   cluster: ClusterSlideStrings
+  /** Strings for the conditional CPU Ready annex slide (ADR-0012). */
+  contention: ContentionAnnexStrings
 }
 
 /**
@@ -82,6 +94,17 @@ export const buildPptx = async (input: BuildPptxInput): Promise<ArrayBuffer> => 
       facts.physicalRamMb,
       input.strings.cluster,
     )
+
+    // Conditional CPU Ready annex right after the cluster slide.
+    // Three guards (ADR-0012 §4):
+    //   1. The source had to expose readiness at all (Live Optics → no).
+    //   2. At least one VM crossed the warning threshold (5 %).
+    //   3. The caller supplied a non-empty top-N list for the cluster.
+    // Healthy clusters (all ≤ 5 %) intentionally add nothing to the deck.
+    const top = input.topReadinessByCluster.get(cluster.cluster) ?? []
+    if (cluster.readinessAvailable && cluster.vmsAboveReadinessWarning > 0 && top.length > 0) {
+      addContentionAnnexSlide(pptx, cluster, top, input.strings.contention)
+    }
   }
 
   // pptxgenjs returns `string | ArrayBuffer | Blob | Uint8Array` depending on

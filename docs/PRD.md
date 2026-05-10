@@ -1,9 +1,9 @@
 # vsizer — Product Requirements (V1)
 
 **Status**: Active development
-**Version**: 0.1.x
+**Version**: 1.1.x
 **Owner**: Frédéric Jacquet
-**Last updated**: 2026-05-09
+**Last updated**: 2026-05-10
 
 ---
 

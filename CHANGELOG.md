@@ -5,6 +5,26 @@ All notable changes to vsizer are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **CPU Ready contention surface** (ADR-0012) — RVTools' per-VM
+  `vInfo.Overall Cpu Readiness` is now parsed, aggregated per cluster
+  (mean / max / count of VMs above 5 %), and surfaced on each cluster
+  card and slide as a single factual line with VMware-standard color
+  thresholds (<5 % green / 5–10 % orange / >10 % red). For clusters
+  with at least one VM above the warning threshold, a conditional
+  annex slide listing the top 10 VMs is appended right after the
+  cluster slide. Live Optics inputs render `"CPU Ready : non
+  disponible (source : Live Optics)"` — the workbook does not expose
+  the metric. New shared module `engines/aggregation/contention.ts`
+  centralizes the thresholds; new helper `contentionColor` mirrors
+  the existing `usageColor`. Top-N defaults to 10. Estate-level
+  rollup `vmsAboveReadinessWarning` is wired through `GlobalSummary`
+  but intentionally not surfaced on the dashboard or title slide in
+  this iteration (V2).
+
 ## [1.0.1] — 2026-05-09
 
 ### Fixed

@@ -5,25 +5,8 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>vsizer</title>
-    <!--
-      FOUC-prevention: set the `dark` class on <html> before stylesheets
-      apply, based on the user's stored preference (or the OS default).
-      Wrapped in try/catch because Safari throws on localStorage access in
-      private mode.
-    -->
-    <script>
-      (() => {
-        var pref = null
-        try { pref = localStorage.getItem('vsizer-theme') } catch (_) {}
-        var resolved =
-          pref === 'light' || pref === 'dark'
-            ? pref
-            : window.matchMedia('(prefers-color-scheme: dark)').matches
-            ? 'dark'
-            : 'light'
-        if (resolved === 'dark') document.documentElement.classList.add('dark')
-      })()
-    </script>
+    <!-- FOUC-prevention: see public/theme-init.js (ADR-0013). -->
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

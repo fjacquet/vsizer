@@ -1,0 +1,31 @@
+# Source control
+.git
+.gitignore
+.gitattributes
+
+# Build output (we rebuild inside the image)
+dist
+coverage
+
+# Node
+node_modules
+npm-debug.log*
+
+# Tooling / IDE
+.vscode
+.idea
+.DS_Store
+*.swp
+
+# Repo-internal context that should never leak into image layers
+.planning
+.claude
+.reference
+
+# Docs (not needed at runtime; reduces context size)
+docs
+*.md
+!README.md
+
+# CI metadata
+.github

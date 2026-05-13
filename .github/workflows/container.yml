@@ -29,6 +29,9 @@ concurrency:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  # Opt into Node 24 for docker/* javascript actions ahead of the 2026-06-02
+  # default flip — keeps us on the latest runtime the runner offers.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   build:

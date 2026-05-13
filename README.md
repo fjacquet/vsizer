@@ -58,6 +58,26 @@ npm install            # uses the SheetJS tarball pinned in package.json
 npm run dev            # http://localhost:5173/vsizer/
 ```
 
+### Run with Docker
+
+A hardened multi-arch image is published to GHCR with every release:
+
+```bash
+docker run --rm -p 8080:8080 ghcr.io/fjacquet/vsizer:latest
+```
+
+Open <http://localhost:8080/>. The image is built from a non-root nginx
+base, ships strict CSP (`connect-src 'none'`) that forbids any outbound
+fetch of workbook data, and runs entirely client-side just like the
+public deploy. Tags:
+
+- `:latest`, `:1.2`, `:1`, `:1.2.0` — semver releases
+- `:edge` — built from `main` on every push
+- `:sha-<short>` — pinpoint a specific commit
+
+See [ADR-0013](docs/adr/0013-container-image-distribution.md) for the
+design.
+
 ## Scripts
 
 | Command                  | Purpose                                          |

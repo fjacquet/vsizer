@@ -5,6 +5,24 @@ All notable changes to vsizer are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Container image distribution** (ADR-0013) — multi-arch (amd64/arm64)
+  OCI image published to `ghcr.io/fjacquet/vsizer` from a new GitHub
+  Actions workflow. Image serves the SPA from a hardened
+  `nginxinc/nginx-unprivileged` base with CSP `connect-src 'none'`
+  enforcing the privacy invariant (ADR-0001) at the HTTP layer.
+  Tags: `:edge` on `main`, `:latest` + semver on `v*` releases.
+
+### Changed
+
+- **Externalised the dark-mode FOUC script** from inline in `index.html`
+  to `public/theme-init.js` so the container's strict
+  `script-src 'self'` Content-Security-Policy can hold. Behavior is
+  unchanged on Pages.
+
 ## [1.1.0] — 2026-05-10
 
 ### Added

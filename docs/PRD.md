@@ -37,6 +37,12 @@ The deployment is a single static site (GitHub Pages). The only network activity
 load is fetching the static assets that ship the app. Open DevTools → Network and a
 user can verify this themselves — that's a feature.
 
+**Container image (since v1.2)**: vsizer is additionally published as a hardened OCI
+image at `ghcr.io/fjacquet/vsizer`. Users who cannot or will not use the public Pages
+deploy can `docker run` the image locally; the privacy invariant holds identically
+because the image still serves only static files and the runtime CSP forbids outbound
+fetches (`connect-src 'none'`). See ADR-0013.
+
 ## 4. Scope (V1)
 
 ### 4.1 In scope

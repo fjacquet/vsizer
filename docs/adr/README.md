@@ -23,3 +23,4 @@ old one and update the old one's `Status` to `Superseded by ADR-NNNN`.
 | 0010 | Extended import formats: RVTools `RVTools_tab*`, modern Live Optics & `.zip` bundles | Accepted |
 | 0011 | DR-aware utilization ratios (capacity-weighted)    | Accepted (builds on 0007 / 0009) |
 | 0012 | CPU Ready (contention) from RVTools, asymmetric source | Accepted (builds on 0003 / 0010) |
+| 0013 | Container image distribution via GHCR              | Accepted (reinforces 0001) |

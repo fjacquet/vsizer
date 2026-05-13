@@ -28,8 +28,10 @@ LABEL org.opencontainers.image.title="vsizer" \
       org.opencontainers.image.url="https://github.com/fjacquet/vsizer"
 
 # Replace the default nginx-unprivileged server block with vsizer's
-# hardened version.
+# hardened version. security-headers.conf is included from every location
+# block in default.conf (see nginx.conf for why).
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/security-headers.conf /etc/nginx/snippets/security-headers.conf
 
 # Static SPA — owned by the non-root nginx user (uid 101).
 COPY --from=builder --chown=101:101 /app/dist/ /usr/share/nginx/html/

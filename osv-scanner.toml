@@ -1,0 +1,31 @@
+# OSV-Scanner ignore list — see ADR-0016 Waivers section for full rationale.
+#
+# Each entry must mirror a Waivers entry in
+# docs/adr/0016-strict-audit-gates-all-deps-low-severity.md, including
+# the same ignoreUntil expiry. Drift between this file and the ADR is
+# a process bug — review at the same cadence.
+
+[[IgnoredVulns]]
+id = "GHSA-4r6h-8v6p-xvw6"
+ignoreUntil = 2026-08-14
+reason = """
+SheetJS prototype pollution. GHSA summary says affected range is
+< 0.19.3; we ship xlsx 0.20.3 via the CDN tarball (ADR-0002), so we
+are PAST the fix. However the OSV.dev record has range
+{introduced: 0, no fixed event}, treating every xlsx version as
+vulnerable, because SheetJS is CDN-distributed and the GHSA was
+never updated with a "first_patched_version" entry. Re-check this
+waiver before 2026-08-14: confirm we are still on a tarball at or
+above the GHSA-summary's fix range; if SheetJS publishes a newer
+tarball, bump and drop the waiver.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-5pgg-2g8v-p4x9"
+ignoreUntil = 2026-08-14
+reason = """
+SheetJS ReDoS. GHSA summary says affected range is < 0.20.2; we ship
+xlsx 0.20.3 via the CDN tarball (ADR-0002). Same OSV structured-
+range gap as GHSA-4r6h-8v6p-xvw6: introduced=0, no fixed event. Not
+actually vulnerable on 0.20.3. Re-check before 2026-08-14.
+"""

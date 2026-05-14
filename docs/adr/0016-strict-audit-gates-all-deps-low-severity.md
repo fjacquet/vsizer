@@ -158,7 +158,35 @@ When a gate forces a waiver, append an entry below with:
 
 ### Open waivers
 
-*None at the time of writing.*
+#### W-001 — `GHSA-4r6h-8v6p-xvw6` (xlsx prototype pollution)
+
+- **Severity:** HIGH (CVSS 7.8)
+- **Dependency path:** root → `xlsx@0.20.3` (CDN tarball, ADR-0002)
+- **Why we can't fix today:** The GHSA *summary* declares the affected
+  range as `< 0.19.3`. We ship `0.20.3` via the SheetJS CDN tarball,
+  so we are past the fix. The OSV.dev record, however, encodes the
+  range as `{introduced: 0, no fixed event}`, treating every xlsx
+  version as vulnerable, because SheetJS moved to CDN-only after
+  0.18.5 and the GHSA never received a `first_patched_version`
+  event. This is an upstream-tooling data-quality issue, not an
+  exploitable bug in our deployed bytes.
+- **Follow-up:** Track upstream — re-test waiver renewal date.
+- **Granted:** 2026-05-14
+- **Expires:** 2026-08-14 (90 days)
+- **Mirror:** `osv-scanner.toml#IgnoredVulns[0]`
+
+#### W-002 — `GHSA-5pgg-2g8v-p4x9` (xlsx ReDoS)
+
+- **Severity:** HIGH (CVSS 7.5)
+- **Dependency path:** root → `xlsx@0.20.3` (CDN tarball, ADR-0002)
+- **Why we can't fix today:** GHSA summary says affected range is
+  `< 0.20.2`; we ship `0.20.3`. Same OSV structured-range gap as
+  W-001 — introduced=0, no fixed event recorded because SheetJS is
+  CDN-distributed. Not actually exploitable on 0.20.3.
+- **Follow-up:** Same as W-001 — track upstream.
+- **Granted:** 2026-05-14
+- **Expires:** 2026-08-14 (90 days)
+- **Mirror:** `osv-scanner.toml#IgnoredVulns[1]`
 
 ### Expired waivers (history)
 

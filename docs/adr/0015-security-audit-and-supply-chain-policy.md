@@ -1,9 +1,13 @@
 # ADR-0015: Security audit & supply-chain policy
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0016
 - **Date:** 2026-05-14
 - **Related:** ADR-0001 (client-side), ADR-0002 (SheetJS tarball), ADR-0013 (container)
 - **Spec:** `docs/superpowers/specs/2026-05-14-security-audit-and-supply-chain-hardening-design.md`
+- **Superseded:** Gating clause (Moderate+ on prod-deps only) replaced
+  the same day by ADR-0016 (LOW+ on all deps). The SBOM, CodeQL,
+  Dependabot, action SHA pinning, Trivy, and SECURITY.md decisions in
+  this ADR remain in force.
 
 ## Context
 

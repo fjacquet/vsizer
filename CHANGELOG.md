@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Audit gates tightened** (ADR-0016, supersedes ADR-0015's gating
+  clause). `npm audit` and `osv-scanner` now gate CI on **LOW+
+  severity across all dependencies** (production + dev) — previously
+  gated at Moderate+ on production only. The SBOM, CodeQL, Dependabot,
+  action SHA-pinning, Trivy and SECURITY.md infrastructure from
+  ADR-0015 are unchanged. Waivers (if needed) are recorded in
+  ADR-0016, expire within 90 days, and re-block CI automatically.
+
 ## [1.3.0] — 2026-05-14
 
 ### Added

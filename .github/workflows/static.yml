@@ -34,13 +34,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: npm audit (prod, Moderate+)
-        run: npm audit --audit-level=moderate --omit=dev
+      - name: npm audit (all deps, LOW+)
+        run: npm audit --audit-level=low
 
       - name: OSV-Scanner (lockfile)
         uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2  # v2.3.8
         with:
+          # Waivers (ignore list) live in osv-scanner.toml; each entry is
+          # mirrored in ADR-0016 with a max-90-day expiry. See the ADR for
+          # the rationale and the renewal cadence.
           scan-args: |-
+            --config=./osv-scanner.toml
             --lockfile=./package-lock.json
             --format=sarif
             --output=osv-results.sarif
@@ -55,23 +59,24 @@ jobs:
           category: osv-scanner
         continue-on-error: true
 
-      - name: Gate on OSV Moderate+
+      - name: Gate on OSV LOW+
         run: |
           if [ ! -f osv-results.sarif ]; then
             echo "::warning::OSV produced no SARIF — treating as clean."
             exit 0
           fi
           # Severity in OSV SARIF rules: properties.severity (lowercase).
-          # SARIF level (warning/error) also reflects severity.
-          mod_plus=$(jq '[.runs[].results[]?
+          # SARIF level (warning/error/note) also reflects severity.
+          # `info` is excluded — it's a maintainer note, not a GHSA CVE.
+          low_plus=$(jq '[.runs[].results[]?
             | select(
                 ([.properties.severity? // ""
                   , .level? // ""] | join(" ") | ascii_downcase) as $sev
-                | $sev | test("(moderate|high|critical|error)")
+                | $sev | test("(low|moderate|high|critical|warning|error)")
               )] | length' osv-results.sarif)
-          echo "OSV Moderate+ findings: $mod_plus"
-          if [ "$mod_plus" -gt 0 ]; then
-            echo "::error::OSV found $mod_plus Moderate+ advisory(ies)"
+          echo "OSV LOW+ findings: $low_plus"
+          if [ "$low_plus" -gt 0 ]; then
+            echo "::error::OSV found $low_plus LOW+ advisory(ies)"
             exit 1
           fi
 

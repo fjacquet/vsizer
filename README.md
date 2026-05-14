@@ -188,10 +188,13 @@ and runs under a strict Content-Security-Policy on the container image
   builds attach it to GitHub Releases on `v*` tags; container builds
   embed it as an OCI attestation alongside SLSA provenance.
 - **Dependency audits:** `npm audit` and `osv-scanner` gate CI at
-  Moderate+ for production dependencies.
+  **LOW+ severity across all dependencies** (production and dev).
+  See [ADR-0016](docs/adr/0016-strict-audit-gates-all-deps-low-severity.md).
 - **Static analysis:** CodeQL runs on every PR and weekly.
 - **Disclosure:** see [SECURITY.md](SECURITY.md).
-- **Policy:** see [ADR-0015](docs/adr/0015-security-audit-and-supply-chain-policy.md).
+- **Policy:** see [ADR-0015](docs/adr/0015-security-audit-and-supply-chain-policy.md)
+  (infrastructure) and [ADR-0016](docs/adr/0016-strict-audit-gates-all-deps-low-severity.md)
+  (current gating policy: LOW+ on all deps).
 
 ## License
 

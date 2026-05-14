@@ -10,6 +10,8 @@
 [![Tested with Vitest](https://img.shields.io/badge/tested%20with-vitest-6e9f18?logo=vitest&logoColor=white)](https://vitest.dev/)
 [![Code style: Biome](https://img.shields.io/badge/code%20style-biome-60a5fa?logo=biome&logoColor=white)](https://biomejs.dev/)
 [![Client-side only](https://img.shields.io/badge/processing-100%25%20client--side-22c55e)](#privacy-guarantee)
+[![CodeQL](https://github.com/fjacquet/vsizer/actions/workflows/codeql.yml/badge.svg)](https://github.com/fjacquet/vsizer/actions/workflows/codeql.yml)
+[![SBOM](https://img.shields.io/badge/SBOM-CycloneDX-blue)](https://github.com/fjacquet/vsizer/releases/latest)
 
 > Drop your RVTools / Live Optics export, get a factual cluster utilization deck.
 > 100 % client-side — your file never leaves your browser.
@@ -175,6 +177,21 @@ This README is intentionally thin — it gets you to the right doc.
 | [0010](docs/adr/0010-extended-import-formats.md)                                     | RVTools `RVTools_tab*`, modern Live Optics, `.zip` bundles |
 | [0011](docs/adr/0011-dr-aware-utilization-ratios.md)                                 | DR-aware, capacity-weighted utilization ratios |
 | [0012](docs/adr/0012-cpu-ready-contention-asymmetric-source.md)                      | CPU Ready (contention) from RVTools, asymmetric source |
+
+## Security
+
+vsizer is 100 % client-side ([ADR-0001](docs/adr/0001-client-side-only-processing.md))
+and runs under a strict Content-Security-Policy on the container image
+([ADR-0013](docs/adr/0013-container-image-distribution.md)).
+
+- **SBOM:** every build produces a CycloneDX 1.6 JSON SBOM. Static
+  builds attach it to GitHub Releases on `v*` tags; container builds
+  embed it as an OCI attestation alongside SLSA provenance.
+- **Dependency audits:** `npm audit` and `osv-scanner` gate CI at
+  Moderate+ for production dependencies.
+- **Static analysis:** CodeQL runs on every PR and weekly.
+- **Disclosure:** see [SECURITY.md](SECURITY.md).
+- **Policy:** see [ADR-0015](docs/adr/0015-security-audit-and-supply-chain-policy.md).
 
 ## License
 

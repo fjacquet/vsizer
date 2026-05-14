@@ -4,12 +4,13 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: ['main']
+    tags: ['v*']
   pull_request:
     branches: ['main']
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write  # ADR-0015: attach SBOM to GitHub Releases on v* tags
   pages: write
   id-token: write
 
@@ -107,20 +108,34 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+      - name: Attach SBOM to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          if ! gh release view "$tag" >/dev/null 2>&1; then
+            gh release create "$tag" \
+              --title "$tag" \
+              --notes "See CHANGELOG.md for release notes." \
+              --verify-tag
+          fi
+          gh release upload "$tag" sbom.cdx.json --clobber
+
       - name: Setup Pages
-        if: github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
         with:
           enablement: true
 
       - name: Upload artifact
-        if: github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
         with:
           path: './dist'
 
   deploy:
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

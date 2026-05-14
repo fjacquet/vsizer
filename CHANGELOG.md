@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Security audit & supply-chain policy** (ADR-0015) — every build
+  now emits a CycloneDX 1.6 JSON SBOM (`sbom.cdx.json`, prod-deps
+  scope) as a workflow artefact, attached to GitHub Releases on
+  `v*` tags. CI gates on `npm audit --audit-level=moderate --omit=dev`
+  and `osv-scanner` (Moderate+). A CodeQL workflow scans the TS source
+  weekly and on every PR. All GitHub Actions are pinned to commit
+  SHAs. Dependabot manages weekly grouped updates for npm,
+  github-actions, and docker (`xlsx` excluded — ADR-0002 mandates the
+  SheetJS tarball). The container workflow gained a Trivy CVE scan
+  (warn-only initially; gate promotion tracked as a follow-up).
+  `SECURITY.md` documents the private GitHub advisory disclosure
+  path.
+
 ## [1.2.0] — 2026-05-14
 
 ### Added

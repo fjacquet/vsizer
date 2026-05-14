@@ -59,6 +59,16 @@ the baseline stays green and is provable to consumers.
    base-image CVEs disclose on a cadence independent of our releases.
    Promotion to gate is a one-line change tracked as a follow-up.
 
+   **Update 2026-05-14 (v1.5.0):** Promoted to **gate**. The v1.4.0
+   base-image bump (nginx-unprivileged 1.27 → 1.29-alpine; node 24 →
+   26-alpine) dropped the Security-tab Trivy count from ~88 → 0. With
+   a clean baseline established, `exit-code: '1'` + dropping
+   `continue-on-error: true` makes any new HIGH/CRITICAL with a
+   fix fail the container build. `ignore-unfixed: true` is kept so
+   newly-disclosed advisories without an upstream patch only surface
+   in the Security tab and do not freeze CI — those are tracked via
+   the ADR-0016 Waivers workflow if the wait becomes long.
+
 7. **Disclosure.** `SECURITY.md` points reporters to GitHub's private
    advisory flow with a 7-day acknowledge / 30-day fix target.
 

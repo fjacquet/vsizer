@@ -117,16 +117,19 @@ jobs:
           fi
           docker stop vsizer-smoke
 
-      - name: Scan image with Trivy (warn-only)
+      - name: Scan image with Trivy (gate)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
         with:
           image-ref: vsizer:smoke
           format: sarif
           output: trivy-results.sarif
           severity: HIGH,CRITICAL
-          exit-code: '0'   # warn-only until promoted to gate (ADR-0015)
+          # Promoted from warn-only to gate (ADR-0015 §6 update 2026-05-14)
+          # after the v1.4.0 nginx-unprivileged:1.29-alpine + node:26-alpine
+          # bump dropped the Security-tab count from ~88 to 0. Any new
+          # HIGH/CRITICAL with a fix available now fails the container build.
+          exit-code: '1'
           ignore-unfixed: true
-        continue-on-error: true
 
       - name: Upload Trivy SARIF
         if: always()

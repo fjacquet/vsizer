@@ -2,7 +2,7 @@ import { useCallback, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export interface FileDropzoneProps {
-  onFile(file: File): void
+  onFiles(files: File[]): void
   /** When true, the dropzone is disabled (e.g., while a file is parsing). */
   disabled?: boolean
   /** Variant: full-page hero on the empty landing, compact in the sidebar. */
@@ -19,25 +19,34 @@ const isAcceptable = (file: File): boolean => {
 
 /**
  * Drag-and-drop zone with a click-to-browse fallback. Emits the chosen
- * `File` upward via `onFile`; parsing happens in `useDatasetUpload`.
+ * `File`s upward via `onFiles`; parsing happens in `useDatasetUpload`.
  *
- * Privacy invariant (ADR-0001): the file never leaves this component
- * tree — it's read by `FileReader` in the upload hook and the bytes are
- * dropped after parsing. No fetches with the file body anywhere.
+ * Multi-file (ADR-0017): the `<input>` carries `multiple` and the drop
+ * handler iterates `dataTransfer.files`. Unacceptable files are silently
+ * filtered out per-file; an empty filtered set is a no-op.
+ *
+ * Privacy invariant (ADR-0001): the files never leave this component
+ * tree — they're read by `FileReader` in the upload hook and the
+ * bytes are dropped after parsing. No fetches with the file body
+ * anywhere.
  */
-export function FileDropzone({ onFile, disabled, variant = 'compact' }: FileDropzoneProps) {
+export function FileDropzone({ onFiles, disabled, variant = 'compact' }: FileDropzoneProps) {
   const { t } = useTranslation('upload')
   const inputRef = useRef<HTMLInputElement>(null)
   const inputId = useId()
   const [isDragging, setIsDragging] = useState(false)
 
   const accept = useCallback(
-    (file: File | null | undefined) => {
-      if (!file) return
-      if (!isAcceptable(file)) return
-      onFile(file)
+    (files: FileList | File[] | null | undefined) => {
+      if (!files) return
+      const filtered: File[] = []
+      for (const file of files) {
+        if (isAcceptable(file)) filtered.push(file)
+      }
+      if (filtered.length === 0) return
+      onFiles(filtered)
     },
-    [onFile],
+    [onFiles],
   )
 
   const onDrop = useCallback(
@@ -45,14 +54,14 @@ export function FileDropzone({ onFile, disabled, variant = 'compact' }: FileDrop
       e.preventDefault()
       setIsDragging(false)
       if (disabled) return
-      accept(e.dataTransfer.files[0])
+      accept(e.dataTransfer.files)
     },
     [accept, disabled],
   )
 
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      accept(e.target.files?.[0])
+      accept(e.target.files)
       // Reset so re-selecting the same file fires `onChange`.
       if (inputRef.current) inputRef.current.value = ''
     },
@@ -111,6 +120,7 @@ export function FileDropzone({ onFile, disabled, variant = 'compact' }: FileDrop
         id={inputId}
         type="file"
         accept={ACCEPT_ATTR}
+        multiple
         className="sr-only"
         onChange={onChange}
         disabled={disabled}

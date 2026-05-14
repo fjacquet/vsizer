@@ -53,9 +53,12 @@ describe('App shell', () => {
   })
 
   it('switches to the cockpit (header + main content) when a dataset is loaded', () => {
-    useDatasetStore.getState().setDataset({
-      file: new File(['fake'], 'demo.xlsx'),
-      parsed: { source: 'rvtools', vinfo: [sampleVm], vhost: [], errors: [] },
+    useDatasetStore.getState().setMergedDataset({
+      sources: [{ name: 'demo.xlsx', size: 4, source: 'rvtools', vinfoRows: 1, vhostRows: 0 }],
+      source: 'rvtools',
+      vinfo: [sampleVm],
+      vhost: [],
+      parseErrors: [],
       aggregates: {
         CL_DEMO_1: {
           cluster: 'CL_DEMO_1',

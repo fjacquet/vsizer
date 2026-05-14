@@ -53,8 +53,7 @@ export const resolveClusterCollisions = (
     }
   }
 
-  const isColliding = (cluster: string): boolean =>
-    (filesPerCluster.get(cluster)?.size ?? 0) > 1
+  const isColliding = (cluster: string): boolean => (filesPerCluster.get(cluster)?.size ?? 0) > 1
 
   // Step 2: rewrite or pass through per file.
   const outVhost: VHostRow[] = []

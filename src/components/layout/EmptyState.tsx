@@ -14,7 +14,7 @@ import { FileDropzone } from '../inputs/FileDropzone'
  */
 export function EmptyState() {
   const { t } = useTranslation('common')
-  const { uploadFile, isUploading } = useDatasetUpload()
+  const { uploadFiles, isUploading } = useDatasetUpload()
 
   const loadSample = async () => {
     try {
@@ -23,7 +23,7 @@ export function EmptyState() {
       if (!res.ok) return
       const blob = await res.blob()
       const file = new File([blob], 'rvtools-sample.xlsx', { type: blob.type })
-      await uploadFile(file)
+      await uploadFiles([file])
     } catch {
       // Silent: the dropzone is always available as the fallback.
     }
@@ -37,8 +37,8 @@ export function EmptyState() {
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{t('tagline')}</p>
         </div>
         <FileDropzone
-          onFile={(f) => {
-            void uploadFile(f)
+          onFiles={(files) => {
+            void uploadFiles(files)
           }}
           disabled={isUploading}
           variant="hero"

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useExport } from '../../hooks/useExport'
 import i18n, { SUPPORTED_LANGUAGES, type SupportedLanguage } from '../../i18n'
-import { useDatasetStore } from '../../store/datasetStore'
+import { selectHasDataset, useDatasetStore } from '../../store/datasetStore'
 import { ThemeToggle } from '../inputs/ThemeToggle'
 
 const switchLanguage = (lang: SupportedLanguage): void => {
@@ -17,7 +17,7 @@ const switchLanguage = (lang: SupportedLanguage): void => {
 export function Header() {
   const { t, i18n: i18nApi } = useTranslation('common')
   const reset = useDatasetStore((s) => s.reset)
-  const hasFile = useDatasetStore((s) => s.file !== null)
+  const hasFile = useDatasetStore(selectHasDataset)
   const { canExport, isExporting, exportPptx } = useExport()
   const currentLang = i18nApi.resolvedLanguage as SupportedLanguage | undefined
 

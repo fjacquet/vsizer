@@ -4,6 +4,7 @@ import { useDatasetUpload } from '../../hooks/useDatasetUpload'
 import { sortAggregates, useDatasetStore } from '../../store/datasetStore'
 import { ClusterFilterPanel } from '../inputs/ClusterFilterPanel'
 import { FileDropzone } from '../inputs/FileDropzone'
+import { SourceFileList } from '../sources/SourceFileList'
 
 /**
  * Left sidebar in the loaded state. Contains the (compact) dropzone for
@@ -12,11 +13,15 @@ import { FileDropzone } from '../inputs/FileDropzone'
  *
  * Layout-wise it's a fixed 320 px column on viewports ≥ 1024 px and a
  * full-width band above the main pane below that breakpoint (ADR-0006).
+ *
+ * Multi-file (ADR-0017): when more than one workbook is imported,
+ * the single-file metadata panel is replaced by a `SourceFileList`
+ * chip list.
  */
 export function UploadSidebar() {
   const { t } = useTranslation('upload')
-  const { isUploading, uploadFile } = useDatasetUpload()
-  const file = useDatasetStore((s) => s.file)
+  const { isUploading, uploadFiles } = useDatasetUpload()
+  const sources = useDatasetStore((s) => s.sources)
   const aggregates = useDatasetStore((s) => s.aggregates)
   const clusters = useMemo(() => sortAggregates(aggregates), [aggregates])
   const selected = useDatasetStore((s) => s.selectedClusters)
@@ -30,18 +35,10 @@ export function UploadSidebar() {
       className="flex flex-col gap-4 lg:w-80 lg:shrink-0"
       aria-label={t('fileLoaded.ariaLabel')}
     >
-      {file ? (
-        <div className="panel text-xs">
-          <p className="mb-1 font-semibold uppercase tracking-wider text-accent-500">
-            {t('fileLoaded.ariaLabel')}
-          </p>
-          <p className="break-all text-slate-700 dark:text-slate-200">{file.name}</p>
-          <p className="text-slate-500">{Math.round(file.size / 1024).toLocaleString()} kB</p>
-        </div>
-      ) : null}
+      <SourceFileList sources={sources} />
       <FileDropzone
-        onFile={(f) => {
-          void uploadFile(f)
+        onFiles={(files) => {
+          void uploadFiles(files)
         }}
         disabled={isUploading}
         variant="compact"

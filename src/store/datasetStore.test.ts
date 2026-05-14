@@ -1,10 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { GlobalSummary, VInfoRow } from '../types'
+import type { GlobalSummary, SourceFile, VInfoRow } from '../types'
 import { useDatasetStore } from './datasetStore'
 
-const sampleFile = new File(['fake'], 'sample.xlsx', {
-  type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-})
+const sampleSource: SourceFile = {
+  name: 'sample.xlsx',
+  size: 4,
+  source: 'rvtools',
+  vinfoRows: 1,
+  vhostRows: 0,
+}
 
 const sampleVm: VInfoRow = {
   vmName: 'vm-1',
@@ -49,7 +53,7 @@ describe('datasetStore', () => {
 
   it('starts empty', () => {
     const s = useDatasetStore.getState()
-    expect(s.file).toBeNull()
+    expect(s.sources).toEqual([])
     expect(s.source).toBe('unknown')
     expect(s.vinfo).toEqual([])
     expect(s.vhost).toEqual([])
@@ -77,24 +81,22 @@ describe('datasetStore', () => {
     expect(useDatasetStore.getState().selectedClusters.size).toBe(0)
   })
 
-  it('setDataset populates every field at once and clears the selection', () => {
+  it('setMergedDataset populates every field at once and clears the selection', () => {
     // Pre-mutate selection so we can verify it gets reset on a new dataset.
     useDatasetStore.getState().toggleCluster('STALE')
 
-    useDatasetStore.getState().setDataset({
-      file: sampleFile,
-      parsed: {
-        source: 'rvtools',
-        vinfo: [sampleVm],
-        vhost: [],
-        errors: [{ sheet: 'vinfo', index: 7, message: 'bogus' }],
-      },
+    useDatasetStore.getState().setMergedDataset({
+      sources: [sampleSource],
+      source: 'rvtools',
+      vinfo: [sampleVm],
+      vhost: [],
+      parseErrors: [{ file: 'sample.xlsx', sheet: 'vinfo', index: 7, message: 'bogus' }],
       aggregates: {},
       globals: sampleGlobals,
     })
 
     const s = useDatasetStore.getState()
-    expect(s.file).toBe(sampleFile)
+    expect(s.sources).toEqual([sampleSource])
     expect(s.source).toBe('rvtools')
     expect(s.vinfo).toHaveLength(1)
     expect(s.parseErrors).toHaveLength(1)
@@ -103,10 +105,36 @@ describe('datasetStore', () => {
     expect(s.selectedClusters.size).toBe(0)
   })
 
+  // ADR-0017: multi-file imports populate `sources` with N entries.
+  // No assertion on aggregation math here — that's covered by the
+  // collision-resolver tests and the aggregation tests; this test
+  // exercises only the store's shape contract.
+  it('setMergedDataset accepts multiple sources (multi-file import)', () => {
+    useDatasetStore.getState().setMergedDataset({
+      sources: [
+        { ...sampleSource, name: 'site-a.xlsx' },
+        { ...sampleSource, name: 'site-b.xlsx' },
+        { ...sampleSource, name: 'site-c.xlsx' },
+      ],
+      source: 'rvtools',
+      vinfo: [sampleVm],
+      vhost: [],
+      parseErrors: [],
+      aggregates: {},
+      globals: sampleGlobals,
+    })
+
+    const s = useDatasetStore.getState()
+    expect(s.sources.map((src) => src.name)).toEqual(['site-a.xlsx', 'site-b.xlsx', 'site-c.xlsx'])
+  })
+
   it('reset returns the store to its initial shape after mutation', () => {
-    useDatasetStore.getState().setDataset({
-      file: sampleFile,
-      parsed: { source: 'rvtools', vinfo: [sampleVm], vhost: [], errors: [] },
+    useDatasetStore.getState().setMergedDataset({
+      sources: [sampleSource],
+      source: 'rvtools',
+      vinfo: [sampleVm],
+      vhost: [],
+      parseErrors: [],
       aggregates: {},
       globals: sampleGlobals,
     })
@@ -116,7 +144,7 @@ describe('datasetStore', () => {
 
     useDatasetStore.getState().reset()
     const after = useDatasetStore.getState()
-    expect(after.file).toBeNull()
+    expect(after.sources).toEqual([])
     expect(after.vinfo).toEqual([])
     expect(after.globals).toBeNull()
     expect(after.selectedClusters.size).toBe(0)
@@ -159,9 +187,12 @@ describe('datasetStore', () => {
         ramRatio: 0.3,
       },
     ]
-    useDatasetStore.getState().setDataset({
-      file: sampleFile,
-      parsed: { source: 'rvtools', vinfo: [], vhost, errors: [] },
+    useDatasetStore.getState().setMergedDataset({
+      sources: [{ ...sampleSource, vhostRows: 1, vinfoRows: 0 }],
+      source: 'rvtools',
+      vinfo: [],
+      vhost,
+      parseErrors: [],
       aggregates: {},
       globals: sampleGlobals,
     })

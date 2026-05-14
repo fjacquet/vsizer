@@ -55,7 +55,7 @@ describe('resolveClusterCollisions', () => {
     expect(out.vinfo.map((v) => v.cluster)).toEqual(['Prod-A', 'Prod-B'])
   })
 
-  it('two files share a cluster name → both files\' rows get rewritten with the source-filename suffix', () => {
+  it("two files share a cluster name → both files' rows get rewritten with the source-filename suffix", () => {
     const out = resolveClusterCollisions([
       {
         filename: 'site-a.xlsx',

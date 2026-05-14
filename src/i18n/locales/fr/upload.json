@@ -1,14 +1,26 @@
 {
   "dropzone": {
-    "instruction": "Glissez votre export RVTools ou Live Optics",
+    "instruction": "Glissez vos exports RVTools ou Live Optics",
     "or": "ou",
     "browse": "parcourir vos fichiers",
-    "accepted": "Formats acceptés : .xlsx, .xlsm, .xlsb, .csv, .ods, .zip (archive Live Optics)",
-    "active": "Déposez le fichier ici"
+    "accepted": "Formats acceptés : .xlsx, .xlsm, .xlsb, .csv, .ods, .zip (archive Live Optics). Un seul fichier ou plusieurs à la fois.",
+    "active": "Déposez les fichiers ici"
   },
   "fileLoaded": {
     "ariaLabel": "Fichier chargé",
     "remove": "Retirer"
+  },
+  "source": {
+    "rvtools": "RVTools",
+    "liveOptics": "Live Optics",
+    "unknown": "Inconnu"
+  },
+  "sources": {
+    "list": {
+      "title": "Classeurs importés"
+    },
+    "summary": "{{n}} fichiers · {{vms}} VM · {{hosts}} hôtes",
+    "rowCounts": "{{vms}} VM · {{hosts}} hôtes"
   },
   "errors": {
     "rejected": "Format non reconnu. Glissez un export RVTools ou Live Optics.",

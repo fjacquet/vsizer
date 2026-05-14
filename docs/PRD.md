@@ -40,8 +40,10 @@ user can verify this themselves — that's a feature.
 **Container image (since v1.2)**: vsizer is additionally published as a hardened OCI
 image at `ghcr.io/fjacquet/vsizer`. Users who cannot or will not use the public Pages
 deploy can `docker run` the image locally; the privacy invariant holds identically
-because the image still serves only static files and the runtime CSP forbids outbound
-fetches (`connect-src 'none'`). See ADR-0013.
+because the image still serves only static files and the runtime CSP forbids any
+third-party connection (`connect-src 'self'` — same-origin only, and the container
+exposes no endpoint capable of receiving workbook bytes). See ADR-0013, including
+the 2026-05-14 update on the `'none'` → `'self'` relaxation.
 
 ## 4. Scope (V1)
 

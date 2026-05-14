@@ -26,3 +26,4 @@ old one and update the old one's `Status` to `Superseded by ADR-NNNN`.
 | 0013 | Container image distribution via GHCR              | Accepted (reinforces 0001) |
 | 0015 | Security audit & supply-chain policy               | Superseded by ADR-0016 |
 | 0016 | Strict audit gates — all deps, LOW+ severity       | Accepted (supersedes 0015's gating clause) |
+| 0017 | Multi-file import (RVTools + Live Optics)          | Accepted (builds on 0010, 0014) |

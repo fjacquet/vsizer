@@ -1,14 +1,26 @@
 {
   "dropzone": {
-    "instruction": "Drop your RVTools or Live Optics export",
+    "instruction": "Drop your RVTools or Live Optics exports",
     "or": "or",
     "browse": "browse your files",
-    "accepted": "Accepted formats: .xlsx, .xlsm, .xlsb, .csv, .ods, .zip (Live Optics bundle)",
-    "active": "Drop the file here"
+    "accepted": "Accepted formats: .xlsx, .xlsm, .xlsb, .csv, .ods, .zip (Live Optics bundle). Drop one file or several at once.",
+    "active": "Drop the files here"
   },
   "fileLoaded": {
     "ariaLabel": "Loaded file",
     "remove": "Remove"
+  },
+  "source": {
+    "rvtools": "RVTools",
+    "liveOptics": "Live Optics",
+    "unknown": "Unknown"
+  },
+  "sources": {
+    "list": {
+      "title": "Imported workbooks"
+    },
+    "summary": "{{n}} files · {{vms}} VMs · {{hosts}} hosts",
+    "rowCounts": "{{vms}} VMs · {{hosts}} hosts"
   },
   "errors": {
     "rejected": "Unrecognized format. Drop an RVTools or Live Optics export.",

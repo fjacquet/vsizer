@@ -2,34 +2,44 @@ import { create } from 'zustand'
 import { aggregateClusters } from '../engines/aggregation/aggregateClusters'
 import { aggregateGlobals } from '../engines/aggregation/globals'
 import type { SourceFormat } from '../engines/parser/detectSource'
-import type { ParsedDataset } from '../engines/parser/normalizeColumns'
 import { isOrphanCluster } from '../engines/parser/synthesizeOrphanClusters'
-import type { ClusterAggregate, GlobalSummary, VHostRow, VInfoRow } from '../types'
+import type { ClusterAggregate, GlobalSummary, SourceFile, VHostRow, VInfoRow } from '../types'
 
 /**
  * Single source of truth for the parsed dataset and the user's export
  * selection. The store is **memory-only** — vsizer never persists workbook
  * contents to localStorage, the URL, or anywhere else (ADR-0001, ADR-0004),
  * because uploaded exports may carry sensitive hostnames.
+ *
+ * Multi-file import (ADR-0017): `sources` holds metadata for every
+ * imported workbook. The raw `File` bytes are dropped after parse;
+ * `sources` carries only the display metadata. `vinfo` / `vhost`
+ * already contain rows from every file with cluster-name collisions
+ * resolved upstream (`resolveClusterCollisions`).
  */
 export interface DatasetState {
-  /** The uploaded source file. Kept for filename/size display only — bytes
-   *  are parsed once on upload and the resulting rows live in `vinfo` /
-   *  `vhost`. */
-  file: File | null
+  /** Metadata for each imported workbook. Length 0 = empty state,
+   *  length 1 = single-file import (most common), length > 1 =
+   *  multi-file estate import (ADR-0017). */
+  sources: SourceFile[]
 
-  /** Origin of the workbook (RVTools / Live Optics / unknown). Drives the
-   *  manual mapping fallback when set to `'unknown'`. */
+  /** Origin of the imported data. For a single-file import this is
+   *  that file's format. For a multi-file import this is the
+   *  first source's format — per-row nullable fields (e.g.
+   *  `cpuReadinessPercent`) handle mixed-source data symmetrically
+   *  (ADR-0012). */
   source: SourceFormat
 
-  /** Canonical VM rows after parser + adapter normalization. */
+  /** Canonical VM rows after parser + adapter normalization, merged
+   *  across all sources with cluster-name collisions resolved. */
   vinfo: VInfoRow[]
-  /** Canonical host rows after parser + adapter normalization. */
+  /** Canonical host rows after parser + adapter normalization, merged
+   *  across all sources with cluster-name collisions resolved. */
   vhost: VHostRow[]
 
   /** Per-row validation errors surfaced from the parser. UI renders a count
-   *  badge — see PRD §5.2. */
-  parseErrors: ParsedDataset['errors']
+   *  badge — see PRD §5.2. Aggregated across all imported files. */
+  parseErrors: { file: string; sheet: 'vinfo' | 'vhost'; index: number; message: string }[]
 
   /** Set of cluster names selected for export. Empty set = "export all"
    *  (V1 UX contract — see ADR-0006). */
@@ -47,9 +57,12 @@ export interface DatasetState {
   /** Estate-wide rollup. Filled at the same time as `aggregates`. */
   globals: GlobalSummary | null
 
-  setDataset(input: {
-    file: File
-    parsed: ParsedDataset
+  setMergedDataset(input: {
+    sources: SourceFile[]
+    source: SourceFormat
+    vinfo: VInfoRow[]
+    vhost: VHostRow[]
+    parseErrors: DatasetState['parseErrors']
     aggregates: Record<string, ClusterAggregate>
     globals: GlobalSummary
   }): void
@@ -65,9 +78,9 @@ export interface DatasetState {
 
 const emptyState = (): Omit<
   DatasetState,
-  'setDataset' | 'toggleCluster' | 'clearSelection' | 'toggleStretched' | 'reset'
+  'setMergedDataset' | 'toggleCluster' | 'clearSelection' | 'toggleStretched' | 'reset'
 > => ({
-  file: null,
+  sources: [],
   source: 'unknown',
   vinfo: [],
   vhost: [],
@@ -81,13 +94,13 @@ const emptyState = (): Omit<
 export const useDatasetStore = create<DatasetState>((set) => ({
   ...emptyState(),
 
-  setDataset: ({ file, parsed, aggregates, globals }) =>
+  setMergedDataset: ({ sources, source, vinfo, vhost, parseErrors, aggregates, globals }) =>
     set({
-      file,
-      source: parsed.source,
-      vinfo: parsed.vinfo,
-      vhost: parsed.vhost,
-      parseErrors: parsed.errors,
+      sources,
+      source,
+      vinfo,
+      vhost,
+      parseErrors,
       aggregates,
       globals,
       // New dataset → fresh selection + fresh stretched flags.

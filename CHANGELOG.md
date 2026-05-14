@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Multi-file import** (ADR-0017, issue #7). The dropzone now accepts
+  N workbooks in a single drop or click-to-browse. Each file is parsed
+  independently through the existing pipeline (RVTools, Live Optics
+  classic + modern, `.zip` bundles), and one bad file in a batch
+  doesn't abort the others. Cluster names that appear in more than
+  one file's host rows are disambiguated as `<name> (<filename>)`
+  for every contributing file; names that appear in exactly one file
+  are left untouched. Mixed RVTools + Live Optics in the same batch
+  is allowed — the existing per-row nullable CPU Ready field
+  (ADR-0012) handles the asymmetry. Imported workbooks are surfaced
+  beneath the dropzone as a chip list (filename + source format + row
+  counts). The PPTX header label reads the single filename for
+  one-file imports or `vsizer estate (N files)` for multi-file ones.
+  Privacy invariants from ADR-0001 / ADR-0004 are preserved: bytes
+  drop after parse, nothing persists, nothing leaves the browser.
+
+### Changed
+
+- `datasetStore` shape: `file: File | null` is replaced by
+  `sources: SourceFile[]` carrying per-file display metadata. The
+  raw `File` is no longer retained — parsing happens upstream and
+  the metadata is what the UI needs. `setDataset` is renamed
+  `setMergedDataset`. The store's `parseErrors` entries now carry a
+  `file` field so per-file row errors stay attributable across
+  multi-source imports.
+
 ## [1.5.1] — 2026-05-14
 
 ### Fixed

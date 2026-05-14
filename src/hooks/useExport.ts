@@ -48,7 +48,7 @@ export function useExport(): {
   exportPptx(): Promise<void>
 } {
   const { t } = useTranslation('common')
-  const file = useDatasetStore((s) => s.file)
+  const sources = useDatasetStore((s) => s.sources)
   const source = useDatasetStore((s) => s.source)
   const aggregates = useDatasetStore((s) => s.aggregates)
   const globals = useDatasetStore((s) => s.globals)
@@ -58,7 +58,15 @@ export function useExport(): {
 
   const [isExporting, setIsExporting] = useState(false)
 
-  const sourceFile = file?.name ?? '—'
+  // PPTX header label: single-file → that filename. Multi-file (ADR-0017)
+  // → a generic "vsizer estate (N files)" — users wanting per-source
+  // detail read the SourceFileList in the dashboard sidebar.
+  const sourceFile =
+    sources.length === 0
+      ? '—'
+      : sources.length === 1
+        ? (sources[0]?.name ?? '—')
+        : `vsizer estate (${sources.length} files)`
   // ADR-0012 / Hunter H2: usePptxStrings needs the source format to
   // pick the right label for the "non disponible" line — picking
   // "Live Optics" on an RVTools file with the column missing

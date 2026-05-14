@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] — 2026-05-14
+
+### Fixed
+
+- **`package.json` version bump folded in.** The v1.5.0 release commit
+  picked up `CHANGELOG.md` + `package-lock.json` but lost
+  `package.json` from staging due to a linter race, so the v1.5.0 tag
+  shipped with `package.json` reporting `1.4.0`. v1.5.1 is otherwise
+  identical to v1.5.0 — no code change, no Trivy/CI behaviour change,
+  no runtime impact (vsizer doesn't surface `package.json#version` at
+  runtime). The v1.5.0 tag is left in place as honest history; v1.5.1
+  is the version whose SBOM correctly reads `vsizer@1.5.1`.
+
 ## [1.5.0] — 2026-05-14
 
 ### Security

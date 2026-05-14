@@ -1,11 +1,13 @@
 # vsizer container image — see ADR-0013.
-# Two stages: node:24-alpine builder produces dist/ with base='/',
-# nginxinc/nginx-unprivileged:1.27-alpine serves it under a hardened config.
+# Two stages: node:26-alpine builder produces dist/ with base='/',
+# nginxinc/nginx-unprivileged:1.29-alpine serves it under a hardened config.
+# Base-image versions are kept current to drop nginx-alpine OS CVEs that
+# Trivy surfaces in the Security tab (ADR-0015 warn-only scan).
 
 # syntax=docker/dockerfile:1.9
 
 # ── Stage 1: builder ────────────────────────────────────────────────────
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 # Install dependencies first for layer caching.
@@ -17,7 +19,7 @@ COPY . .
 RUN npm run build:container
 
 # ── Stage 2: runtime ────────────────────────────────────────────────────
-FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.29-alpine AS runtime
 
 # OCI annotations — values are overridden at build time by metadata-action.
 LABEL org.opencontainers.image.title="vsizer" \

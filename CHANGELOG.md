@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-05-14
+
+### Security
+
+- **Container base image bumped** to drop nginx-alpine OS CVEs that
+  the ADR-0015 Trivy scan surfaced (~88 findings in the Security tab,
+  mostly transitive openssl/libpng/libexpat/curl/busybox advisories).
+  - `node:24-alpine` → `node:26-alpine` (builder stage, not shipped)
+  - `nginxinc/nginx-unprivileged:1.27-alpine` →
+    `nginxinc/nginx-unprivileged:1.29-alpine` (runtime, shipped)
+  These bumps obsolete Dependabot PRs #9 and #10.
+
 ### Changed
 
 - **Audit gates tightened** (ADR-0016, supersedes ADR-0015's gating
@@ -16,6 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   action SHA-pinning, Trivy and SECURITY.md infrastructure from
   ADR-0015 are unchanged. Waivers (if needed) are recorded in
   ADR-0016, expire within 90 days, and re-block CI automatically.
+
+- **xlsx OSV waivers** (ADR-0016 §Waivers W-001, W-002). The
+  SheetJS CDN tarball `xlsx@0.20.3` (ADR-0002) trips two GHSA
+  advisories whose OSV.dev structured ranges encode the entire
+  package as vulnerable (`introduced: 0`, no `first_patched` event)
+  because SheetJS distributes outside npm. The GHSA *summary* text
+  confirms we're past the fix on both: 0.20.3 ≥ the fix ranges
+  `< 0.19.3` and `< 0.20.2`. Waived for 90 days via
+  `osv-scanner.toml`.
 
 ## [1.3.0] — 2026-05-14
 

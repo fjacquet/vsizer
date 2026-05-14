@@ -1,7 +1,7 @@
 {
   "name": "vsizer",
   "private": true,
-  "version": "1.3.0",
+  "version": "1.4.0",
   "type": "module",
   "description": "Drop your RVTools / Live Optics export, get a factual cluster utilization deck. 100% client-side.",
   "scripts": {

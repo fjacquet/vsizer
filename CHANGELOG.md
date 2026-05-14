@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Trivy container scan promoted from warn-only to gate** (ADR-0015 §6
+  update). v1.4.0's base-image bump dropped the Security-tab Trivy
+  count from ~88 to 0; with the baseline clean, any new HIGH/CRITICAL
+  with a fix available now fails the container build. `ignore-unfixed:
+  true` is kept so fix-less advisories surface in the Security tab
+  without freezing CI — those are handled via ADR-0016 Waivers if the
+  wait becomes long.
+
 ## [1.4.0] — 2026-05-14
 
 ### Security

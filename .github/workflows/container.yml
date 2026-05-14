@@ -21,6 +21,7 @@ permissions:
   packages: write
   id-token: write
   attestations: write
+  security-events: write  # ADR-0015: Trivy SARIF upload to Code Scanning
 
 concurrency:
   group: container-${{ github.ref }}
@@ -115,6 +116,25 @@ jobs:
             exit 1
           fi
           docker stop vsizer-smoke
+
+      - name: Scan image with Trivy (warn-only)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          image-ref: vsizer:smoke
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          exit-code: '0'   # warn-only until promoted to gate (ADR-0015)
+          ignore-unfixed: true
+        continue-on-error: true
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e  # v4.35.4
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-image
+        continue-on-error: true
 
       # Second pass: multi-arch, publishes only on non-PR events. Reuses the
       # GHA cache from the first pass; only arm64 is new work.

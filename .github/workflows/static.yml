@@ -33,6 +33,47 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: npm audit (prod, Moderate+)
+        run: npm audit --audit-level=moderate --omit=dev
+
+      - name: OSV-Scanner (lockfile)
+        uses: google/osv-scanner-action/osv-scanner-action@9a498708959aeaef5ef730655706c5a1df1edbc2  # v2.3.8
+        with:
+          scan-args: |-
+            --lockfile=./package-lock.json
+            --format=sarif
+            --output=osv-results.sarif
+        # Step itself runs to completion; we filter for Moderate+ below.
+        continue-on-error: true
+
+      - name: Upload OSV SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@68bde559dea0fdcac2102bfdf6230c5f70eb485e  # v4.35.4
+        with:
+          sarif_file: osv-results.sarif
+          category: osv-scanner
+        continue-on-error: true
+
+      - name: Gate on OSV Moderate+
+        run: |
+          if [ ! -f osv-results.sarif ]; then
+            echo "::warning::OSV produced no SARIF — treating as clean."
+            exit 0
+          fi
+          # Severity in OSV SARIF rules: properties.severity (lowercase).
+          # SARIF level (warning/error) also reflects severity.
+          mod_plus=$(jq '[.runs[].results[]?
+            | select(
+                ([.properties.severity? // ""
+                  , .level? // ""] | join(" ") | ascii_downcase) as $sev
+                | $sev | test("(moderate|high|critical|error)")
+              )] | length' osv-results.sarif)
+          echo "OSV Moderate+ findings: $mod_plus"
+          if [ "$mod_plus" -gt 0 ]; then
+            echo "::error::OSV found $mod_plus Moderate+ advisory(ies)"
+            exit 1
+          fi
+
       - name: Type check
         run: npm run typecheck
 

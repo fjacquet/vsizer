@@ -17,7 +17,7 @@ COPY . .
 RUN npm run build:container
 
 # ── Stage 2: runtime ────────────────────────────────────────────────────
-FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.29-alpine AS runtime
 
 # OCI annotations — values are overridden at build time by metadata-action.
 LABEL org.opencontainers.image.title="vsizer" \

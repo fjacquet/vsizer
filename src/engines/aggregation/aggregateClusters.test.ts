@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { VHostRow, VInfoRow } from '../../types'
+import { synthesizeOrphanClusters } from '../parser/synthesizeOrphanClusters'
 import { aggregateClusters } from './aggregateClusters'
 
 const host = (overrides: Partial<VHostRow>): VHostRow => ({
@@ -16,6 +17,7 @@ const host = (overrides: Partial<VHostRow>): VHostRow => ({
 const vm = (overrides: Partial<VInfoRow>): VInfoRow => ({
   vmName: 'vm-default',
   cluster: 'CL_DEFAULT',
+  host: 'esx-default',
   vcpu: 2,
   vramMb: 4096,
   activeMemMb: null,
@@ -159,6 +161,7 @@ describe('aggregateClusters', () => {
       vinfo: Array.from({ length: 24 }, (_, i) => ({
         vmName: `vm-${i}`,
         cluster: 'CL',
+        host: 'esx-default',
         vcpu: 4,
         vramMb: 1024,
         activeMemMb: null,
@@ -178,6 +181,7 @@ describe('aggregateClusters', () => {
       vinfo: Array.from({ length: 24 }, (_, i) => ({
         vmName: `vm-${i}`,
         cluster: 'CL',
+        host: 'esx-default',
         vcpu: 4,
         vramMb: 1024,
         activeMemMb: null,
@@ -358,5 +362,42 @@ describe('aggregateClusters', () => {
     expect(out[0]?.readinessAvailable).toBe(false)
     expect(out[0]?.meanCpuReadinessPercent).toBeNull()
     expect(out[0]?.vmsAboveReadinessWarning).toBe(0)
+  })
+
+  // ── Orphan-host bucketing end-to-end (ADR-0014) ──────────────────────
+  //
+  // Regression test for issue #4. The aggregator does not know about
+  // orphans — it consumes the already-bucketed output of
+  // `synthesizeOrphanClusters` (which `normalizeWorkbook` invokes
+  // after schema validation). This test composes the two layers
+  // explicitly to assert the contract: a fully clusterless dataset
+  // produces one ClusterAggregate per standalone host with the
+  // correct VM counts attached.
+  it('produces one ClusterAggregate per standalone host for a fully clusterless dataset', () => {
+    // The aggregator does not know about orphans — it consumes the
+    // already-bucketed output of `synthesizeOrphanClusters`, which
+    // `normalizeWorkbook` invokes after schema validation. We compose
+    // the two layers explicitly here to pin the end-to-end contract.
+    const raw = {
+      vhost: [host({ hostName: 'esx-a', cluster: '' }), host({ hostName: 'esx-b', cluster: '' })],
+      vinfo: [
+        vm({ vmName: 'vm-a1', cluster: '', host: 'esx-a', vcpu: 4 }),
+        vm({ vmName: 'vm-a2', cluster: '', host: 'esx-a', vcpu: 2 }),
+        vm({ vmName: 'vm-b1', cluster: '', host: 'esx-b', vcpu: 8 }),
+      ],
+    }
+
+    const bucketed = synthesizeOrphanClusters(raw)
+    const out = aggregateClusters(bucketed)
+
+    expect(out.map((c) => c.cluster)).toEqual(['(no cluster) esx-a', '(no cluster) esx-b'])
+
+    const byName = new Map(out.map((c) => [c.cluster, c]))
+    expect(byName.get('(no cluster) esx-a')?.hostCount).toBe(1)
+    expect(byName.get('(no cluster) esx-a')?.vmCount).toBe(2)
+    expect(byName.get('(no cluster) esx-a')?.vcpuAllocated).toBe(6)
+    expect(byName.get('(no cluster) esx-b')?.hostCount).toBe(1)
+    expect(byName.get('(no cluster) esx-b')?.vmCount).toBe(1)
+    expect(byName.get('(no cluster) esx-b')?.vcpuAllocated).toBe(8)
   })
 })

@@ -265,6 +265,7 @@ describe('plan reference numbers', () => {
     const vinfo: VInfoRow[] = Array.from({ length: VM_COUNT }, (_, i) => ({
       vmName: `vm-${i.toString().padStart(4, '0')}`,
       cluster: 'CL_REF',
+      host: 'esx-ref',
       vcpu: VCPU_EACH + (i < remainder ? 1 : 0),
       vramMb: 4096,
       activeMemMb: null,

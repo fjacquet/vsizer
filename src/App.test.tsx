@@ -7,6 +7,7 @@ import type { GlobalSummary, VInfoRow } from './types'
 const sampleVm: VInfoRow = {
   vmName: 'vm-1',
   cluster: 'CL_DEMO_1',
+  host: 'esx-01',
   vcpu: 4,
   vramMb: 8192,
   activeMemMb: 1024,

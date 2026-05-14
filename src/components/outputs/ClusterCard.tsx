@@ -6,6 +6,7 @@ import { THEME } from '../../engines/export/pptx/theme'
 import type { SourceFormat } from '../../engines/parser/detectSource'
 import type { ClusterAggregate, VHostRow } from '../../types'
 import {
+  fmtGhzNumber,
   fmtGhzValue,
   fmtInt,
   fmtMemMb,
@@ -201,7 +202,10 @@ export function ClusterCard({
         />
         <KpiCard
           accent={THEME.navy}
-          big={`${fmtInt(cluster.consumedGhz)} / ${fmtInt(cluster.physicalGhz)}`}
+          // Adaptive precision (one decimal under 10 GHz) so small
+          // clusters and standalone-host rows (ADR-0014) don't read
+          // as `0 / 5` on sub-1-GHz consumption.
+          big={`${fmtGhzNumber(cluster.consumedGhz)} / ${fmtGhzNumber(cluster.physicalGhz)}`}
           small={t('card.kpi.ghzUsedVsPhys')}
         />
         <KpiCard
@@ -278,7 +282,15 @@ export function ClusterCard({
             <dt className="whitespace-pre-line text-xs text-ice">
               {t('card.banner.reservedCapacity')}
             </dt>
-            <dd className="text-xl font-bold text-accent-500">{fmtGhzValue(reservedGhz)}</dd>
+            {/*
+              When no VM is powered on, `vcpuAllocated × clock` is 0 by
+              construction — that's not a reservation of 0 GHz, it's
+              "not applicable". Surface as em-dash (same convention as
+              `fmtRatio` / `fmtMhzValue`). ADR-0014.
+            */}
+            <dd className="text-xl font-bold text-accent-500">
+              {cluster.vcpuAllocated === 0 ? '—' : fmtGhzValue(reservedGhz)}
+            </dd>
           </div>
           <div>
             <dt className="text-xs text-ice">{t('card.banner.consumedGhz')}</dt>

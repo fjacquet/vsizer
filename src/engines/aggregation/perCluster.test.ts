@@ -29,9 +29,15 @@ describe('aggregateHostsPerCluster', () => {
     expect(byName.get('CL_B')?.hostCount).toBe(1)
   })
 
-  it('drops hosts with an empty cluster name (orphans)', () => {
+  // Defensive guard (ADR-0014). The parser-layer
+  // `synthesizeOrphanClusters` step renames clusterless hosts to
+  // `(no cluster) <hostName>`. A host that still has `cluster: ''`
+  // at the aggregator boundary means we couldn't synthesize one
+  // (no hostName either). Drop it rather than crash downstream on
+  // an empty group key.
+  it('drops hosts that arrive with an empty cluster name (defensive)', () => {
     const out = aggregateHostsPerCluster([
-      host({ hostName: 'h-orphan', cluster: '' }),
+      host({ hostName: '', cluster: '' }),
       host({ hostName: 'h-real', cluster: 'CL_A' }),
     ])
     expect(out).toHaveLength(1)

@@ -54,6 +54,11 @@ the 2026-05-14 update on the `'none'` → `'self'` relaxation.
   dataset bundled at `public/samples/`.
 - **Source detection**: automatic, by sheet-name fingerprint. When detection fails, a
   manual mapping panel lets the user nominate sheets and columns.
+- **Standalone (clusterless) hosts** (ADR-0014): RVTools / Live Optics exports where
+  some or all ESXi hosts have no cluster assigned are accepted. Each clusterless host
+  is rendered as its own row labelled `(no cluster) <hostName>`, attributed to the
+  VMs that run on it. The user controls inclusion in the deck via the same per-cluster
+  selection panel.
 - **Aggregation**: per-cluster CPU/RAM ratios (mean/max/min), physical and consumed
   GHz, available GHz, vCPU/vRAM allocated (powered-on VMs), MHz-per-vCPU. Plus an
   estate-wide rollup with capacity-weighted CPU.

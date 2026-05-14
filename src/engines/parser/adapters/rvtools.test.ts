@@ -10,10 +10,13 @@ const rvtoolsWorkbook = (overrides?: {
   parseXlsx(
     buildXlsxBuffer({
       vInfo: overrides?.vInfoRows ?? [
-        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory'],
-        ['vm-app-1', 'poweredOn', 'CL_DEMO_1', 4, 8192],
-        ['vm-db-1', 'poweredOff', 'CL_DEMO_1', 8, 16384],
-        ['vm-web-1', 'poweredOn', 'CL_DEMO_2', 2, 4096],
+        // `Host` column matches the real RVTools 4.x layout — used by
+        // synthesizeOrphanClusters (ADR-0014) to attribute clusterless
+        // VMs to their standalone host.
+        ['VM', 'Powerstate', 'Cluster', 'Host', 'CPUs', 'Memory'],
+        ['vm-app-1', 'poweredOn', 'CL_DEMO_1', 'esx-01', 4, 8192],
+        ['vm-db-1', 'poweredOff', 'CL_DEMO_1', 'esx-02', 8, 16384],
+        ['vm-web-1', 'poweredOn', 'CL_DEMO_2', 'esx-03', 2, 4096],
       ],
       vHost: overrides?.vHostRows ?? [
         ['Host', 'Cluster', '# Cores', 'Speed (MHz)', '# Memory', '# CPU usage %', '# Mem usage %'],
@@ -35,6 +38,7 @@ describe('adaptRvtoolsVInfo', () => {
     expect(rows[0]).toEqual({
       vmName: 'vm-app-1',
       cluster: 'CL_DEMO_1',
+      host: 'esx-01',
       vcpu: 4,
       vramMb: 8192,
       activeMemMb: null,
@@ -170,6 +174,29 @@ describe('adaptRvtoolsVInfo', () => {
       vramMb: 12288,
       poweredOn: true,
     })
+  })
+
+  // ADR-0014: preserve the per-VM Host column so the parser can later
+  // attribute clusterless VMs to their standalone host.
+  it('reads the canonical RVTools "Host" column from vInfo', () => {
+    const wb = rvtoolsWorkbook()
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    expect(rows.map((r) => r.host)).toEqual(['esx-01', 'esx-02', 'esx-03'])
+  })
+
+  it('leaves host empty when the column is absent', () => {
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory'],
+        ['vm-no-host', 'poweredOn', 'CL', 2, 4096],
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    expect(rows[0]?.host).toBe('')
   })
 })
 

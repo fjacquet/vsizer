@@ -9,6 +9,7 @@ const sampleFile = new File(['fake'], 'sample.xlsx', {
 const sampleVm: VInfoRow = {
   vmName: 'vm-1',
   cluster: 'CL_DEMO_1',
+  host: 'esx-01',
   vcpu: 4,
   vramMb: 8192,
   activeMemMb: 1024,
@@ -129,6 +130,19 @@ describe('datasetStore', () => {
     expect(useDatasetStore.getState().stretchedClusters.has('CL_A')).toBe(true)
     useDatasetStore.getState().toggleStretched('CL_A')
     expect(useDatasetStore.getState().stretchedClusters.has('CL_A')).toBe(false)
+  })
+
+  // ADR-0014: a single standalone host can't be a 2-site stretched
+  // pair, so the store no-ops the toggle for orphan cluster names.
+  // Defense-in-depth — the ClusterFilterPanel already hides the
+  // toggle button for these rows.
+  it('toggleStretched is a no-op for orphan (synthesized) cluster names', () => {
+    const before = useDatasetStore.getState().stretchedClusters
+    useDatasetStore.getState().toggleStretched('(no cluster) esx-01')
+    const after = useDatasetStore.getState().stretchedClusters
+    expect(after.has('(no cluster) esx-01')).toBe(false)
+    // No re-aggregate side-effect either: same Set reference.
+    expect(after).toBe(before)
   })
 
   it('toggleStretched re-aggregates GHz and RAM atomically', () => {

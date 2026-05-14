@@ -11,6 +11,7 @@ describe('VInfoRowSchema', () => {
     const row = {
       vmName: 'vm-1',
       cluster: 'CL_DEMO_1',
+      host: 'esx-01',
       vcpu: 4,
       vramMb: 8192,
       activeMemMb: null,
@@ -43,6 +44,7 @@ describe('VInfoRowSchema', () => {
     const row = {
       vmName: 'vm-1',
       cluster: 'CL_DEMO_1',
+      host: 'esx-01',
       vcpu: 4,
       vramMb: 8192,
       activeMemMb: null,
@@ -57,6 +59,7 @@ describe('VInfoRowSchema', () => {
       VInfoRowSchema.parse({
         vmName: 'vm-1',
         cluster: 'CL_DEMO_1',
+        host: 'esx-01',
         vcpu: 8,
         vramMb: 8192,
         activeMemMb: null,

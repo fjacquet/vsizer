@@ -16,22 +16,48 @@ export const fmtGhz = (mhz: number, locale = 'fr-FR'): string => {
 }
 
 /**
- * Renders an already-GHz value as a unit-bearing string (`"230 GHz"`). No
- * decimals — the dashboard summarizes capacity at integer-GHz granularity.
+ * Locale-aware unitless GHz formatter with **adaptive precision**: one
+ * decimal for sub-10 values, integer otherwise. The threshold keeps
+ * large clusters readable (`"230"`) while small clusters and
+ * standalone-host rows (ADR-0014) don't collapse to `"0"` on values
+ * like `0.24` (5 % × 5 GHz). Returns em-dash for non-finite inputs so
+ * the dashboard can render placeholders without ad-hoc null guards.
+ *
+ * Composed by `fmtGhzValue` for the unit-bearing case and used
+ * directly by callers that render a `consumed / physical` pair
+ * (e.g. cluster-card KPI).
+ */
+export const fmtGhzNumber = (ghz: number, locale = 'fr-FR'): string => {
+  if (!Number.isFinite(ghz)) return '—'
+  const opts =
+    Math.abs(ghz) < 10
+      ? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+      : { maximumFractionDigits: 0 }
+  return ghz.toLocaleString(locale, opts)
+}
+
+/**
+ * Renders an already-GHz value as a unit-bearing string. Adaptive
+ * precision (see `fmtGhzNumber`): `"230 GHz"` for large clusters,
+ * `"0,2 GHz"` for small / standalone-host rows.
  */
 export const fmtGhzValue = (ghz: number, locale = 'fr-FR'): string =>
-  Number.isFinite(ghz)
-    ? `${Math.round(ghz).toLocaleString(locale, { maximumFractionDigits: 0 })} GHz`
-    : '—'
+  Number.isFinite(ghz) ? `${fmtGhzNumber(ghz, locale)} GHz` : '—'
 
 /**
  * Renders an already-MHz value as a unit-bearing string (`"385 MHz"`).
  * Used for the per-vCPU rate on cluster cards.
+ *
+ * `0` is treated as a sentinel ("no powered-on vCPUs to divide by")
+ * and rendered as em-dash — same convention as `fmtRatio`. The
+ * aggregator emits `mhzPerVcpu === 0` only when `vcpuAllocated === 0`
+ * (see `computeMhzPerVcpu`), so a literal `0` is never a true
+ * measurement here.
  */
-export const fmtMhzValue = (mhz: number, locale = 'fr-FR'): string =>
-  Number.isFinite(mhz)
-    ? `${Math.round(mhz).toLocaleString(locale, { maximumFractionDigits: 0 })} MHz`
-    : '—'
+export const fmtMhzValue = (mhz: number, locale = 'fr-FR'): string => {
+  if (!Number.isFinite(mhz) || mhz === 0) return '—'
+  return `${Math.round(mhz).toLocaleString(locale, { maximumFractionDigits: 0 })} MHz`
+}
 
 /**
  * Renders a 0..1 ratio as a localized percent (one decimal). Inputs outside

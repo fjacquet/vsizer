@@ -9,6 +9,18 @@
 export interface VInfoRow {
   vmName: string
   cluster: string
+  /** ESXi host this VM runs on. Source columns:
+   *  - RVTools: `vInfo.Host` (always present in 4.x exports).
+   *  - Live Optics modern: `VMs.Host` (present in 2025+ exports;
+   *    verified against a real `LiveOptics_*.xlsx`).
+   *  - Live Optics classic: not exposed on `VM Inventory` — `host`
+   *    is `''` from that source. Forward-compatible if a future
+   *    build adds the column.
+   *  Used by the parser-layer `synthesizeOrphanClusters` step
+   *  (ADR-0014) to attribute clusterless VMs to the specific
+   *  standalone host they live on. Empty when the source doesn't
+   *  expose it. */
+  host: string
   /** vCPU count of the VM. */
   vcpu: number
   /** Allocated memory in MB. */

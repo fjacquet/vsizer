@@ -14,6 +14,13 @@ import { findSheet, mapColumns, readCol, readNumber, readString, toRatio } from 
 const VINFO_COLS = {
   vmName: ['vm', 'vm name', 'name', 'nom de la vm', 'vm-name'],
   cluster: ['cluster', 'grappe'],
+  // ESXi host the VM runs on. RVTools' canonical 4.x header is
+  // literally `Host` (see e.g. column `CF` in a typical export). The
+  // alias list mirrors `VHOST_COLS.hostName` so a localized RVTools
+  // build parses consistently between the two sheets. Used by
+  // `synthesizeOrphanClusters` (ADR-0014) to attribute clusterless
+  // VMs to their standalone host.
+  host: ['host', 'host name', 'hostname', 'nom hôte'],
   vcpu: ['cpus', '# cpus', 'cpu', 'vcpu', 'vcpus'],
   vramMb: ['memory', 'memory (mb)', 'mem', 'mémoire'],
   // CPU Ready (%RDY snapshot from VMware quickStats), per ADR-0012.
@@ -106,6 +113,7 @@ export const adaptRvtoolsVInfo = (sheet: ParsedSheet): VInfoRow[] => {
     return {
       vmName: readString(readCol(row, cols.vmName)),
       cluster: readString(readCol(row, cols.cluster)),
+      host: readString(readCol(row, cols.host)),
       vcpu: Math.max(0, Math.trunc(readNumber(readCol(row, cols.vcpu)))),
       vramMb: Math.max(0, readNumber(readCol(row, cols.vramMb))),
       activeMemMb: null,

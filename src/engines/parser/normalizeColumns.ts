@@ -4,6 +4,7 @@ import { adaptRvtools } from './adapters/rvtools'
 import { detectSource, type SourceFormat } from './detectSource'
 import { type ParsedWorkbook, parseXlsx } from './parseXlsx'
 import { VHostRowSchema, VInfoRowSchema } from './schemas'
+import { synthesizeOrphanClusters } from './synthesizeOrphanClusters'
 
 /**
  * Outcome of running the parser against a user-provided workbook. The UI
@@ -58,10 +59,17 @@ export const normalizeWorkbook = (workbook: ParsedWorkbook): ParsedDataset => {
   const vinfo = validate<VInfoRow>(raw.vinfo, VInfoRowSchema, 'vinfo')
   const vhost = validate<VHostRow>(raw.vhost, VHostRowSchema, 'vhost')
 
+  // ADR-0014: bucket clusterless hosts under per-host synthetic
+  // cluster names so the aggregator doesn't drop them as orphans.
+  // No-op when every host already has a cluster (the common case).
+  // Runs after schema validation so the input rows are guaranteed
+  // typed; the synthesis itself is pure and shape-preserving.
+  const bucketed = synthesizeOrphanClusters({ vinfo: vinfo.rows, vhost: vhost.rows })
+
   return {
     source,
-    vinfo: vinfo.rows,
-    vhost: vhost.rows,
+    vinfo: bucketed.vinfo,
+    vhost: bucketed.vhost,
     errors: [...vinfo.errors, ...vhost.errors],
   }
 }

@@ -16,6 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`connect-src 'self'`, no third-party connections; see ADR-0013 update
   2026-05-14) enforcing the privacy invariant (ADR-0001) at the HTTP
   layer. Tags: `:edge` on `main`, `:latest` + semver on `v*` releases.
+- **Orphan-host bucketing** (ADR-0014) — RVTools / Live Optics
+  workbooks where ESXi hosts have no assigned cluster now import
+  successfully (#4). Each standalone host appears in the dashboard
+  and PPTX as `(no cluster) <hostName>` — a separate logical entity
+  per the user's intent. VMs running on those hosts are attributed
+  via the new `VInfoRow.host` field (RVTools' `vInfo.Host` column,
+  previously discarded). Live Optics is forward-compatible if a
+  future build exposes a Host column on the VM sheet; today's
+  workbooks have no per-VM host info on that side, so Live Optics
+  orphan VMs are dropped as before — no regression. The
+  stretched-cluster (DR) toggle is hidden for orphan rows — a
+  single standalone host cannot be a 2-site stretched pair.
 
 ### Changed
 
@@ -32,6 +44,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bundled sample workbook from being loaded. Relaxed to
   `connect-src 'self'`; third-party connections remain fully blocked
   (see ADR-0013 update 2026-05-14 for the rationale).
+- **Standalone-host card no longer reads as "all zero"** (#4
+  follow-up).
+  - Adaptive GHz precision: cluster cards now show one decimal of
+    precision for sub-10-GHz values, so a 5 %-busy 5-GHz standalone
+    host displays `0,2 GHz consommés sur 5 GHz` instead of
+    `0 GHz consommés sur 5 GHz`. Large clusters still render at
+    integer-GHz granularity (`230 GHz`).
+  - `MHz par vCPU alloué` and the `Capacité réservée
+    (vCPU × clock host)` tile show `—` instead of `0` when no VM
+    is powered on — `vcpuAllocated === 0` is a "not applicable"
+    sentinel, not a real measurement (same convention as
+    `fmtRatio`).
 
 ## [1.1.0] — 2026-05-10
 

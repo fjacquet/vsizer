@@ -14,6 +14,12 @@ import { findSheet, mapColumns, readCol, readNumber, readString, toRatio } from 
 const VINFO_COLS = {
   vmName: ['vm name', 'vmname', 'name'],
   cluster: ['cluster', 'cluster name'],
+  // Forward-compatible: today's classic `VM Inventory` sheet does not
+  // expose a Host column, so `readString` returns `''` and orphan
+  // VMs from a classic Live Optics export stay unattributable. Added
+  // so a future build that exposes the column is picked up
+  // automatically (ADR-0014).
+  host: ['host', 'host name', 'esxi host'],
   vcpu: ['vcpu', 'vcpus', 'configured vcpus', 'cpu'],
   vramMb: ['memory (mb)', 'memory mb', 'allocated memory (mb)', 'memory'],
   activeMemMb: ['active memory (mb)', 'memory active (mb)', 'active memory'],
@@ -44,6 +50,7 @@ export const adaptLiveOpticsVInfo = (sheet: ParsedSheet): VInfoRow[] => {
     return {
       vmName: readString(readCol(row, cols.vmName)),
       cluster: readString(readCol(row, cols.cluster)),
+      host: readString(readCol(row, cols.host)),
       vcpu: Math.max(0, Math.trunc(readNumber(readCol(row, cols.vcpu)))),
       vramMb: Math.max(0, readNumber(readCol(row, cols.vramMb))),
       // Active-memory cells are blank for VMs that don't report it; preserve
@@ -94,6 +101,14 @@ export const adaptLiveOpticsVHost = (sheet: ParsedSheet): VHostRow[] => {
 const VINFO_MODERN_COLS = {
   vmName: ['vm name'],
   cluster: ['cluster'],
+  // Per-VM ESXi host. The modern Live Optics `VMs` sheet exports a
+  // `Host` column (verified against a real 2026 export at column
+  // 31). The extra aliases mirror `PERF_COLS.hostName` for future
+  // drift tolerance. Consumed by `synthesizeOrphanClusters`
+  // (ADR-0014) to bucket clusterless VMs under their standalone
+  // host. Empty when absent — orphan VMs without a host stay
+  // unattributable, same as today.
+  host: ['host', 'host name', 'esxi host'],
   vcpu: ['virtual cpu', 'vcpu', 'vcpus'],
   vramMb: ['provisioned memory (mib)', 'memory (mib)', 'memory (mb)'],
   // Active-memory cell on the VMs sheet. Blank cells are preserved as
@@ -128,6 +143,9 @@ export const adaptLiveOpticsModernVInfo = (sheet: ParsedSheet): VInfoRow[] => {
     return {
       vmName: readString(readCol(row, cols.vmName)),
       cluster: readString(readCol(row, cols.cluster)),
+      // Modern `VMs.Host` column (verified against a real 2026
+      // export); `''` if absent. See ADR-0014.
+      host: readString(readCol(row, cols.host)),
       vcpu: Math.max(0, Math.trunc(readNumber(readCol(row, cols.vcpu)))),
       vramMb: Math.max(0, readNumber(readCol(row, cols.vramMb))),
       activeMemMb: activeRaw == null ? null : readNumber(activeRaw),

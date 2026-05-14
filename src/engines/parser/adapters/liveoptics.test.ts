@@ -48,6 +48,10 @@ describe('adaptLiveOpticsVInfo', () => {
     expect(rows[0]).toEqual({
       vmName: 'vm-app-1',
       cluster: 'CL_DEMO_1',
+      // Classic Live Optics VM Inventory has no Host column today;
+      // ADR-0014 keeps the field as `''` so orphan VMs from this
+      // source stay unattributable (forward-compatible).
+      host: '',
       vcpu: 4,
       vramMb: 8192,
       activeMemMb: 1024,
@@ -200,6 +204,10 @@ describe('adaptLiveOpticsModernVInfo', () => {
     expect(rows[0]).toEqual({
       vmName: 'app-01',
       cluster: 'CL_MOD',
+      // Modern Live Optics 2026+ exports include `VMs.Host`
+      // (ADR-0014); the canonical row preserves it for orphan
+      // attribution.
+      host: 'esx-mod-01.lab',
       vcpu: 4,
       vramMb: 16384,
       activeMemMb: 1802,

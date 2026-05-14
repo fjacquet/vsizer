@@ -5,6 +5,7 @@ import { aggregateVmsPerCluster, topReadinessVmsByCluster } from './vinfoMerge'
 const vm = (overrides: Partial<VInfoRow>): VInfoRow => ({
   vmName: 'vm-default',
   cluster: 'CL_DEFAULT',
+  host: 'esx-default',
   vcpu: 2,
   vramMb: 4096,
   activeMemMb: null,
@@ -28,9 +29,16 @@ describe('aggregateVmsPerCluster', () => {
     expect(out[0]?.vcpuAllocated).toBe(4)
   })
 
-  it('drops VMs with an empty cluster name', () => {
+  // Defensive guard (ADR-0014). The parser-layer
+  // `synthesizeOrphanClusters` step renames clusterless VMs whose host
+  // is known. A VM that still has `cluster: ''` at the aggregator
+  // boundary means we couldn't attribute it to a specific host (e.g.
+  // Live Optics input where the source omits the Host column). Such a
+  // row has no actionable bucket; we drop it rather than silently
+  // mis-aggregating.
+  it('drops VMs that arrive with an empty cluster name (defensive)', () => {
     const out = aggregateVmsPerCluster([
-      vm({ vmName: 'orphan', cluster: '' }),
+      vm({ vmName: 'orphan', cluster: '', host: '' }),
       vm({ vmName: 'real', cluster: 'CL' }),
     ])
     expect(out).toHaveLength(1)

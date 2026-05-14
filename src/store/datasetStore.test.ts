@@ -9,6 +9,7 @@ const sampleFile = new File(['fake'], 'sample.xlsx', {
 const sampleVm: VInfoRow = {
   vmName: 'vm-1',
   cluster: 'CL_DEMO_1',
+  host: 'esx-01',
   vcpu: 4,
   vramMb: 8192,
   activeMemMb: 1024,

@@ -16,6 +16,12 @@ import type { ClusterAggregate, GlobalSummary, VHostRow, VInfoRow } from '../../
 export const VInfoRowSchema: z.ZodType<VInfoRow> = z.object({
   vmName: z.string(),
   cluster: z.string(),
+  // ESXi host this VM runs on. RVTools `vInfo.Host`; empty string for
+  // Live Optics sources that don't expose the column. Used by
+  // `synthesizeOrphanClusters` to attribute clusterless VMs to their
+  // host (ADR-0014). Empty strings are valid here — same contract as
+  // the `cluster` field.
+  host: z.string(),
   vcpu: z.number().int().nonnegative(),
   vramMb: z.number().nonnegative(),
   // SheetJS leaves blanks as `null`; nullable() keeps that contract explicit.

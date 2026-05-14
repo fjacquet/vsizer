@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `nginxinc/nginx-unprivileged` base with CSP `connect-src 'none'`
   enforcing the privacy invariant (ADR-0001) at the HTTP layer.
   Tags: `:edge` on `main`, `:latest` + semver on `v*` releases.
+- **Orphan-host bucketing** (ADR-0014) — RVTools / Live Optics
+  workbooks where ESXi hosts have no assigned cluster now import
+  successfully (#4). Each standalone host appears in the dashboard
+  and PPTX as `(no cluster) <hostName>` — a separate logical entity
+  per the user's intent. VMs running on those hosts are attributed
+  via the new `VInfoRow.host` field (RVTools' `vInfo.Host` column,
+  previously discarded). Live Optics is forward-compatible if a
+  future build exposes a Host column on the VM sheet; today's
+  workbooks have no per-VM host info on that side, so Live Optics
+  orphan VMs are dropped as before — no regression.
 
 ### Changed
 

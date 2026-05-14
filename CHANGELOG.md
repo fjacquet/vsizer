@@ -28,6 +28,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stretched-cluster (DR) toggle is hidden for orphan rows — a
   single standalone host cannot be a 2-site stretched pair.
 
+### Fixed
+
+- **Standalone-host card no longer reads as "all zero"** (#4
+  follow-up).
+  - Adaptive GHz precision: cluster cards now show one decimal of
+    precision for sub-10-GHz values, so a 5 %-busy 5-GHz standalone
+    host displays `0,2 GHz consommés sur 5 GHz` instead of
+    `0 GHz consommés sur 5 GHz`. Large clusters still render at
+    integer-GHz granularity (`230 GHz`).
+  - `MHz par vCPU alloué` and the `Capacité réservée
+    (vCPU × clock host)` tile show `—` instead of `0` when no VM
+    is powered on — `vcpuAllocated === 0` is a "not applicable"
+    sentinel, not a real measurement (same convention as
+    `fmtRatio`).
+
 ### Changed
 
 - **Externalised the dark-mode FOUC script** from inline in `index.html`

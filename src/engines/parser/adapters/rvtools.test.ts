@@ -175,6 +175,29 @@ describe('adaptRvtoolsVInfo', () => {
       poweredOn: true,
     })
   })
+
+  // ADR-0014: preserve the per-VM Host column so the parser can later
+  // attribute clusterless VMs to their standalone host.
+  it('reads the canonical RVTools "Host" column from vInfo', () => {
+    const wb = rvtoolsWorkbook()
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    expect(rows.map((r) => r.host)).toEqual(['esx-01', 'esx-02', 'esx-03'])
+  })
+
+  it('leaves host empty when the column is absent', () => {
+    const wb = rvtoolsWorkbook({
+      vInfoRows: [
+        ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory'],
+        ['vm-no-host', 'poweredOn', 'CL', 2, 4096],
+      ],
+    })
+    const sheet = wb.sheets.get('vInfo')
+    if (!sheet) throw new Error('fixture missing vInfo')
+    const rows = adaptRvtoolsVInfo(sheet)
+    expect(rows[0]?.host).toBe('')
+  })
 })
 
 describe('adaptRvtoolsVHost', () => {

@@ -70,6 +70,34 @@ describe('adaptLiveOpticsVInfo', () => {
     expect(rows.every((r) => r.cpuReadinessPercent === null)).toBe(true)
   })
 
+  // ADR-0014: today's classic VM Inventory sheet has no Host column,
+  // so `host` is `''` and the orphan-attribution path in
+  // synthesizeOrphanClusters short-circuits — same drop-as-orphan
+  // outcome as before the ADR.
+  it('leaves host empty when the classic fixture has no Host column', () => {
+    const wb = liveOpticsWorkbook()
+    const sheet = wb.sheets.get('VM Inventory')
+    if (!sheet) throw new Error('fixture missing VM Inventory')
+    const rows = adaptLiveOpticsVInfo(sheet)
+    expect(rows.every((r) => r.host === '')).toBe(true)
+  })
+
+  // Forward-compatibility: if a future Live Optics build adds a Host
+  // column on the VM sheet, the alias picks it up automatically and
+  // orphan VMs become attributable.
+  it('reads a future "Host" column on the classic VM Inventory sheet when present', () => {
+    const wb = liveOpticsWorkbook({
+      vmRows: [
+        ['VM Name', 'Cluster', 'Host', 'vCPU', 'Memory (MB)', 'Active Memory (MB)', 'Power State'],
+        ['vm-fwd', 'CL_FWD', 'esx-fwd-01', 2, 4096, 512, 'Powered On'],
+      ],
+    })
+    const sheet = wb.sheets.get('VM Inventory')
+    if (!sheet) throw new Error('fixture missing VM Inventory')
+    const rows = adaptLiveOpticsVInfo(sheet)
+    expect(rows[0]?.host).toBe('esx-fwd-01')
+  })
+
   it('preserves null activeMemMb when the source cell is blank', () => {
     const wb = liveOpticsWorkbook()
     const sheet = wb.sheets.get('VM Inventory')
@@ -204,10 +232,9 @@ describe('adaptLiveOpticsModernVInfo', () => {
     expect(rows[0]).toEqual({
       vmName: 'app-01',
       cluster: 'CL_MOD',
-      // Modern Live Optics 2026+ exports include `VMs.Host`
-      // (ADR-0014); the canonical row preserves it for orphan
-      // attribution.
-      host: 'esx-mod-01.lab',
+      // Modern VMs sheet doesn't expose a Host column today; the
+      // alias is forward-compatible (ADR-0014).
+      host: '',
       vcpu: 4,
       vramMb: 16384,
       activeMemMb: 1802,

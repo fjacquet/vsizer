@@ -94,3 +94,39 @@ Publish a hardened multi-arch (amd64 + arm64) OCI image to
 - Issue: [#2 — Provide container images for testing](https://github.com/fjacquet/vsizer/issues/2)
 - Design spec: `docs/superpowers/specs/2026-05-13-containerization-design.md`
 - Reinforces: ADR-0001 (100 % client-side processing)
+
+---
+
+## Update 2026-05-14 — `connect-src` relaxed from `'none'` to `'self'`
+
+`connect-src 'none'` broke the "Load a sample" button in the container.
+The handler in `EmptyState.tsx` issues a same-origin `fetch()` against
+`/samples/rvtools-sample.xlsx`; the CSP `connect-src` directive applies
+to `fetch()` / XHR / EventSource regardless of origin, so the call was
+silently denied. The same UI works on GitHub Pages because Pages does
+not ship a CSP header. Reported as part of issue
+[#2](https://github.com/fjacquet/vsizer/issues/2) after release.
+
+**New value**: `connect-src 'self'`. Every other directive is unchanged.
+
+**Why the privacy property still holds.** ADR-0001 says workbook bytes
+never leave the client. `connect-src 'self'` permits same-origin
+requests only — third-party connections remain fully blocked at the
+browser. The container's nginx instance only serves static `GET`
+responses; there are no endpoints capable of receiving or persisting
+posted bytes. A malicious script that issued
+`fetch('/upload', { method: 'POST', body: workbookBytes })` would hit
+nginx, which has no handler to log the body — the bytes are discarded
+server-side. The runtime guarantee is now *"the bytes cannot leave
+this origin"*, which is materially equivalent to "cannot leave the
+client" given the container's static-only deployment.
+
+**What a future regression would have to look like to defeat this.**
+Adding a same-origin endpoint that accepts and persists request bodies
+— e.g. introducing a reverse proxy, an analytics collector, or a
+side-loaded service worker that stores payloads. Any such change MUST
+ship with a renewed ADR amending the privacy invariant; the relaxed
+CSP no longer protects against it.
+
+The CI smoke-test in `.github/workflows/container.yml` is updated to
+assert `connect-src 'self'`.

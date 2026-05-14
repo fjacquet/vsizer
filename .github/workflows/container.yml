@@ -104,9 +104,12 @@ jobs:
               exit 1
             fi
           done
-          # ADR-0001 reinforcement.
-          if ! curl -fsSI http://127.0.0.1:8080/ | grep -i 'content-security-policy:' | grep -q "connect-src 'none'"; then
-            echo "::error::CSP must include connect-src 'none' (ADR-0001 enforcement)"
+          # ADR-0001 reinforcement. `connect-src 'self'` permits the
+          # same-origin sample-workbook fetch (issue #2) but still
+          # blocks every third-party connection — see ADR-0013 update
+          # 2026-05-14 for why this preserves the privacy invariant.
+          if ! curl -fsSI http://127.0.0.1:8080/ | grep -i 'content-security-policy:' | grep -q "connect-src 'self'"; then
+            echo "::error::CSP must include connect-src 'self' (ADR-0001 enforcement)"
             docker logs vsizer-smoke
             docker stop vsizer-smoke || true
             exit 1

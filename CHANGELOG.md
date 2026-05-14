@@ -12,9 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Container image distribution** (ADR-0013) — multi-arch (amd64/arm64)
   OCI image published to `ghcr.io/fjacquet/vsizer` from a new GitHub
   Actions workflow. Image serves the SPA from a hardened
-  `nginxinc/nginx-unprivileged` base with CSP `connect-src 'none'`
-  enforcing the privacy invariant (ADR-0001) at the HTTP layer.
-  Tags: `:edge` on `main`, `:latest` + semver on `v*` releases.
+  `nginxinc/nginx-unprivileged` base with a strict Content-Security-Policy
+  (`connect-src 'self'`, no third-party connections; see ADR-0013 update
+  2026-05-14) enforcing the privacy invariant (ADR-0001) at the HTTP
+  layer. Tags: `:edge` on `main`, `:latest` + semver on `v*` releases.
 
 ### Changed
 
@@ -22,6 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to `public/theme-init.js` so the container's strict
   `script-src 'self'` Content-Security-Policy can hold. Behavior is
   unchanged on Pages.
+
+### Fixed
+
+- **"Load a sample" now works inside the container image** (#2). The
+  pre-release CSP shipped `connect-src 'none'`, which the browser also
+  enforces against same-origin `fetch()` calls — silently blocking the
+  bundled sample workbook from being loaded. Relaxed to
+  `connect-src 'self'`; third-party connections remain fully blocked
+  (see ADR-0013 update 2026-05-14 for the rationale).
 
 ## [1.1.0] — 2026-05-10
 

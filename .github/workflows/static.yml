@@ -45,6 +45,27 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Generate CycloneDX SBOM (prod deps)
+        run: |
+          npx --yes @cyclonedx/cyclonedx-npm@latest \
+            --omit dev \
+            --output-format JSON \
+            --output-file sbom.cdx.json
+          components=$(jq '.components | length' sbom.cdx.json)
+          echo "SBOM components: $components"
+          if [ "$components" -lt 1 ]; then
+            echo "::error::SBOM has zero components — aborting"
+            exit 1
+          fi
+
+      - name: Upload SBOM artefact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: sbom-cyclonedx
+          path: sbom.cdx.json
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Setup Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v6

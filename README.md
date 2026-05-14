@@ -67,9 +67,11 @@ docker run --rm -p 8080:8080 ghcr.io/fjacquet/vsizer:latest
 ```
 
 Open <http://localhost:8080/>. The image is built from a non-root nginx
-base, ships strict CSP (`connect-src 'none'`) that forbids any outbound
-fetch of workbook data, and runs entirely client-side just like the
-public deploy. Tags:
+base, ships a strict CSP (`connect-src 'self'` — third-party
+connections are blocked at the browser, and the container serves only
+static assets so there is no endpoint that could receive workbook
+bytes), and runs entirely client-side just like the public deploy.
+Tags:
 
 - `:latest`, `:1.2`, `:1`, `:1.2.0` — semver releases
 - `:edge` — built from `main` on every push

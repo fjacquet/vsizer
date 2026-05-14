@@ -12,9 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Container image distribution** (ADR-0013) — multi-arch (amd64/arm64)
   OCI image published to `ghcr.io/fjacquet/vsizer` from a new GitHub
   Actions workflow. Image serves the SPA from a hardened
-  `nginxinc/nginx-unprivileged` base with CSP `connect-src 'none'`
-  enforcing the privacy invariant (ADR-0001) at the HTTP layer.
-  Tags: `:edge` on `main`, `:latest` + semver on `v*` releases.
+  `nginxinc/nginx-unprivileged` base with a strict Content-Security-Policy
+  (`connect-src 'self'`, no third-party connections; see ADR-0013 update
+  2026-05-14) enforcing the privacy invariant (ADR-0001) at the HTTP
+  layer. Tags: `:edge` on `main`, `:latest` + semver on `v*` releases.
 - **Orphan-host bucketing** (ADR-0014) — RVTools / Live Optics
   workbooks where ESXi hosts have no assigned cluster now import
   successfully (#4). Each standalone host appears in the dashboard
@@ -28,8 +29,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stretched-cluster (DR) toggle is hidden for orphan rows — a
   single standalone host cannot be a 2-site stretched pair.
 
+### Changed
+
+- **Externalised the dark-mode FOUC script** from inline in `index.html`
+  to `public/theme-init.js` so the container's strict
+  `script-src 'self'` Content-Security-Policy can hold. Behavior is
+  unchanged on Pages.
+
 ### Fixed
 
+- **"Load a sample" now works inside the container image** (#2). The
+  pre-release CSP shipped `connect-src 'none'`, which the browser also
+  enforces against same-origin `fetch()` calls — silently blocking the
+  bundled sample workbook from being loaded. Relaxed to
+  `connect-src 'self'`; third-party connections remain fully blocked
+  (see ADR-0013 update 2026-05-14 for the rationale).
 - **Standalone-host card no longer reads as "all zero"** (#4
   follow-up).
   - Adaptive GHz precision: cluster cards now show one decimal of
@@ -42,13 +56,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     is powered on — `vcpuAllocated === 0` is a "not applicable"
     sentinel, not a real measurement (same convention as
     `fmtRatio`).
-
-### Changed
-
-- **Externalised the dark-mode FOUC script** from inline in `index.html`
-  to `public/theme-init.js` so the container's strict
-  `script-src 'self'` Content-Security-Policy can hold. Behavior is
-  unchanged on Pages.
 
 ## [1.1.0] — 2026-05-10
 

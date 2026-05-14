@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { VHostRow, VInfoRow } from '../../types'
-import { synthesizeOrphanClusters } from './synthesizeOrphanClusters'
+import { isOrphanCluster, synthesizeOrphanClusters } from './synthesizeOrphanClusters'
 
 const host = (overrides: Partial<VHostRow> = {}): VHostRow => ({
   hostName: 'esx-01',
@@ -118,5 +118,21 @@ describe('synthesizeOrphanClusters', () => {
     // Hot-path optimisation: when no orphans exist, the same array
     // reference is returned (no clone). Stable contract.
     expect(out.vinfo).toBe(vms)
+  })
+})
+
+describe('isOrphanCluster', () => {
+  it('matches names produced by synthesizeOrphanClusters', () => {
+    expect(isOrphanCluster('(no cluster) esx-01.acme.com')).toBe(true)
+    expect(isOrphanCluster('(no cluster) host-with-spaces and stuff')).toBe(true)
+  })
+
+  it('does not match real cluster names that happen to look similar', () => {
+    expect(isOrphanCluster('CL_PROD')).toBe(false)
+    expect(isOrphanCluster('no cluster esx-01')).toBe(false)
+    expect(isOrphanCluster('')).toBe(false)
+    // Trailing-space-only match: explicit non-orphan label that
+    // contains the substring elsewhere should not match.
+    expect(isOrphanCluster('prefix (no cluster) inside')).toBe(false)
   })
 })

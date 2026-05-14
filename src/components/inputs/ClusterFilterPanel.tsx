@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { isOrphanCluster } from '../../engines/parser/synthesizeOrphanClusters'
 import type { ClusterAggregate } from '../../types'
 
 export interface ClusterFilterPanelProps {
@@ -67,6 +68,11 @@ export function ClusterFilterPanel({
         {clusters.map((cluster) => {
           const checked = isChecked(cluster.cluster)
           const isStretched = stretched.has(cluster.cluster)
+          // A synthesized "(no cluster) <hostName>" row represents a
+          // single standalone host — the 2-site stretched DR
+          // reservation (ADR-0007) has no meaning for one box, so
+          // the toggle is omitted entirely. See ADR-0014.
+          const allowStretch = !isOrphanCluster(cluster.cluster)
           return (
             <li key={cluster.cluster}>
               <label className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-surface-700">
@@ -80,26 +86,30 @@ export function ClusterFilterPanel({
                 <span className="flex-1 truncate text-slate-700 dark:text-slate-200">
                   {cluster.cluster}
                 </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    // Stop the click from bubbling up to the <label> and
-                    // toggling the export checkbox.
-                    e.preventDefault()
-                    e.stopPropagation()
-                    onToggleStretched(cluster.cluster)
-                  }}
-                  aria-pressed={isStretched}
-                  aria-label={isStretched ? t('filter.unmarkStretched') : t('filter.markStretched')}
-                  title={tc('badge.stretchedFull')}
-                  className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                    isStretched
-                      ? 'border-accent-500 bg-accent-500 text-primary-900'
-                      : 'border-slate-300 text-slate-500 hover:border-accent-500 hover:text-accent-500 dark:border-surface-700'
-                  }`}
-                >
-                  {t('filter.drPillLabel')}
-                </button>
+                {allowStretch && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      // Stop the click from bubbling up to the <label> and
+                      // toggling the export checkbox.
+                      e.preventDefault()
+                      e.stopPropagation()
+                      onToggleStretched(cluster.cluster)
+                    }}
+                    aria-pressed={isStretched}
+                    aria-label={
+                      isStretched ? t('filter.unmarkStretched') : t('filter.markStretched')
+                    }
+                    title={tc('badge.stretchedFull')}
+                    className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+                      isStretched
+                        ? 'border-accent-500 bg-accent-500 text-primary-900'
+                        : 'border-slate-300 text-slate-500 hover:border-accent-500 hover:text-accent-500 dark:border-surface-700'
+                    }`}
+                  >
+                    {t('filter.drPillLabel')}
+                  </button>
+                )}
                 <span className="text-[11px] text-slate-500">
                   {cluster.hostCount}h · {cluster.vmCount}v
                 </span>

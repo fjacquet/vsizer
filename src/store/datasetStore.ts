@@ -3,6 +3,7 @@ import { aggregateClusters } from '../engines/aggregation/aggregateClusters'
 import { aggregateGlobals } from '../engines/aggregation/globals'
 import type { SourceFormat } from '../engines/parser/detectSource'
 import type { ParsedDataset } from '../engines/parser/normalizeColumns'
+import { isOrphanCluster } from '../engines/parser/synthesizeOrphanClusters'
 import type { ClusterAggregate, GlobalSummary, VHostRow, VInfoRow } from '../types'
 
 /**
@@ -106,6 +107,13 @@ export const useDatasetStore = create<DatasetState>((set) => ({
 
   toggleStretched: (name) =>
     set((state) => {
+      // Orphan rows (one synthetic cluster per standalone host,
+      // ADR-0014) can never be a 2-site stretched pair — there is
+      // exactly one box. The ClusterFilterPanel hides the toggle for
+      // these rows; this guard catches anything else (URL hydration,
+      // future scripted hooks) that tries to set the flag.
+      if (isOrphanCluster(name)) return {}
+
       const nextStretched = new Set(state.stretchedClusters)
       if (nextStretched.has(name)) nextStretched.delete(name)
       else nextStretched.add(name)

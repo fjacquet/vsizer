@@ -132,6 +132,19 @@ describe('datasetStore', () => {
     expect(useDatasetStore.getState().stretchedClusters.has('CL_A')).toBe(false)
   })
 
+  // ADR-0014: a single standalone host can't be a 2-site stretched
+  // pair, so the store no-ops the toggle for orphan cluster names.
+  // Defense-in-depth — the ClusterFilterPanel already hides the
+  // toggle button for these rows.
+  it('toggleStretched is a no-op for orphan (synthesized) cluster names', () => {
+    const before = useDatasetStore.getState().stretchedClusters
+    useDatasetStore.getState().toggleStretched('(no cluster) esx-01')
+    const after = useDatasetStore.getState().stretchedClusters
+    expect(after.has('(no cluster) esx-01')).toBe(false)
+    // No re-aggregate side-effect either: same Set reference.
+    expect(after).toBe(before)
+  })
+
   it('toggleStretched re-aggregates GHz and RAM atomically', () => {
     // Arrange: a single cluster's worth of host + VM data, set up so we can
     // measure the math change before/after toggling.

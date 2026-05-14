@@ -24,7 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previously discarded). Live Optics is forward-compatible if a
   future build exposes a Host column on the VM sheet; today's
   workbooks have no per-VM host info on that side, so Live Optics
-  orphan VMs are dropped as before — no regression.
+  orphan VMs are dropped as before — no regression. The
+  stretched-cluster (DR) toggle is hidden for orphan rows — a
+  single standalone host cannot be a 2-site stretched pair.
 
 ### Changed
 

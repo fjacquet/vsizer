@@ -15,6 +15,17 @@ import type { VHostRow, VInfoRow } from '../../types'
  */
 export const ORPHAN_CLUSTER_PREFIX = '(no cluster) '
 
+/**
+ * `true` iff `cluster` is a synthesized per-host bucket emitted by
+ * `synthesizeOrphanClusters`. Single source of truth for any UI or
+ * store code that needs to disable cluster-level operations that
+ * don't apply to a single standalone host — chief example: the
+ * stretched-cluster DR reservation (ADR-0007) makes no sense for
+ * a single box, so the toggle is hidden for these names.
+ */
+export const isOrphanCluster = (cluster: string): boolean =>
+  cluster.startsWith(ORPHAN_CLUSTER_PREFIX)
+
 const isClusterEmpty = (cluster: string): boolean => cluster.length === 0
 
 /**

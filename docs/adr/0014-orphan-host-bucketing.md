@@ -102,10 +102,14 @@ not in the aggregation engine.
   scales badly for estates with dozens of standalone hosts. The user
   controls the per-cluster selection in the export panel, so they
   can deselect orphan rows if the deck would be too long.
-- ADR-0007 (stretched-cluster DR reservation) keys on the cluster
-  name. The synthesized labels never appear in the user's
-  `stretchedClusters` set unless explicitly added in the UI, so
-  orphans never get a phantom DR reservation. Acceptable behavior.
+- ADR-0007 (stretched-cluster DR reservation) is **not offered** for
+  orphan rows. A single standalone host cannot be a 2-site stretched
+  pair — there is exactly one box, so the N/2 reservation math is
+  meaningless. The DR toggle in `ClusterFilterPanel` is hidden when
+  `cluster` starts with `ORPHAN_CLUSTER_PREFIX`, and
+  `datasetStore.toggleStretched` no-ops for the same names as
+  defense-in-depth (catches future code paths that might try to set
+  the flag without going through the panel button).
 
 **Neutral**
 

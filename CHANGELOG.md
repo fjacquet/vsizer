@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Removed unused curl/libcurl from the container runtime image**
+  (ADR-0019). The upstream nginx-unprivileged Alpine base ships
+  `curl` as a DNS-SD convenience vsizer never uses (the healthcheck
+  uses `wget`; nginx core does not link libcurl). `apk del curl
+  libcurl` in the runtime stage purges 8 packages and eliminates all
+  7 curl/libcurl Trivy advisories at the root rather than waiving
+  them — independent of Alpine's patch cadence. Also shrinks the
+  image attack surface.
+
 ## [1.7.0] — 2026-05-16
 
 ### Added

@@ -2,7 +2,9 @@
 # Two stages: node:26-alpine builder produces dist/ with base='/',
 # nginxinc/nginx-unprivileged:1.29-alpine serves it under a hardened config.
 # Base-image versions are kept current to drop nginx-alpine OS CVEs that
-# Trivy surfaces in the Security tab (ADR-0015 warn-only scan).
+# Trivy surfaces in the Security tab (ADR-0015 warn-only scan). The
+# runtime stage additionally strips the unused curl/libcurl packages
+# the upstream base ships as a DNS-SD convenience (ADR-0019).
 
 # syntax=docker/dockerfile:1.9
 
@@ -20,6 +22,15 @@ RUN npm run build:container
 
 # ── Stage 2: runtime ────────────────────────────────────────────────────
 FROM nginxinc/nginx-unprivileged:1.29-alpine AS runtime
+
+# Strip curl/libcurl — the upstream base adds them for DNS-SD
+# registration, which vsizer (static SPA, wget healthcheck, no libcurl
+# in nginx core) never uses. apk del cascades to the curl-only
+# transitive deps, eliminating 7 curl CVEs at the root (ADR-0019).
+# Kept before the build-arg LABELs so the layer stays cache-stable.
+USER root
+RUN apk --no-cache del curl libcurl
+USER nginx
 
 # OCI annotations — values are overridden at build time by metadata-action.
 LABEL org.opencontainers.image.title="vsizer" \

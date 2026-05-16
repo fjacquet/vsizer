@@ -26,5 +26,10 @@
   "badge": {
     "stretched": "Étendu",
     "stretchedFull": "vSAN étendu — 50 % de la capacité (CPU et RAM) réservée pour le DR"
+  },
+  "pwa": {
+    "updateAvailable": "Une nouvelle version est disponible.",
+    "reload": "Recharger",
+    "offlineReady": "Disponible hors ligne."
   }
 }

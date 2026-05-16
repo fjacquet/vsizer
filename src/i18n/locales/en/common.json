@@ -26,5 +26,10 @@
   "badge": {
     "stretched": "Stretched",
     "stretchedFull": "Stretched vSAN — 50% of capacity (CPU and RAM) reserved for DR"
+  },
+  "pwa": {
+    "updateAvailable": "A new version is available.",
+    "reload": "Reload",
+    "offlineReady": "Ready to work offline."
   }
 }

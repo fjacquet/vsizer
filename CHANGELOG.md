@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Installable PWA + offline app-shell** (ADR-0018). vsizer now ships
+  a web app manifest (full icon set: SVG + 192/512 PNG + maskable +
+  iOS apple-touch) and a Workbox service worker via `vite-plugin-pwa`
+  that precaches only static app-shell assets — hashed JS/CSS,
+  `index.html`, icons, and the anonymized sample workbook — so the app
+  installs and runs fully offline after first load. No `runtimeCaching`
+  is configured: uploaded workbooks and derived state are never cached
+  or intercepted, so privacy invariants ADR-0001 / ADR-0004 are
+  preserved. Service-worker updates prompt to reload via a toast
+  (`registerType: 'prompt'`) rather than force-reloading, so an
+  in-memory dataset is never silently destroyed. The SW is disabled in
+  the dev server. Base path is derived from Vite's resolved `base`, so
+  both the GitHub Pages (`/vsizer/`) and container (`/`) builds are
+  correct.
+
 ## [1.6.0] — 2026-05-14
 
 ### Added

@@ -12,6 +12,13 @@ describe('FOUC script externalisation (ADR-0013)', () => {
     expect(indexHtml).not.toMatch(/<script>[\s\S]*localStorage[\s\S]*<\/script>/)
   })
 
+  it('index.html carries the PWA head tags (ADR-0018)', () => {
+    expect(indexHtml).toContain('<meta name="theme-color" content="#7e14ff" />')
+    expect(indexHtml).toContain(
+      '<link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png" />',
+    )
+  })
+
   it('public/theme-init.js exists and contains the dark-class IIFE', () => {
     expect(themeInit).toContain("localStorage.getItem('vsizer-theme')")
     expect(themeInit).toContain("classList.add('dark')")

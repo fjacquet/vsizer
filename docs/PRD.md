@@ -3,7 +3,7 @@
 **Status**: Active development
 **Version**: 1.2.x
 **Owner**: Frédéric Jacquet
-**Last updated**: 2026-05-14
+**Last updated**: 2026-05-16
 
 ---
 
@@ -176,6 +176,22 @@ The GHz math is unchanged — that's data. Only language and conclusions disappe
   hard-coded. Five namespaces today: `common`, `upload`, `dashboard`, `pptx`,
   `validation`. PPTX-rendered strings live in the `pptx` namespace so a translator
   can review the deck in one file.
+
+### 6.6 Offline & installability (ADR-0018)
+
+- The app is installable: valid web manifest, SVG + raster + maskable
+  icons, `theme-color`, iOS apple-touch icon.
+- After a first online load the app shell works fully offline — no
+  network is required for upload, parsing, aggregation, or PPTX export
+  (all client-side per §3). The bundled sample workbook is usable
+  offline.
+- The service worker caches only static, public app-shell assets. It
+  never caches or intercepts uploaded workbooks or any derived state —
+  reinforces the §3 privacy guarantee (no `runtimeCaching`).
+- A service-worker update never force-reloads the page; the user is
+  prompted to reload, preserving the in-memory dataset (ADR-0004).
+- Correct under both the GitHub Pages base (`/vsizer/`) and the
+  container base (`/`).
 
 ## 7. Success criteria
 

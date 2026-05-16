@@ -5,6 +5,7 @@ import App from './App.tsx'
 // keys synchronously on the first paint.
 import './i18n'
 import './index.css'
+import { registerSW } from './pwa/registerSW'
 
 const rootEl = document.getElementById('root')
 if (!rootEl) throw new Error('vsizer: missing #root element in index.html')
@@ -14,3 +15,7 @@ createRoot(rootEl).render(
     <App />
   </StrictMode>,
 )
+
+// After render so SW install never competes with first paint. No-op in dev
+// (devOptions.enabled: false in vite.config.ts).
+registerSW()

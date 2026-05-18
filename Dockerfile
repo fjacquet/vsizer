@@ -21,7 +21,7 @@ COPY . .
 RUN npm run build:container
 
 # ── Stage 2: runtime ────────────────────────────────────────────────────
-FROM nginxinc/nginx-unprivileged:1.29-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
 
 # Strip curl/libcurl — the upstream base adds them for DNS-SD
 # registration, which vsizer (static SPA, wget healthcheck, no libcurl

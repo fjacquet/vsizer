@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.8.1] — 2026-05-25
+
+### Security
+
+- **Bumped the container runtime base from
+  `nginxinc/nginx-unprivileged:1.29-alpine` to `1.31-alpine`**, moving
+  the image to a current Alpine release and clearing the HIGH/CRITICAL
+  OS-package advisory that the Trivy image gate had begun failing on.
+  Keeps the base current per the policy noted in the `Dockerfile`.
+
+### Changed
+
+- **Dependency maintenance** (Dependabot). Runtime: `react-i18next`
+  16.6.6 → 17.0.8, `i18next` → 26.2.0, `fflate` 0.8.2 → 0.8.3,
+  `react-error-boundary` 6.1.1 → 6.1.2. Build/dev: `vite` 8.0.12 →
+  8.0.14, `@vitejs/plugin-react` 6.0.1 → 6.0.2, `@vitest/coverage-v8`
+  4.1.2 → 4.1.7, `@types/node` 25.7.0 → 25.9.1, `@types/react` 19.2.14
+  → 19.2.15. No source or behaviour changes.
+- **CI action pins refreshed** (Dependabot). `github/codeql-action`
+  v4.35.4 → v4.36.0, `docker/setup-buildx-action` v4.0.0 → v4.1.0,
+  `docker/login-action` v4.1.0 → v4.2.0, `docker/metadata-action`
+  v6.0.0 → v6.1.0, `docker/build-push-action` v7.1.0 → v7.2.0.
+
 ## [1.8.0] — 2026-05-16
 
 ### Security

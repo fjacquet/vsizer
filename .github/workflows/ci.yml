@@ -1,0 +1,10 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request: { branches: [main] }
+permissions:
+  contents: read
+jobs:
+  ci:
+    uses: fjacquet/ci/.github/workflows/web-ci.yml@v1
+    with: { node-version: "24" }

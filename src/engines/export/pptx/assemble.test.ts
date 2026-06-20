@@ -1,10 +1,10 @@
 // src/engines/export/pptx/assemble.test.ts
 import { describe, expect, it } from 'vitest'
-import { ingestDataset } from '../../ingest'
-import { buildPptxStrings } from './strings'
 import { createPptxT } from '../../../cli/i18n'
-import { assembleBuildPptxInput } from './assemble'
 import { buildRvToolsXlsx } from '../../../test/fixtures/buildXlsx'
+import { ingestDataset } from '../../ingest'
+import { assembleBuildPptxInput } from './assemble'
+import { buildPptxStrings } from './strings'
 
 describe('assembleBuildPptxInput', () => {
   it('selects all clusters sorted and wires strings + readiness', () => {

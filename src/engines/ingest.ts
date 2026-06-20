@@ -1,10 +1,10 @@
+import type { ClusterAggregate, GlobalSummary, SourceFile, VHostRow, VInfoRow } from '../types'
 import { aggregateClusters } from './aggregation/aggregateClusters'
 import { aggregateGlobals } from './aggregation/globals'
+import type { SourceFormat } from './parser/detectSource'
 import { extractWorkbookBytes } from './parser/extractWorkbook'
 import { parseDataset } from './parser/normalizeColumns'
-import { resolveClusterCollisions, type FileScopedRows } from './parser/resolveClusterCollisions'
-import type { SourceFormat } from './parser/detectSource'
-import type { ClusterAggregate, GlobalSummary, SourceFile, VHostRow, VInfoRow } from '../types'
+import { type FileScopedRows, resolveClusterCollisions } from './parser/resolveClusterCollisions'
 
 export class IngestError extends Error {
   constructor(
@@ -53,22 +53,32 @@ export function ingestDataset(
       vhostRows: parsed.vhost.length,
     })
     for (const err of parsed.errors) {
-      parseErrors.push({ file: file.name, sheet: err.sheet, index: err.index, message: err.message })
+      parseErrors.push({
+        file: file.name,
+        sheet: err.sheet,
+        index: err.index,
+        message: err.message,
+      })
     }
   }
 
-  if (perFile.length === 0) throw new IngestError('NO_SOURCE', 'No file parsed to a known RVTools/LiveOptics source')
+  if (perFile.length === 0)
+    throw new IngestError('NO_SOURCE', 'No file parsed to a known RVTools/LiveOptics source')
 
   const { vinfo, vhost } = resolveClusterCollisions(perFile)
   const clusters = aggregateClusters({ vinfo, vhost, stretchedClusters })
-  if (clusters.length === 0) throw new IngestError('NO_CLUSTERS', 'No clusters found in the dataset')
+  if (clusters.length === 0)
+    throw new IngestError('NO_CLUSTERS', 'No clusters found in the dataset')
 
   const aggregates: Record<string, ClusterAggregate> = {}
   for (const cluster of clusters) aggregates[cluster.cluster] = cluster
 
+  const first = sources[0]
+  if (!first) throw new IngestError('NO_SOURCE', 'No source files provided')
+
   return {
     sources,
-    source: sources[0]!.source,
+    source: first.source,
     vinfo,
     vhost,
     aggregates,

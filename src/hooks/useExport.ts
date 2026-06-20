@@ -79,7 +79,11 @@ export function useExport(): {
     if (!canExport || globals === null) return
     setIsExporting(true)
     try {
-      const input = assembleBuildPptxInput({ globals, aggregates, vhost, vinfo }, strings, selectedClusters)
+      const input = assembleBuildPptxInput(
+        { globals, aggregates, vhost, vinfo },
+        strings,
+        selectedClusters,
+      )
       const data = await buildPptx(input)
 
       triggerDownload(data, `${sanitizeBaseName(sourceFile)}_vsizer.pptx`)
@@ -89,17 +93,7 @@ export function useExport(): {
     } finally {
       setIsExporting(false)
     }
-  }, [
-    aggregates,
-    canExport,
-    globals,
-    selectedClusters,
-    sourceFile,
-    strings,
-    t,
-    vhost,
-    vinfo,
-  ])
+  }, [aggregates, canExport, globals, selectedClusters, sourceFile, strings, t, vhost, vinfo])
 
   return { canExport, isExporting, exportPptx }
 }

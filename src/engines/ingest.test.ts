@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildXlsxBuffer } from '../test/fixtures/buildXlsx'
-import { ingestDataset, IngestError } from './ingest'
+import { ingestDataset } from './ingest'
 
 const rvtools = (): ArrayBuffer =>
   buildXlsxBuffer({

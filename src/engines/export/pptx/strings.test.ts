@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { buildPptxStrings } from './strings'
 import { createPptxT } from '../../../cli/i18n'
+import { buildPptxStrings } from './strings'
 
 describe('buildPptxStrings', () => {
   it('fills the deck strings from a standalone i18n instance', () => {

@@ -9,7 +9,8 @@ export function assembleBuildPptxInput(
   selectedClusters: ReadonlySet<string> = new Set(),
 ): BuildPptxInput {
   const all = Object.values(dataset.aggregates).sort((a, b) => a.cluster.localeCompare(b.cluster))
-  const clusters = selectedClusters.size === 0 ? all : all.filter((c) => selectedClusters.has(c.cluster))
+  const clusters =
+    selectedClusters.size === 0 ? all : all.filter((c) => selectedClusters.has(c.cluster))
   return {
     globals: dataset.globals,
     clusters,

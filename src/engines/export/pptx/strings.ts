@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next'
-import type { PptxStrings } from './builder'
 import type { SourceFormat } from '../../parser/detectSource'
+import type { PptxStrings } from './builder'
 
 /**
  * Pure function that assembles a `PptxStrings` bag from an i18next `t`

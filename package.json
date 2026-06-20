@@ -4,7 +4,11 @@
   "version": "1.8.1",
   "type": "module",
   "description": "Drop your RVTools / Live Optics export, get a factual cluster utilization deck. 100% client-side.",
+  "bin": {
+    "vsizer-pptx": "src/cli/pptx.ts"
+  },
   "scripts": {
+    "pptx": "tsx src/cli/pptx.ts",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:container": "tsc -b && vite build --base=/",
@@ -50,6 +54,7 @@
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.1.2",
     "workbox-build": "^7.4.1",
+    "tsx": "^4.19.2",
     "workbox-window": "^7.4.1"
   }
 }

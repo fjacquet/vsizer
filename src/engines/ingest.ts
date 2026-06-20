@@ -1,0 +1,99 @@
+import type { ClusterAggregate, GlobalSummary, SourceFile, VHostRow, VInfoRow } from '../types'
+import { aggregateClusters } from './aggregation/aggregateClusters'
+import { aggregateGlobals } from './aggregation/globals'
+import type { SourceFormat } from './parser/detectSource'
+import { extractWorkbookBytes, ZipExtractError } from './parser/extractWorkbook'
+import { parseDataset } from './parser/normalizeColumns'
+import { type FileScopedRows, resolveClusterCollisions } from './parser/resolveClusterCollisions'
+
+export class IngestError extends Error {
+  readonly code: 'NO_SOURCE' | 'NO_CLUSTERS'
+  constructor(code: 'NO_SOURCE' | 'NO_CLUSTERS', message: string) {
+    super(message)
+    this.code = code
+    this.name = 'IngestError'
+  }
+}
+
+export interface IngestFile {
+  name: string
+  size?: number
+  bytes: ArrayBuffer | Uint8Array
+}
+
+export interface IngestResult {
+  sources: SourceFile[]
+  source: SourceFormat
+  vinfo: VInfoRow[]
+  vhost: VHostRow[]
+  aggregates: Record<string, ClusterAggregate>
+  globals: GlobalSummary
+  parseErrors: Array<{ file: string; sheet: 'vinfo' | 'vhost'; index: number; message: string }>
+  failedFiles: Array<{ file: string; kind: 'zip' | 'unknown'; message: string }>
+}
+
+export function ingestDataset(
+  files: IngestFile[],
+  stretchedClusters: ReadonlySet<string> = new Set(),
+): IngestResult {
+  const perFile: FileScopedRows[] = []
+  const sources: SourceFile[] = []
+  const parseErrors: IngestResult['parseErrors'] = []
+  const failedFiles: IngestResult['failedFiles'] = []
+
+  for (const file of files) {
+    try {
+      const workbookBytes = extractWorkbookBytes(file.bytes, file.name)
+      const parsed = parseDataset(workbookBytes)
+      if (parsed.source === 'unknown') {
+        failedFiles.push({ file: file.name, kind: 'unknown', message: '' })
+        continue
+      }
+      perFile.push({ filename: file.name, vinfo: parsed.vinfo, vhost: parsed.vhost })
+      sources.push({
+        name: file.name,
+        size: file.size ?? 0,
+        source: parsed.source,
+        vinfoRows: parsed.vinfo.length,
+        vhostRows: parsed.vhost.length,
+      })
+      for (const err of parsed.errors) {
+        parseErrors.push({
+          file: file.name,
+          sheet: err.sheet,
+          index: err.index,
+          message: err.message,
+        })
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      const kind = err instanceof ZipExtractError ? 'zip' : 'unknown'
+      failedFiles.push({ file: file.name, kind, message })
+    }
+  }
+
+  if (perFile.length === 0)
+    throw new IngestError('NO_SOURCE', 'No file parsed to a known RVTools/LiveOptics source')
+
+  const { vinfo, vhost } = resolveClusterCollisions(perFile)
+  const clusters = aggregateClusters({ vinfo, vhost, stretchedClusters })
+  if (clusters.length === 0)
+    throw new IngestError('NO_CLUSTERS', 'No clusters found in the dataset')
+
+  const aggregates: Record<string, ClusterAggregate> = {}
+  for (const cluster of clusters) aggregates[cluster.cluster] = cluster
+
+  const first = sources[0]
+  if (!first) throw new IngestError('NO_SOURCE', 'No source files provided')
+
+  return {
+    sources,
+    source: first.source,
+    vinfo,
+    vhost,
+    aggregates,
+    globals: aggregateGlobals(clusters),
+    parseErrors,
+    failedFiles,
+  }
+}

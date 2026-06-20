@@ -23,3 +23,19 @@ export const buildXlsxBuffer = (
   const u8 = raw instanceof Uint8Array ? raw : new Uint8Array(raw)
   return u8.buffer.slice(u8.byteOffset, u8.byteOffset + u8.byteLength) as ArrayBuffer
 }
+
+/**
+ * Builds a minimal RVTools-shaped XLSX with one cluster so `ingestDataset`
+ * returns a valid `IngestResult` suitable for engine-level tests.
+ */
+export const buildRvToolsXlsx = (): ArrayBuffer =>
+  buildXlsxBuffer({
+    vInfo: [
+      ['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory'],
+      ['vm-1', 'poweredOn', 'CL_1', 4, 8192],
+    ],
+    vHost: [
+      ['Host', 'Cluster', '# Cores', 'Speed', '# CPU usage %', '# Mem usage %'],
+      ['esx-01', 'CL_1', 24, 2400, 30, 28],
+    ],
+  })

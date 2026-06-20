@@ -22,6 +22,7 @@ npm run format         # biome format --write .
 npm run test           # vitest (watch)
 npm run test:run       # vitest run (CI mode, single pass)
 npm run test:coverage  # vitest run --coverage
+npm run pptx -- <file> # headless CLI: RVTools/LiveOptics file -> light-mode .pptx (see below)
 # Run a single test file or pattern:
 npx vitest run src/engines/aggregation/ghz.test.ts
 npx vitest run -t "physicalGhz"
@@ -31,6 +32,25 @@ CI (`.github/workflows/static.yml`) runs `typecheck → lint → test:run → bu
 then deploys `dist/` to GitHub Pages. `tsc -b` (inside `build`) project-references both
 `tsconfig.app.json` and `tsconfig.node.json` — so any type error in `vite.config.ts` is caught at
 build time but not by `npm run typecheck`. **Always run `npm run build` before pushing.**
+
+## Headless CLI (`vsizer-pptx`)
+
+`src/cli/pptx.ts` (run via `tsx`; `bin: vsizer-pptx`, `npm run pptx`) generates the same deck
+without the browser, reusing the engines:
+`ingestDataset` (`src/engines/ingest.ts`) → `buildPptxStrings` + `createPptxT`
+(`src/engines/export/pptx/strings.ts`, `src/cli/i18n.ts`) → `assembleBuildPptxInput`
+(`src/engines/export/pptx/assemble.ts`) → `buildPptx`. The React hooks (`useDatasetUpload`,
+`usePptxStrings`, `useExport`) are thin wrappers over these same pure functions, so the CLI and
+the app produce an identical deck.
+
+```bash
+npm run pptx -- path/to/rvtools.xlsx          # -> rvtools_vsizer.pptx beside the input
+npm run pptx -- estate.xlsx --out deck.pptx --lang en --quiet
+```
+
+Light theme only (vsizer's single palette); default deck language is the app's `fallbackLng`
+(`fr`). The CLI runs entirely locally in Node — it makes no network calls, upholding the
+"workbook bytes never leave the client" invariant.
 
 ## Architecture
 

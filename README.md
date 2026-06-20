@@ -98,6 +98,7 @@ design.
 | `npm run test`           | `vitest` (watch)                                 |
 | `npm run test:run`       | `vitest run` (CI mode)                           |
 | `npm run test:coverage`  | `vitest run --coverage` (75 % gate on `engines/` and `utils/`) |
+| `npm run pptx -- <file>` | Headless CLI: RVTools/LiveOptics file → light-mode `.pptx` |
 
 Run a single test file or pattern:
 
@@ -105,6 +106,22 @@ Run a single test file or pattern:
 npx vitest run src/utils/format.test.ts
 npx vitest run -t "physicalGhz"
 ```
+
+## CLI (`vsizer-pptx`)
+
+Generate the deck from the command line — the same source file the app starts from, no browser:
+
+```bash
+npm run pptx -- path/to/rvtools.xlsx                 # → rvtools_vsizer.pptx beside the input
+npm run pptx -- estate.xlsx --out deck.pptx --lang en --quiet
+# or, after `npm link` / install: vsizer-pptx <file> [--out <path>] [--lang <code>] [--quiet]
+```
+
+It reuses the in-app engines (`ingestDataset → buildPptxStrings → assembleBuildPptxInput →
+buildPptx`), so the deck is identical to the app's export. Light theme only; default language is
+`fr`. Multiple `.xlsx` files are not batched (the app's multi-file mode is browser-only); a file
+that fails to parse is reported and skipped. Like the app, the CLI runs entirely locally and never
+sends workbook bytes anywhere.
 
 ## Architecture
 

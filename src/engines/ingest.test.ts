@@ -23,9 +23,20 @@ describe('ingestDataset', () => {
     expect(res.sources[0]?.name).toBe('estate.xlsx')
   })
 
-  it('throws IngestError when no file parses to a known source', () => {
-    expect(() => ingestDataset([{ name: 'junk.xlsx', bytes: new Uint8Array([1, 2, 3]) }])).toThrow(
-      IngestError,
+  it('throws IngestError with code NO_SOURCE when no file parses to a known source', () => {
+    expect(() =>
+      ingestDataset([{ name: 'junk.xlsx', bytes: new Uint8Array([1, 2, 3]) }]),
+    ).toThrowError(expect.objectContaining({ code: 'NO_SOURCE' }))
+  })
+
+  it('throws IngestError with code NO_CLUSTERS when workbook has no cluster rows', () => {
+    // Build a workbook that is recognized as rvtools but has no cluster data
+    const emptyRvtools = buildXlsxBuffer({
+      vInfo: [['VM', 'Powerstate', 'Cluster', 'CPUs', 'Memory']],
+      vHost: [['Host', 'Cluster', '# Cores', 'Speed', '# CPU usage %', '# Mem usage %']],
+    })
+    expect(() => ingestDataset([{ name: 'empty.xlsx', bytes: emptyRvtools }])).toThrowError(
+      expect.objectContaining({ code: 'NO_CLUSTERS' }),
     )
   })
 })

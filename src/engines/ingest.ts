@@ -6,7 +6,15 @@ import { resolveClusterCollisions, type FileScopedRows } from './parser/resolveC
 import type { SourceFormat } from './parser/detectSource'
 import type { ClusterAggregate, GlobalSummary, SourceFile, VHostRow, VInfoRow } from '../types'
 
-export class IngestError extends Error {}
+export class IngestError extends Error {
+  constructor(
+    public readonly code: 'NO_SOURCE' | 'NO_CLUSTERS',
+    message: string,
+  ) {
+    super(message)
+    this.name = 'IngestError'
+  }
+}
 
 export interface IngestFile {
   name: string
@@ -49,11 +57,11 @@ export function ingestDataset(
     }
   }
 
-  if (perFile.length === 0) throw new IngestError('No file parsed to a known RVTools/LiveOptics source')
+  if (perFile.length === 0) throw new IngestError('NO_SOURCE', 'No file parsed to a known RVTools/LiveOptics source')
 
   const { vinfo, vhost } = resolveClusterCollisions(perFile)
   const clusters = aggregateClusters({ vinfo, vhost, stretchedClusters })
-  if (clusters.length === 0) throw new IngestError('No clusters found in the dataset')
+  if (clusters.length === 0) throw new IngestError('NO_CLUSTERS', 'No clusters found in the dataset')
 
   const aggregates: Record<string, ClusterAggregate> = {}
   for (const cluster of clusters) aggregates[cluster.cluster] = cluster

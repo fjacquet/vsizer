@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { extractWorkbookBytes, ZipExtractError } from '../engines/parser/extractWorkbook'
+import { ZipExtractError } from '../engines/parser/extractWorkbook'
 import { ingestDataset, IngestError, type IngestFile, type IngestResult } from '../engines/ingest'
 import { useDatasetStore } from '../store/datasetStore'
 
@@ -35,21 +35,14 @@ export function useDatasetUpload(): {
         for (const file of files) {
           try {
             const buffer = await file.arrayBuffer()
-            // Live Optics ships a 5-file zip; extract the *_VMWARE_*.xlsx
-            // entry before parsing. Plain .xlsx uploads pass through.
-            const workbookBytes = extractWorkbookBytes(buffer, file.name)
-            ingestFiles.push({ name: file.name, size: file.size, bytes: workbookBytes })
+            // Pass raw bytes; ingestDataset calls extractWorkbookBytes once
+            // (handles both plain .xlsx and Live Optics .zip).
+            ingestFiles.push({ name: file.name, size: file.size, bytes: buffer })
           } catch (err) {
             const msg = err instanceof Error ? err.message : String(err)
-            if (err instanceof ZipExtractError) {
-              toast.error(t('upload:errors.zipExtractFailed', { message: msg }), {
-                description: file.name,
-              })
-            } else {
-              toast.error(t('upload:errors.parseFailed', { message: msg }), {
-                description: file.name,
-              })
-            }
+            toast.error(t('upload:errors.parseFailed', { message: msg }), {
+              description: file.name,
+            })
           }
         }
 
@@ -59,9 +52,12 @@ export function useDatasetUpload(): {
         try {
           result = ingestDataset(ingestFiles, useDatasetStore.getState().stretchedClusters)
         } catch (err) {
+          if (err instanceof ZipExtractError) {
+            toast.error(t('upload:errors.zipExtractFailed', { message: err.message }))
+            return
+          }
           if (err instanceof IngestError) {
-            const msg = err.message
-            if (msg.includes('No clusters')) {
+            if (err.code === 'NO_CLUSTERS') {
               toast.error(t('validation:rows.noClusters'))
             } else {
               toast.error(t('validation:source.unknown'))

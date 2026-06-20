@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { IngestError, type IngestFile, type IngestResult, ingestDataset } from '../engines/ingest'
-import { ZipExtractError } from '../engines/parser/extractWorkbook'
 import { useDatasetStore } from '../store/datasetStore'
 
 /**
@@ -52,10 +51,6 @@ export function useDatasetUpload(): {
         try {
           result = ingestDataset(ingestFiles, useDatasetStore.getState().stretchedClusters)
         } catch (err) {
-          if (err instanceof ZipExtractError) {
-            toast.error(t('upload:errors.zipExtractFailed', { message: err.message }))
-            return
-          }
           if (err instanceof IngestError) {
             if (err.code === 'NO_CLUSTERS') {
               toast.error(t('validation:rows.noClusters'))
@@ -67,12 +62,13 @@ export function useDatasetUpload(): {
           throw err
         }
 
-        // Surface per-file unknown-source toasts by comparing ingest input
-        // to the sources that successfully parsed (ADR-0017).
-        const succeededNames = new Set(result.sources.map((s) => s.name))
-        for (const f of ingestFiles) {
-          if (!succeededNames.has(f.name)) {
-            toast.error(t('validation:source.unknown'), { description: f.name })
+        for (const f of result.failedFiles) {
+          if (f.kind === 'zip') {
+            toast.error(t('upload:errors.zipExtractFailed', { message: f.message }), {
+              description: f.file,
+            })
+          } else {
+            toast.error(t('validation:source.unknown'), { description: f.file })
           }
         }
 

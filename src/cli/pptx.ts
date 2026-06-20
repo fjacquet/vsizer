@@ -37,6 +37,11 @@ export async function runCli(argv: string[]): Promise<number> {
   try {
     const bytes = await readFile(args.input)
     const ds = ingestDataset([{ name: basename(args.input), size: bytes.length, bytes }])
+    if (!args.quiet) {
+      for (const f of ds.failedFiles) {
+        process.stderr.write(`skipped ${f.file}: ${f.kind}\n`)
+      }
+    }
     const strings = buildPptxStrings(
       createPptxT(args.lang),
       basename(args.input),

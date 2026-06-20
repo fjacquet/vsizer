@@ -2,7 +2,7 @@ import type { ClusterAggregate, GlobalSummary, SourceFile, VHostRow, VInfoRow } 
 import { aggregateClusters } from './aggregation/aggregateClusters'
 import { aggregateGlobals } from './aggregation/globals'
 import type { SourceFormat } from './parser/detectSource'
-import { extractWorkbookBytes } from './parser/extractWorkbook'
+import { extractWorkbookBytes, ZipExtractError } from './parser/extractWorkbook'
 import { parseDataset } from './parser/normalizeColumns'
 import { type FileScopedRows, resolveClusterCollisions } from './parser/resolveClusterCollisions'
 
@@ -30,6 +30,7 @@ export interface IngestResult {
   aggregates: Record<string, ClusterAggregate>
   globals: GlobalSummary
   parseErrors: Array<{ file: string; sheet: 'vinfo' | 'vhost'; index: number; message: string }>
+  failedFiles: Array<{ file: string; kind: 'zip' | 'unknown'; message: string }>
 }
 
 export function ingestDataset(
@@ -39,26 +40,36 @@ export function ingestDataset(
   const perFile: FileScopedRows[] = []
   const sources: SourceFile[] = []
   const parseErrors: IngestResult['parseErrors'] = []
+  const failedFiles: IngestResult['failedFiles'] = []
 
   for (const file of files) {
-    const workbookBytes = extractWorkbookBytes(file.bytes, file.name)
-    const parsed = parseDataset(workbookBytes)
-    if (parsed.source === 'unknown') continue
-    perFile.push({ filename: file.name, vinfo: parsed.vinfo, vhost: parsed.vhost })
-    sources.push({
-      name: file.name,
-      size: file.size ?? 0,
-      source: parsed.source,
-      vinfoRows: parsed.vinfo.length,
-      vhostRows: parsed.vhost.length,
-    })
-    for (const err of parsed.errors) {
-      parseErrors.push({
-        file: file.name,
-        sheet: err.sheet,
-        index: err.index,
-        message: err.message,
+    try {
+      const workbookBytes = extractWorkbookBytes(file.bytes, file.name)
+      const parsed = parseDataset(workbookBytes)
+      if (parsed.source === 'unknown') {
+        failedFiles.push({ file: file.name, kind: 'unknown', message: '' })
+        continue
+      }
+      perFile.push({ filename: file.name, vinfo: parsed.vinfo, vhost: parsed.vhost })
+      sources.push({
+        name: file.name,
+        size: file.size ?? 0,
+        source: parsed.source,
+        vinfoRows: parsed.vinfo.length,
+        vhostRows: parsed.vhost.length,
       })
+      for (const err of parsed.errors) {
+        parseErrors.push({
+          file: file.name,
+          sheet: err.sheet,
+          index: err.index,
+          message: err.message,
+        })
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      const kind = err instanceof ZipExtractError ? 'zip' : 'unknown'
+      failedFiles.push({ file: file.name, kind, message })
     }
   }
 
@@ -84,5 +95,6 @@ export function ingestDataset(
     aggregates,
     globals: aggregateGlobals(clusters),
     parseErrors,
+    failedFiles,
   }
 }

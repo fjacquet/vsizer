@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
-import { topReadinessVmsByCluster } from '../engines/aggregation/vinfoMerge'
+import { assembleBuildPptxInput } from '../engines/export/pptx/assemble'
 import { buildPptx } from '../engines/export/pptx/builder'
 import { useDatasetStore } from '../store/datasetStore'
 import { usePptxStrings } from './usePptxStrings'
@@ -73,32 +73,14 @@ export function useExport(): {
   // mis-attributes the cause of absence.
   const strings = usePptxStrings(sourceFile, todayIso(), source)
 
-  // CPU Ready top-N is computed from the parsed vInfo rows once per
-  // dataset (changes only when a new file is uploaded). Heavy enough
-  // to memoize: O(n log n) sort per cluster across all powered-on VMs.
-  // The map is empty for Live Optics inputs (all readiness values
-  // null) — see ADR-0012 §4. Passed as a ReadonlyMap to buildPptx,
-  // which conditionally injects the annex slide.
-  const topReadinessByCluster = useMemo(() => topReadinessVmsByCluster(vinfo), [vinfo])
-
   const canExport = globals !== null && Object.keys(aggregates).length > 0
 
   const exportPptx = useCallback(async (): Promise<void> => {
     if (!canExport || globals === null) return
     setIsExporting(true)
     try {
-      // Selection rule: empty set ⇒ "all clusters".
-      const all = Object.values(aggregates).sort((a, b) => a.cluster.localeCompare(b.cluster))
-      const filtered =
-        selectedClusters.size === 0 ? all : all.filter((c) => selectedClusters.has(c.cluster))
-
-      const data = await buildPptx({
-        globals,
-        clusters: filtered,
-        vhost,
-        topReadinessByCluster,
-        strings,
-      })
+      const input = assembleBuildPptxInput({ globals, aggregates, vhost, vinfo }, strings, selectedClusters)
+      const data = await buildPptx(input)
 
       triggerDownload(data, `${sanitizeBaseName(sourceFile)}_vsizer.pptx`)
     } catch (err) {
@@ -115,8 +97,8 @@ export function useExport(): {
     sourceFile,
     strings,
     t,
-    topReadinessByCluster,
     vhost,
+    vinfo,
   ])
 
   return { canExport, isExporting, exportPptx }

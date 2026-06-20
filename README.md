@@ -12,6 +12,8 @@
 [![Client-side only](https://img.shields.io/badge/processing-100%25%20client--side-22c55e)](#privacy-guarantee)
 [![CodeQL](https://github.com/fjacquet/vsizer/actions/workflows/codeql.yml/badge.svg)](https://github.com/fjacquet/vsizer/actions/workflows/codeql.yml)
 [![SBOM](https://img.shields.io/badge/SBOM-CycloneDX-blue)](https://github.com/fjacquet/vsizer/releases/latest)
+[![CI](https://github.com/fjacquet/vsizer/actions/workflows/ci.yml/badge.svg)](https://github.com/fjacquet/vsizer/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/fjacquet/vsizer)](https://github.com/fjacquet/vsizer/blob/HEAD/LICENSE)
 
 > Drop your RVTools / Live Optics export, get a factual cluster utilization deck.
 > 100 % client-side — your file never leaves your browser.

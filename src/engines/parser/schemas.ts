@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { ClusterAggregate, GlobalSummary, VHostRow, VInfoRow } from '../../types'
+import type { VInfoRow } from '../../types'
 
 /**
  * Runtime validators for the canonical row shapes. These are applied at the
@@ -13,7 +13,8 @@ import type { ClusterAggregate, GlobalSummary, VHostRow, VInfoRow } from '../../
  * stops compiling — that's the intended contract.
  */
 
-export const VInfoRowSchema: z.ZodType<VInfoRow> = z.object({
+// Cast bridges Zod v4 nullable inference gap vs TS interface contract
+export const VInfoRowSchema = z.object({
   vmName: z.string(),
   cluster: z.string(),
   // ESXi host this VM runs on. RVTools `vInfo.Host`; empty string for
@@ -32,9 +33,9 @@ export const VInfoRowSchema: z.ZodType<VInfoRow> = z.object({
   // and briefly exceed 100 %. Always null on Live Optics inputs.
   cpuReadinessPercent: z.number().min(0).max(200).nullable(),
   poweredOn: z.boolean(),
-})
+}) as unknown as z.ZodType<VInfoRow>
 
-export const VHostRowSchema: z.ZodType<VHostRow> = z.object({
+export const VHostRowSchema = z.object({
   hostName: z.string(),
   cluster: z.string(),
   cores: z.number().int().positive(),
@@ -48,7 +49,7 @@ export const VHostRowSchema: z.ZodType<VHostRow> = z.object({
   ramRatio: z.number().min(0).max(1.5),
 })
 
-export const ClusterAggregateSchema: z.ZodType<ClusterAggregate> = z.object({
+export const ClusterAggregateSchema = z.object({
   cluster: z.string(),
   hostCount: z.number().int().nonnegative(),
   vmCount: z.number().int().nonnegative(),
@@ -88,7 +89,7 @@ export const ClusterAggregateSchema: z.ZodType<ClusterAggregate> = z.object({
   readinessAvailable: z.boolean(),
 })
 
-export const GlobalSummarySchema: z.ZodType<GlobalSummary> = z.object({
+export const GlobalSummarySchema = z.object({
   clusterCount: z.number().int().nonnegative(),
   hostCount: z.number().int().nonnegative(),
   vmCount: z.number().int().nonnegative(),

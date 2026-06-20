@@ -7,11 +7,10 @@ import { parseDataset } from './parser/normalizeColumns'
 import { type FileScopedRows, resolveClusterCollisions } from './parser/resolveClusterCollisions'
 
 export class IngestError extends Error {
-  constructor(
-    public readonly code: 'NO_SOURCE' | 'NO_CLUSTERS',
-    message: string,
-  ) {
+  readonly code: 'NO_SOURCE' | 'NO_CLUSTERS'
+  constructor(code: 'NO_SOURCE' | 'NO_CLUSTERS', message: string) {
     super(message)
+    this.code = code
     this.name = 'IngestError'
   }
 }

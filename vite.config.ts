@@ -20,7 +20,13 @@ export default defineConfig({
       // update prompt uses the app's sonner toaster + i18n.
       injectRegister: false,
       // Root public assets we rely on offline that aren't content-hashed.
-      includeAssets: ['favicon.png', 'favicon-32x32.png', 'favicon-16x16.png', 'icons.svg', 'theme-init.js'],
+      includeAssets: [
+        'favicon.png',
+        'favicon-32x32.png',
+        'favicon-16x16.png',
+        'icons.svg',
+        'theme-init.js',
+      ],
       manifest: {
         name: 'vsizer',
         short_name: 'vsizer',

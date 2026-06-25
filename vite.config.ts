@@ -20,7 +20,13 @@ export default defineConfig({
       // update prompt uses the app's sonner toaster + i18n.
       injectRegister: false,
       // Root public assets we rely on offline that aren't content-hashed.
-      includeAssets: ['favicon.svg', 'icons.svg', 'theme-init.js'],
+      includeAssets: [
+        'favicon.png',
+        'favicon-32x32.png',
+        'favicon-16x16.png',
+        'icons.svg',
+        'theme-init.js',
+      ],
       manifest: {
         name: 'vsizer',
         short_name: 'vsizer',
@@ -31,7 +37,7 @@ export default defineConfig({
         background_color: '#ffffff',
         categories: ['productivity', 'utilities'],
         icons: [
-          { src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: 'favicon.png', sizes: '256x256', type: 'image/png', purpose: 'any' },
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
           {

@@ -156,6 +156,28 @@ When a gate forces a waiver, append an entry below with:
 - **follow-up issue link**
 - **expiry date** (max 90 days from grant)
 
+### Standing exemptions
+
+#### E-001 — development-only dependencies
+
+- **Scope:** every advisory whose affected package is in the `dev` group.
+- **Mechanism:** `osv-scanner.toml#PackageOverrides[0]`
+  (`group = "dev"`, `vulnerability.ignore = true`).
+- **Why:** dev dependencies are build and test tooling. Nothing we ship
+  resolves, downloads or executes them, so an advisory against one does
+  not describe exposure in the delivered artifact.
+- **Why not per-advisory:** the waiver rules above meant tracking patch
+  bumps on transitive tooling outside our control (`brace-expansion`,
+  `fast-uri`, `postcss`). In practice that held the required
+  `security / osv-scan` check red across the fleet and blocked unrelated
+  work, including production-dependency upgrades that did matter.
+- **Granted:** 2026-07-26
+- **Expires:** never — a standing exemption, not a waiver. The 90-day cap
+  above applies to waivers, which are per-advisory.
+- **Limits:** production dependencies are unaffected and remain fully
+  gated. A finding there is resolved by upgrading, or waived per-advisory
+  under the rules above.
+
 ### Open waivers
 
 #### W-001 — `GHSA-4r6h-8v6p-xvw6` (xlsx prototype pollution)

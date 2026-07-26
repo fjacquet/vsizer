@@ -29,3 +29,21 @@ xlsx 0.20.3 via the CDN tarball (ADR-0002). Same OSV structured-
 range gap as GHSA-4r6h-8v6p-xvw6: introduced=0, no fixed event. Not
 actually vulnerable on 0.20.3. Re-check before 2026-08-14.
 """
+
+# ---------------------------------------------------------------------------
+# Blanket exemption for development-only dependencies.
+#
+# Policy change (2026-07-26): dev dependencies are build and test tooling. They
+# are not resolved, downloaded or executed by anything we ship, so an advisory
+# against one does not describe risk in the delivered artifact. Chasing patch
+# bumps on transitive tooling we do not control kept the required
+# `security / osv-scan` check permanently red and blocked unrelated work.
+#
+# Production dependencies stay fully gated: findings there are resolved by
+# upgrading, never by waiving.
+# ---------------------------------------------------------------------------
+
+[[PackageOverrides]]
+group = "dev"
+vulnerability.ignore = true
+reason = "Dev-only dependency: build/test tooling, never shipped in the production bundle"

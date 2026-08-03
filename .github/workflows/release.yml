@@ -9,7 +9,7 @@ permissions:
   attestations: write   # write the provenance attestation
 jobs:
   release:
-    uses: fjacquet/ci/.github/workflows/web-release.yml@v1
+    uses: fjacquet/ci/.github/workflows/web-release.yml@v1.2.0
     with:
       node-version: "24"
       publish-npm: false

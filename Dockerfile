@@ -9,7 +9,7 @@
 # syntax=docker/dockerfile:1.9
 
 # ── Stage 1: builder ────────────────────────────────────────────────────
-FROM node:26-alpine AS builder
+FROM docker.io/library/node:26-alpine AS builder
 WORKDIR /app
 
 # Install dependencies first for layer caching.
@@ -21,7 +21,7 @@ COPY . .
 RUN npm run build:container
 
 # ── Stage 2: runtime ────────────────────────────────────────────────────
-FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
+FROM docker.io/nginxinc/nginx-unprivileged:1.31-alpine AS runtime
 
 # Strip curl/libcurl — the upstream base adds them for DNS-SD
 # registration, which vsizer (static SPA, wget healthcheck, no libcurl

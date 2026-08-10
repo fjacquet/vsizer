@@ -210,6 +210,41 @@ When a gate forces a waiver, append an entry below with:
 - **Expires:** 2026-08-14 (90 days)
 - **Mirror:** `osv-scanner.toml#IgnoredVulns[1]`
 
+#### W-003 — `GHSA-5p2g-fcmc-qvqq` (image-size JXL/HEIF infinite loop)
+
+- **Severity:** HIGH (CVSS 8.7)
+- **Dependency path:** root → `pptxgenjs@4.0.1` → `image-size@^1.2.1`
+  (production)
+- **Why we can't fix today:** No patched version exists. The OSV record
+  encodes the range as `{introduced: 0, last_affected: 2.0.2}` and 2.0.2
+  is the newest `image-size` on npm, so every published version is in
+  range and there is nothing to upgrade to. `pptxgenjs@4.0.1` is itself
+  the latest release and still declares `image-size ^1.2.1`, so an
+  `overrides` pin to 2.0.2 would move us to a version that is equally
+  affected. The vector is also unreachable as an attack: `image-size` is
+  called by pptxgenjs only to measure images being embedded into a PPTX
+  the user is generating locally in their own browser. Those bytes come
+  from the user's own machine, never from a remote or untrusted party,
+  and the worst outcome is the user hanging their own tab.
+- **Follow-up:** Track `image-size` releases and `pptxgenjs` dependency
+  changes; drop the waiver as soon as either lands.
+- **Granted:** 2026-08-10
+- **Expires:** 2026-11-08 (90 days)
+- **Mirror:** `osv-scanner.toml#IgnoredVulns[2]`
+
+#### W-004 — `GHSA-w3rx-r6r6-pgpr` (image-size ICNS infinite loop)
+
+- **Severity:** HIGH (CVSS 8.7)
+- **Dependency path:** root → `pptxgenjs@4.0.1` → `image-size@^1.2.1`
+  (production)
+- **Why we can't fix today:** Same package, same dependency path, same
+  absence of any patched release and same unreachable vector as W-003 —
+  only the affected parser differs (ICNS rather than JXL/HEIF).
+- **Follow-up:** Same as W-003.
+- **Granted:** 2026-08-10
+- **Expires:** 2026-11-08 (90 days)
+- **Mirror:** `osv-scanner.toml#IgnoredVulns[3]`
+
 ### Expired waivers (history)
 
 *None.*

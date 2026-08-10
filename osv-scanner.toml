@@ -30,6 +30,50 @@ range gap as GHSA-4r6h-8v6p-xvw6: introduced=0, no fixed event. Not
 actually vulnerable on 0.20.3. Re-check before 2026-08-14.
 """
 
+[[IgnoredVulns]]
+id = "GHSA-5p2g-fcmc-qvqq"
+ignoreUntil = 2026-11-08
+reason = """
+image-size JXL and HEIF parser infinite-loop denial of service.
+Dependency path: root -> pptxgenjs@4.0.1 -> image-size@^1.2.1 (production).
+
+No fix exists to upgrade to. The OSV record is
+{introduced: 0, last_affected: 2.0.2} and 2.0.2 is the latest version
+published on npm, so every release of image-size is affected — there is no
+patched target. pptxgenjs 4.0.1 is likewise the latest release and still
+declares image-size ^1.2.1, so an `overrides` pin to 2.0.2 would buy nothing.
+
+Not reachable as an attack here: image-size is called by pptxgenjs solely to
+measure images being embedded into a PPTX the user generates locally in their
+own browser. Those bytes come from the user's own machine, never from a remote
+or untrusted party, and the worst case is the user hanging their own tab.
+
+Re-check at expiry: drop this waiver the moment image-size ships a patched
+release or pptxgenjs stops depending on it.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-w3rx-r6r6-pgpr"
+ignoreUntil = 2026-11-08
+reason = """
+image-size ICNS parser infinite-loop denial of service.
+Dependency path: root -> pptxgenjs@4.0.1 -> image-size@^1.2.1 (production).
+
+No fix exists to upgrade to. The OSV record is
+{introduced: 0, last_affected: 2.0.2} and 2.0.2 is the latest version
+published on npm, so every release of image-size is affected — there is no
+patched target. pptxgenjs 4.0.1 is likewise the latest release and still
+declares image-size ^1.2.1, so an `overrides` pin to 2.0.2 would buy nothing.
+
+Not reachable as an attack here: image-size is called by pptxgenjs solely to
+measure images being embedded into a PPTX the user generates locally in their
+own browser. Those bytes come from the user's own machine, never from a remote
+or untrusted party, and the worst case is the user hanging their own tab.
+
+Re-check at expiry: drop this waiver the moment image-size ships a patched
+release or pptxgenjs stops depending on it.
+"""
+
 # ---------------------------------------------------------------------------
 # Blanket exemption for development-only dependencies.
 #

@@ -8,5 +8,5 @@ permissions:
   id-token: write
 jobs:
   deploy:
-    uses: fjacquet/ci/.github/workflows/web-deploy.yml@v1.2.0
+    uses: fjacquet/ci/.github/workflows/web-deploy.yml@v1.3.0
     with: { node-version: "24", build-dir: dist }

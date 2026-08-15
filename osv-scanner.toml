@@ -7,27 +7,28 @@
 
 [[IgnoredVulns]]
 id = "GHSA-4r6h-8v6p-xvw6"
-ignoreUntil = 2026-08-14
+ignoreUntil = 2026-11-13
 reason = """
 SheetJS prototype pollution. GHSA summary says affected range is
 < 0.19.3; we ship xlsx 0.20.3 via the CDN tarball (ADR-0002), so we
 are PAST the fix. However the OSV.dev record has range
 {introduced: 0, no fixed event}, treating every xlsx version as
 vulnerable, because SheetJS is CDN-distributed and the GHSA was
-never updated with a "first_patched_version" entry. Re-check this
-waiver before 2026-08-14: confirm we are still on a tarball at or
-above the GHSA-summary's fix range; if SheetJS publishes a newer
-tarball, bump and drop the waiver.
+never updated with a "first_patched_version" entry. Renewed 2026-08-15: re-checked
+cdn.sheetjs.com, 0.20.3 is still the newest tarball published, so
+there is nothing to bump to and we remain past the fix range.
+Re-check before 2026-11-13 on the same terms.
 """
 
 [[IgnoredVulns]]
 id = "GHSA-5pgg-2g8v-p4x9"
-ignoreUntil = 2026-08-14
+ignoreUntil = 2026-11-13
 reason = """
 SheetJS ReDoS. GHSA summary says affected range is < 0.20.2; we ship
 xlsx 0.20.3 via the CDN tarball (ADR-0002). Same OSV structured-
 range gap as GHSA-4r6h-8v6p-xvw6: introduced=0, no fixed event. Not
-actually vulnerable on 0.20.3. Re-check before 2026-08-14.
+actually vulnerable on 0.20.3. Renewed 2026-08-15: 0.20.3 is still
+the newest tarball on cdn.sheetjs.com. Re-check before 2026-11-13.
 """
 
 [[IgnoredVulns]]

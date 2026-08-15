@@ -194,7 +194,10 @@ When a gate forces a waiver, append an entry below with:
   exploitable bug in our deployed bytes.
 - **Follow-up:** Track upstream — re-test waiver renewal date.
 - **Granted:** 2026-05-14
-- **Expires:** 2026-08-14 (90 days)
+- **Renewed:** 2026-08-15 — re-checked `cdn.sheetjs.com`; 0.20.3 is
+  still the newest published tarball, so there is no newer release to
+  bump to and we remain past the GHSA-summary fix range.
+- **Expires:** 2026-11-13 (90 days)
 - **Mirror:** `osv-scanner.toml#IgnoredVulns[0]`
 
 #### W-002 — `GHSA-5pgg-2g8v-p4x9` (xlsx ReDoS)
@@ -207,7 +210,9 @@ When a gate forces a waiver, append an entry below with:
   CDN-distributed. Not actually exploitable on 0.20.3.
 - **Follow-up:** Same as W-001 — track upstream.
 - **Granted:** 2026-05-14
-- **Expires:** 2026-08-14 (90 days)
+- **Renewed:** 2026-08-15 — same re-check as W-001; 0.20.3 remains the
+  newest SheetJS tarball.
+- **Expires:** 2026-11-13 (90 days)
 - **Mirror:** `osv-scanner.toml#IgnoredVulns[1]`
 
 #### W-003 — `GHSA-5p2g-fcmc-qvqq` (image-size JXL/HEIF infinite loop)

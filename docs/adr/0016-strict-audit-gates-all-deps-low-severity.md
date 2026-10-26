@@ -3,8 +3,8 @@
 - **Status:** Accepted
 - **Date:** 2026-05-14
 - **Supersedes:** ADR-0015 (the SBOM / CodeQL / Dependabot / SHA-pinning
-  infrastructure decisions are preserved verbatim — only the *gating
-  scope and severity* are revised).
+  infrastructure decisions are preserved verbatim — only the _gating
+  scope and severity_ are revised).
 - **Related:** ADR-0001 (client-side), ADR-0002 (SheetJS tarball),
   ADR-0013 (container).
 
@@ -13,7 +13,7 @@
 ADR-0015 established the supply-chain hardening baseline: SBOM on every
 build, CodeQL, Dependabot, action SHA pinning, Trivy container scan,
 and `SECURITY.md`. It deliberately scoped the **gating** policy to
-*production dependencies* (`npm audit --omit=dev`) at *Moderate+*
+_production dependencies_ (`npm audit --omit=dev`) at _Moderate+_
 severity, on the reasoning that devDependencies never ship to end
 users.
 
@@ -25,13 +25,13 @@ That scope is being revisited.
   across the dep graph, while `npm audit` reports 0 (prod + dev, all
   severities). The discrepancy is the GHSA database scan including
   advisories that npm's audit feed has filtered (withdrawn, redirected,
-  or aged-out advisories). These alerts are *visible* to repo
+  or aged-out advisories). These alerts are _visible_ to repo
   consumers regardless of our CI policy, which makes the divergence a
   trust problem even when shipping bytes are unaffected.
 - The Moderate+ floor leaves Low-severity advisories silent. A
   Low-severity advisory in a dev tool (e.g., a regex DoS in a Vitest
   transitive) cannot harm an end user, but it can foreshadow an
-  upstream regression that *will* matter at the next minor bump.
+  upstream regression that _will_ matter at the next minor bump.
 - The project values **provable** security posture over minimum-
   necessary security posture. A green Security tab is a clearer
   signal to auditors and downstream consumers than a green CI with a
@@ -45,7 +45,7 @@ Replace the gating clause of ADR-0015 with:
    `npm audit`. Drop the dev-exclusion from the OSV gate. CodeQL,
    Dependabot, Trivy, and the SBOM scope are unchanged — they already
    covered the full graph or production-only as appropriate; only the
-   *audit gates* are rescoped.
+   _audit gates_ are rescoped.
 
 2. **LOW+ severity, not Moderate+.** Change `--audit-level=moderate`
    to `--audit-level=low`. Update the OSV SARIF Moderate+ jq filter
@@ -54,8 +54,8 @@ Replace the gating clause of ADR-0015 with:
    GHSA-issued CVE and would gate on noise.
 
 3. **SBOM scope unchanged.** The CycloneDX SBOM still uses
-   `--omit dev` because the SBOM describes *what ships*, not *what is
-   developed against*. Shipping a dev-included SBOM would over-claim
+   `--omit dev` because the SBOM describes _what ships_, not _what is
+   developed against_. Shipping a dev-included SBOM would over-claim
    the runtime surface area to consumers. Auditors who want the dev
    graph can reproduce it from `package-lock.json`.
 
@@ -184,7 +184,7 @@ When a gate forces a waiver, append an entry below with:
 
 - **Severity:** HIGH (CVSS 7.8)
 - **Dependency path:** root → `xlsx@0.20.3` (CDN tarball, ADR-0002)
-- **Why we can't fix today:** The GHSA *summary* declares the affected
+- **Why we can't fix today:** The GHSA _summary_ declares the affected
   range as `< 0.19.3`. We ship `0.20.3` via the SheetJS CDN tarball,
   so we are past the fix. The OSV.dev record, however, encodes the
   range as `{introduced: 0, no fixed event}`, treating every xlsx
@@ -252,4 +252,4 @@ When a gate forces a waiver, append an entry below with:
 
 ### Expired waivers (history)
 
-*None.*
+_None._

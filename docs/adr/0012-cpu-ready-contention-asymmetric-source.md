@@ -9,7 +9,7 @@
 vsizer's V1 metrics describe **capacity** (physical / consumed / available
 GHz and RAM) and **mean utilization** (capacity-weighted CPU%/RAM% per
 cluster, per ADR-0011). They are silent on **contention**: the share of
-runtime a VM spends *ready to execute* but unable to obtain a physical
+runtime a VM spends _ready to execute_ but unable to obtain a physical
 core. VMware exposes this as `summary.quickStats.OverallCpuReadiness`
 and the vSphere PerfManager counter `cpu.ready.summation` (called %RDY
 in `esxtop`).
@@ -25,10 +25,10 @@ its current VMs.
 A factual inspection of two real exports the team uses regularly
 established what each source actually exposes:
 
-| Source                    | CPU Ready exposed | Sheet (already parsed)         | Column header                  | Granularity                                |
-| ------------------------- | ----------------- | ------------------------------ | ------------------------------ | ------------------------------------------ |
-| RVTools 4.x XLSX          | ✅ yes            | `vInfo`                        | **`Overall Cpu Readiness`**    | per-VM, instantaneous (last ~20 s sample)  |
-| Live Optics 2025+ XLSX    | ❌ no             | `VM Performance` / `ESX Performance` | none — only Peak/Avg utilization, IOPS, latency | n/a                                        |
+| Source                 | CPU Ready exposed | Sheet (already parsed)               | Column header                                   | Granularity                               |
+| ---------------------- | ----------------- | ------------------------------------ | ----------------------------------------------- | ----------------------------------------- |
+| RVTools 4.x XLSX       | ✅ yes            | `vInfo`                              | **`Overall Cpu Readiness`**                     | per-VM, instantaneous (last ~20 s sample) |
+| Live Optics 2025+ XLSX | ❌ no             | `VM Performance` / `ESX Performance` | none — only Peak/Avg utilization, IOPS, latency | n/a                                       |
 
 RVTools fetches the value via the vSphere `PropertyCollector` from each
 VM's `summary.quickStats` — same code path that already populates
@@ -92,10 +92,10 @@ that follows it.
 `ClusterAggregate` gains four fields:
 
 ```ts
-meanCpuReadinessPercent: number | null  // arithmetic mean over reporters
-maxCpuReadinessPercent:  number | null  // largest reported value
-vmsAboveReadinessWarning: number        // count of reporters > 5 %
-readinessAvailable:       boolean       // ≥1 powered-on VM reported
+meanCpuReadinessPercent: number | null // arithmetic mean over reporters
+maxCpuReadinessPercent: number | null // largest reported value
+vmsAboveReadinessWarning: number // count of reporters > 5 %
+readinessAvailable: boolean // ≥1 powered-on VM reported
 ```
 
 The arithmetic mean (not vCPU-weighted) is intentional: the cluster
@@ -113,14 +113,12 @@ For each cluster where `readinessAvailable && vmsAboveReadinessWarning
 > 0`, append **one** annex slide immediately after the cluster slide.
 Layout: header rail (mirrors `clusterSlide.ts:82-101`), title
 **`"VMs avec CPU Ready le plus élevé — {{cluster}}"`** (FR) /
-`"VMs with the highest CPU Ready — {{cluster}}"` (EN), subtitle
-`"Source : RVTools vInfo · Overall Cpu Readiness · seuil de référence : 5 %"`,
-manual table (alternating-stripe `addShape` + `addText` per the
-`overviewSlide.ts:140-148` idiom — there is no `addTable` usage in the
-codebase). Columns: `#`, `VM`, `vCPU`, `CPU Ready`, `Cluster`. Top-10
+`"VMs with the highest CPU Ready — {{cluster}}"`(EN), subtitle`"Source : RVTools vInfo · Overall Cpu Readiness · seuil de référence : 5 %"`,
+manual table (alternating-stripe `addShape`+`addText`per the`overviewSlide.ts:140-148`idiom — there is no`addTable`usage in the
+codebase). Columns:`#`, `VM`, `vCPU`, `CPU Ready`, `Cluster`. Top-10
 sorted descending by Ready %. Footer reference legend with three color
 swatches (`<5 % · 5–10 % · >10 %`) — these are status colors, not
-verdicts (see §6 below).
+> verdicts (see §6 below).
 
 The annex slide is **never inserted** when readiness is unavailable
 (Live Optics) or when no VM crosses the warning threshold. A cluster

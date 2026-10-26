@@ -196,7 +196,7 @@ updates:
     schedule: { interval: weekly }
     groups:
       actions:
-        patterns: ['*']
+        patterns: ["*"]
   - package-ecosystem: docker
     directory: /
     schedule: { interval: weekly }
@@ -229,17 +229,17 @@ We aim to acknowledge within 7 days and ship a fix within 30.
 
 Each unit is small and has one job:
 
-| Unit | Purpose | Inputs | Outputs |
-|---|---|---|---|
-| `npm audit` step | Block moderate+ advisories in prod deps | `package-lock.json` | exit 0 / 1 |
-| OSV scanner step | Cross-check with OSV DB; feeds Code Scanning | `package-lock.json` | SARIF |
-| `cyclonedx-npm` step | Emit standard SBOM for prod graph | `package.json`, `package-lock.json` | `sbom.cdx.json` |
-| Release-upload step | Persist SBOMs as release assets | `sbom.cdx.json`, tag | GH release asset |
-| CodeQL workflow | TS source static analysis | `src/**` | SARIF → Security tab |
-| Trivy image step | CVE scan of built container | `vsizer:smoke` | SARIF (warn) |
-| Dependabot | Automated dep PRs | Schedule, configs | PRs |
-| SECURITY.md | Disclosure path | — | Documentation |
-| ADR-0015 | Policy of record | — | Documentation |
+| Unit                 | Purpose                                      | Inputs                              | Outputs              |
+| -------------------- | -------------------------------------------- | ----------------------------------- | -------------------- |
+| `npm audit` step     | Block moderate+ advisories in prod deps      | `package-lock.json`                 | exit 0 / 1           |
+| OSV scanner step     | Cross-check with OSV DB; feeds Code Scanning | `package-lock.json`                 | SARIF                |
+| `cyclonedx-npm` step | Emit standard SBOM for prod graph            | `package.json`, `package-lock.json` | `sbom.cdx.json`      |
+| Release-upload step  | Persist SBOMs as release assets              | `sbom.cdx.json`, tag                | GH release asset     |
+| CodeQL workflow      | TS source static analysis                    | `src/**`                            | SARIF → Security tab |
+| Trivy image step     | CVE scan of built container                  | `vsizer:smoke`                      | SARIF (warn)         |
+| Dependabot           | Automated dep PRs                            | Schedule, configs                   | PRs                  |
+| SECURITY.md          | Disclosure path                              | —                                   | Documentation        |
+| ADR-0015             | Policy of record                             | —                                   | Documentation        |
 
 ## Error handling
 
@@ -256,6 +256,7 @@ Each unit is small and has one job:
 ## Testing
 
 - **Local dry-run before pushing:**
+
   ```
   npm audit --audit-level=moderate --omit=dev
   npx --yes @cyclonedx/cyclonedx-npm@latest \

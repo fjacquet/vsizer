@@ -15,12 +15,12 @@ dependencies. The deck reports numbers; the speaker tells the story.
 
 ## 2. Users
 
-| Persona              | Scenario                                                    |
-| -------------------- | ----------------------------------------------------------- |
-| Presales engineer    | Drops a customer's RVTools export, screen-shares the deck   |
-| Account executive    | Generates a deck before a discovery call, no engineering    |
-| Channel partner      | Uses the public URL on their own laptop with no Dell SSO    |
-| End customer (read)  | Receives the PPTX, opens in PowerPoint or Keynote           |
+| Persona             | Scenario                                                  |
+| ------------------- | --------------------------------------------------------- |
+| Presales engineer   | Drops a customer's RVTools export, screen-shares the deck |
+| Account executive   | Generates a deck before a discovery call, no engineering  |
+| Channel partner     | Uses the public URL on their own laptop with no Dell SSO  |
+| End customer (read) | Receives the PPTX, opens in PowerPoint or Keynote         |
 
 The web app must work for someone whose IT forbids file uploads to third-party SaaS — a
 hard constraint that drives many architectural decisions (see ADR-0001).
@@ -127,13 +127,13 @@ the 2026-05-14 update on the `'none'` → `'self'` relaxation.
 The output is a 16:9 deck (13.333 × 7.5 inches) with the Midnight Executive palette.
 Layout differences vs. the legacy Python script (see `.reference/build_pptx.py`):
 
-| Legacy slide | V1 action |
-| --- | --- |
-| Hero "Vos serveurs ronronnent" | **Removed** — replaced with a neutral title slide showing the app name, date, and source filename. |
-| "Le constat : sizing en vCPU ≠ consommation réelle" | **Removed entirely** — that's editorial framing, not data. |
-| Overview | **Kept** with a neutral header ("Utilisation CPU & RAM par cluster"). The "Marge libérable" judgment column becomes "GHz disponibles" — same number, no value-laden adjective. |
-| Cluster slide | **Kept** — but the bottom navy banner loses the "💡 RESIZE EN GHZ — POTENTIEL" framing, the "Ce cluster ronronne à X %" line, and the "Marge libérable" column. The four data tiles become: `vCPU alloués · Capacité réservée (vCPU × clock host) · GHz consommés · GHz disponibles`. |
-| "Du sizing vCPU au sizing GHz" + 4 recommendations | **Removed entirely** — narrative belongs on the speaker, not the page. |
+| Legacy slide                                        | V1 action                                                                                                                                                                                                                                                                             |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hero "Vos serveurs ronronnent"                      | **Removed** — replaced with a neutral title slide showing the app name, date, and source filename.                                                                                                                                                                                    |
+| "Le constat : sizing en vCPU ≠ consommation réelle" | **Removed entirely** — that's editorial framing, not data.                                                                                                                                                                                                                            |
+| Overview                                            | **Kept** with a neutral header ("Utilisation CPU & RAM par cluster"). The "Marge libérable" judgment column becomes "GHz disponibles" — same number, no value-laden adjective.                                                                                                        |
+| Cluster slide                                       | **Kept** — but the bottom navy banner loses the "💡 RESIZE EN GHZ — POTENTIEL" framing, the "Ce cluster ronronne à X %" line, and the "Marge libérable" column. The four data tiles become: `vCPU alloués · Capacité réservée (vCPU × clock host) · GHz consommés · GHz disponibles`. |
+| "Du sizing vCPU au sizing GHz" + 4 recommendations  | **Removed entirely** — narrative belongs on the speaker, not the page.                                                                                                                                                                                                                |
 
 The GHz math is unchanged — that's data. Only language and conclusions disappear.
 
@@ -200,14 +200,14 @@ The GHz math is unchanged — that's data. Only language and conclusions disappe
   Python tool ± rounding, and the deck contains **zero** editorial language.
 - DevTools → Network shows no outbound requests beyond the static asset bundle.
 - All four CI gates green on `main` (typecheck, lint, test:run, build) with engines
-  + utils coverage ≥ 75 %.
+  - utils coverage ≥ 75 %.
 
 ## 8. Risks (V1)
 
-| Risk | Mitigation |
-| --- | --- |
-| Real RVTools / Live Optics column names don't match our aliases | Manual mapping panel; growing alias list as users hit edge cases |
-| Massive workbook (> 200 MB) freezes the UI thread | Document the cap in the README; later move parsing to a Web Worker |
-| Browser memory pressure on 1000+ host estates | Same — Worker is the answer if it becomes real |
+| Risk                                                                              | Mitigation                                                                                           |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Real RVTools / Live Optics column names don't match our aliases                   | Manual mapping panel; growing alias list as users hit edge cases                                     |
+| Massive workbook (> 200 MB) freezes the UI thread                                 | Document the cap in the README; later move parsing to a Web Worker                                   |
+| Browser memory pressure on 1000+ host estates                                     | Same — Worker is the answer if it becomes real                                                       |
 | `pptxgenjs` produces a deck that looks subtly different from the Python reference | Visual QA against `.reference/slide-*.jpg` images; pixel parity is **not** required, brand parity is |
-| Translator hands back invalid JSON | Biome formats JSON as part of `lint:fix`; tests assert all namespaces parse |
+| Translator hands back invalid JSON                                                | Biome formats JSON as part of `lint:fix`; tests assert all namespaces parse                          |

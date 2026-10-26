@@ -2,7 +2,7 @@
 
 **Date**: 2026-05-13
 **Status**: Approved — ready for implementation planning
-**Closes**: [#2](https://github.com/fjacquet/vsizer/issues/2) — *Provide container images for testing.*
+**Closes**: [#2](https://github.com/fjacquet/vsizer/issues/2) — _Provide container images for testing._
 **Companion ADR**: 0013-container-image-distribution (to be authored during implementation)
 
 ---
@@ -212,14 +212,14 @@ Per `memory:doc-first-workflow`, every non-trivial change writes ADR + CHANGELOG
 before code. Authored in this order during implementation:
 
 1. **`docs/adr/0013-container-image-distribution.md`** — Nygard format.
-   - *Context*: issue #2; users wanting to run vsizer offline or in air-gapped environments.
-   - *Decision*: publish a hardened nginx-unprivileged image to GHCR; build with `base='/'`;
+   - _Context_: issue #2; users wanting to run vsizer offline or in air-gapped environments.
+   - _Decision_: publish a hardened nginx-unprivileged image to GHCR; build with `base='/'`;
      enforce ADR-0001 via CSP `connect-src 'none'`.
-   - *Consequences*: dual-base-path build, public GHCR dependency, externalised FOUC script,
+   - _Consequences_: dual-base-path build, public GHCR dependency, externalised FOUC script,
      new workflow.
 2. **`CHANGELOG.md`** — open `[Unreleased]` section under `### Added`:
-   *"Container image distribution via GHCR (ADR-0013) — `ghcr.io/fjacquet/vsizer` multi-arch
-   (amd64/arm64), CSP-hardened nginx static server."*
+   _"Container image distribution via GHCR (ADR-0013) — `ghcr.io/fjacquet/vsizer` multi-arch
+   (amd64/arm64), CSP-hardened nginx static server."_
 3. **`README.md`** — add a "Run with Docker" subsection right after the Quick start:
 
    ```bash
@@ -245,14 +245,14 @@ before code. Authored in this order during implementation:
 
 ## 7. Risks & mitigations
 
-| Risk | Mitigation |
-|---|---|
-| CSP breaks pptxgenjs blob download in production. | `worker-src 'self' blob:` + `img-src 'self' data: blob:` already covers it. Manual verification step §6 catches regressions. |
-| Tailwind v4 emits inline `<style>` blocks that CSP `style-src 'self'` would block. | Keep `'unsafe-inline'` in `style-src` for v1; revisit if Tailwind moves to fully external stylesheets. |
-| Externalising the FOUC script causes visible flash on first paint. | `<script src="/theme-init.js">` placed before any `<link rel="stylesheet">` in `<head>`. Render-blocking same-origin script; flash is sub-frame in practice. |
-| arm64 build via QEMU is slow (~5-7 min extra). | Acceptable cost. Buildx GHA cache amortises across runs. |
-| `:latest` and `:edge` confuse users. | README documents both: `:latest` = released, `:edge` = main HEAD. |
-| GHCR free tier limits for public packages. | Public packages have no pull rate limit on GHCR; storage is free for public repos. |
+| Risk                                                                               | Mitigation                                                                                                                                                   |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| CSP breaks pptxgenjs blob download in production.                                  | `worker-src 'self' blob:` + `img-src 'self' data: blob:` already covers it. Manual verification step §6 catches regressions.                                 |
+| Tailwind v4 emits inline `<style>` blocks that CSP `style-src 'self'` would block. | Keep `'unsafe-inline'` in `style-src` for v1; revisit if Tailwind moves to fully external stylesheets.                                                       |
+| Externalising the FOUC script causes visible flash on first paint.                 | `<script src="/theme-init.js">` placed before any `<link rel="stylesheet">` in `<head>`. Render-blocking same-origin script; flash is sub-frame in practice. |
+| arm64 build via QEMU is slow (~5-7 min extra).                                     | Acceptable cost. Buildx GHA cache amortises across runs.                                                                                                     |
+| `:latest` and `:edge` confuse users.                                               | README documents both: `:latest` = released, `:edge` = main HEAD.                                                                                            |
+| GHCR free tier limits for public packages.                                         | Public packages have no pull rate limit on GHCR; storage is free for public repos.                                                                           |
 
 ## 8. Open items (none blocking)
 

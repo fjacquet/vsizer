@@ -51,7 +51,7 @@ the language and the conclusions disappear.
 
 **Negative**
 
-- A speaker who *liked* the editorial framing has to deliver it orally. That's a
+- A speaker who _liked_ the editorial framing has to deliver it orally. That's a
   feature for partners, a regression for the original author. We accept that:
   vsizer is for the partner case; the author still has the Python script.
 - Stripping the closing slide removes a built-in prompt for next steps. The

@@ -10,10 +10,10 @@ name: Container image
 
 on:
   push:
-    branches: ['main']
-    tags: ['v*']
+    branches: ["main"]
+    tags: ["v*"]
   pull_request:
-    branches: ['main']
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -21,7 +21,7 @@ permissions:
   packages: write
   id-token: write
   attestations: write
-  security-events: write  # ADR-0015: Trivy SARIF upload to Code Scanning
+  security-events: write # ADR-0015: Trivy SARIF upload to Code Scanning
 
 concurrency:
   group: container-${{ github.ref }}
@@ -32,26 +32,26 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   # Opt into Node 24 for docker/* javascript actions ahead of the 2026-06-02
   # default flip — keeps us on the latest runtime the runner offers.
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1  # v4.4.0
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
         with:
           platforms: arm64
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Log in to GHCR
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6  # v4.7.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -59,7 +59,7 @@ jobs:
 
       - name: Extract image metadata
         id: meta
-        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302  # v6.2.0
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -74,7 +74,7 @@ jobs:
       # First pass: amd64 only, loaded locally for the smoke test. Push is
       # disabled here; the second pass handles publish.
       - name: Build amd64 image (local load for smoke test)
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: ./Dockerfile
@@ -118,7 +118,7 @@ jobs:
           docker stop vsizer-smoke
 
       - name: Scan image with Trivy (gate)
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: vsizer:smoke
           format: sarif
@@ -128,12 +128,12 @@ jobs:
           # after the v1.4.0 nginx-unprivileged:1.29-alpine + node:26-alpine
           # bump dropped the Security-tab count from ~88 to 0. Any new
           # HIGH/CRITICAL with a fix available now fails the container build.
-          exit-code: '1'
+          exit-code: "1"
           ignore-unfixed: true
 
       - name: Upload Trivy SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370  # v4.39.1
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: trivy-results.sarif
           category: trivy-image
@@ -142,7 +142,7 @@ jobs:
       # Second pass: multi-arch, publishes only on non-PR events. Reuses the
       # GHA cache from the first pass; only arm64 is new work.
       - name: Build and publish multi-arch image
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: ./Dockerfile

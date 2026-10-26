@@ -74,17 +74,17 @@ Executive. That's the right trade because:
 
 Mapping (no new CSS variables; we use existing Tailwind utilities):
 
-| Concern | Light | Dark |
-| --- | --- | --- |
-| Page bg | `bg-slate-50` | `bg-surface-900` |
-| Panel bg | `bg-white` | `bg-surface-800` |
-| Subtle border | `border-slate-200` | `border-surface-700` |
-| Primary text | `text-slate-900` | `text-slate-100` |
-| Secondary text | `text-slate-500..700` | `text-slate-300..400` |
-| Most muted | `text-slate-400..500` | `text-slate-500` |
-| Accent gold (`accent-500`) | unchanged | unchanged |
-| Status colors (low/mid/high) | unchanged | unchanged |
-| Navy data banner (`bg-primary-900`) | unchanged | unchanged — intentional contrast block in both modes |
+| Concern                             | Light                 | Dark                                                 |
+| ----------------------------------- | --------------------- | ---------------------------------------------------- |
+| Page bg                             | `bg-slate-50`         | `bg-surface-900`                                     |
+| Panel bg                            | `bg-white`            | `bg-surface-800`                                     |
+| Subtle border                       | `border-slate-200`    | `border-surface-700`                                 |
+| Primary text                        | `text-slate-900`      | `text-slate-100`                                     |
+| Secondary text                      | `text-slate-500..700` | `text-slate-300..400`                                |
+| Most muted                          | `text-slate-400..500` | `text-slate-500`                                     |
+| Accent gold (`accent-500`)          | unchanged             | unchanged                                            |
+| Status colors (low/mid/high)        | unchanged             | unchanged                                            |
+| Navy data banner (`bg-primary-900`) | unchanged             | unchanged — intentional contrast block in both modes |
 
 The cluster card's bottom data banner stays navy in both modes — it's a brand
 element, designed for contrast against any page background, not a surface

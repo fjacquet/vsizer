@@ -22,7 +22,7 @@ in three places:
 1. `FileDropzone` — single `<input>` and `dataTransfer.files[0]`.
 2. `useDatasetUpload` — `uploadFile(file: File)` parses one workbook.
 3. `datasetStore` — `setDataset` replaces all state; `file: File | null`
-   holds the *one* source file.
+   holds the _one_ source file.
 
 Multi-file is therefore a UX + orchestration change, not a math change.
 
@@ -43,8 +43,8 @@ Accept N files in a single drop. Implementation:
 3. **Collision resolution.** A new pure function
    `resolveClusterCollisions(perFile)` concatenates all rows and
    rewrites cluster names that appear in more than one file's host
-   rows to `"<cluster> (<filename without extension>)"` for *every
-   contributing file*. Clusters that appear in only one file are
+   rows to `"<cluster> (<filename without extension>)"` for _every
+   contributing file_. Clusters that appear in only one file are
    untouched. The host-side defines the cluster set (same convention
    as `aggregateClusters`); VM-side rows from the same file get the
    matching rewrite so the host/VM join survives downstream.

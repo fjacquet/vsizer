@@ -27,8 +27,8 @@ They were never reachable: vsizer is a static SPA, the healthcheck uses
 
 The packages are present only because the upstream
 `docker-nginx-unprivileged` Alpine Dockerfile explicitly runs
-`apk add --no-cache curl ca-certificates` with the comment *"Bring in
-curl and ca-certificates to make registering on DNS SD easier"* — a
+`apk add --no-cache curl ca-certificates` with the comment _"Bring in
+curl and ca-certificates to make registering on DNS SD easier"_ — a
 service-discovery convenience irrelevant to a static-file server.
 
 Inspection of the base image (Alpine 3.23.4, `curl`/`libcurl`

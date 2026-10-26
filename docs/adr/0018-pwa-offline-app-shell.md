@@ -45,7 +45,7 @@ strategy) in **prompt** mode.
    LOW+ advisory.
 
 2. **Prompt-to-reload update UX.** `registerType: 'prompt'`: a new SW
-   *waits*; it never auto-`skipWaiting`/`clientsClaim`. Registration
+   _waits_; it never auto-`skipWaiting`/`clientsClaim`. Registration
    goes through the framework-agnostic `virtual:pwa-register` module
    inside `src/pwa/registerSW.ts`, which surfaces the update via the
    existing `sonner` toaster with i18n strings (`common:pwa.*`) and a

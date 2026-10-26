@@ -22,17 +22,17 @@
 
 ## File structure
 
-| File | Status | Responsibility |
-|---|---|---|
-| `SECURITY.md` | NEW | Disclosure policy (GitHub-native private advisory) |
-| `docs/adr/0015-security-audit-and-supply-chain-policy.md` | NEW | Policy of record (Moderate+ gates, SBOM, SHA pins, etc.) |
-| `docs/adr/README.md` | MODIFY | Append index row for ADR-0015 |
-| `CHANGELOG.md` | MODIFY | `[Unreleased]` entry |
-| `README.md` | MODIFY | Add "Security" section + SBOM badge |
-| `.github/dependabot.yml` | NEW | Weekly grouped updates for npm / actions / docker |
-| `.github/workflows/codeql.yml` | NEW | JS/TS static analysis, PR + weekly |
-| `.github/workflows/static.yml` | MODIFY | Add audit, OSV, SBOM, SHA pins, release upload |
-| `.github/workflows/container.yml` | MODIFY | Add Trivy warn-step, SHA pins |
+| File                                                      | Status | Responsibility                                           |
+| --------------------------------------------------------- | ------ | -------------------------------------------------------- |
+| `SECURITY.md`                                             | NEW    | Disclosure policy (GitHub-native private advisory)       |
+| `docs/adr/0015-security-audit-and-supply-chain-policy.md` | NEW    | Policy of record (Moderate+ gates, SBOM, SHA pins, etc.) |
+| `docs/adr/README.md`                                      | MODIFY | Append index row for ADR-0015                            |
+| `CHANGELOG.md`                                            | MODIFY | `[Unreleased]` entry                                     |
+| `README.md`                                               | MODIFY | Add "Security" section + SBOM badge                      |
+| `.github/dependabot.yml`                                  | NEW    | Weekly grouped updates for npm / actions / docker        |
+| `.github/workflows/codeql.yml`                            | NEW    | JS/TS static analysis, PR + weekly                       |
+| `.github/workflows/static.yml`                            | MODIFY | Add audit, OSV, SBOM, SHA pins, release upload           |
+| `.github/workflows/container.yml`                         | MODIFY | Add Trivy warn-step, SHA pins                            |
 
 ---
 
@@ -230,7 +230,7 @@ When an audit gate forces a waiver, append an entry here with:
 Find the table at the end of the file and append the row:
 
 ```markdown
-| 0015 | Security audit & supply-chain policy               | Accepted |
+| 0015 | Security audit & supply-chain policy | Accepted |
 ```
 
 The closing `|` matters — match the surrounding rows exactly.
@@ -405,7 +405,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: '04:00'
+      time: "04:00"
       timezone: Etc/UTC
     open-pull-requests-limit: 10
     labels:
@@ -425,7 +425,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: '04:00'
+      time: "04:00"
       timezone: Etc/UTC
     open-pull-requests-limit: 5
     labels:
@@ -434,14 +434,14 @@ updates:
     groups:
       actions:
         patterns:
-          - '*'
+          - "*"
 
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
       day: monday
-      time: '04:00'
+      time: "04:00"
       timezone: Etc/UTC
     open-pull-requests-limit: 3
     labels:
@@ -524,12 +524,12 @@ name: CodeQL
 
 on:
   push:
-    branches: ['main']
+    branches: ["main"]
   pull_request:
-    branches: ['main']
+    branches: ["main"]
   schedule:
     # Weekly, Monday 04:23 UTC — staggered from Dependabot.
-    - cron: '23 4 * * 1'
+    - cron: "23 4 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -548,18 +548,18 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@<CHECKOUT_SHA>  # v6.x.x
+        uses: actions/checkout@<CHECKOUT_SHA> # v6.x.x
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@<CODEQL_SHA>  # v3.x.x
+        uses: github/codeql-action/init@<CODEQL_SHA> # v3.x.x
         with:
           languages: javascript-typescript
           queries: security-extended
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@<CODEQL_SHA>  # v3.x.x
+        uses: github/codeql-action/analyze@<CODEQL_SHA> # v3.x.x
         with:
-          category: '/language:javascript-typescript'
+          category: "/language:javascript-typescript"
 ```
 
 - [ ] **Step 3: Validate YAML**
@@ -603,11 +603,11 @@ in Task 8 so a regression is easy to bisect.
 Open `.github/workflows/static.yml`. The current build job ends with:
 
 ```yaml
-      - name: Build
-        run: npm run build
+- name: Build
+  run: npm run build
 
-      - name: Setup Pages
-        if: github.event_name != 'pull_request'
+- name: Setup Pages
+  if: github.event_name != 'pull_request'
 ```
 
 Insert the SBOM steps **between** `Build` and `Setup Pages`.
@@ -615,27 +615,27 @@ Insert the SBOM steps **between** `Build` and `Setup Pages`.
 - [ ] **Step 2: Add SBOM generation + upload**
 
 ```yaml
-      - name: Generate CycloneDX SBOM (prod deps)
-        run: |
-          npx --yes @cyclonedx/cyclonedx-npm@latest \
-            --omit dev \
-            --output-format JSON \
-            --output-file sbom.cdx.json
-          # Smoke-check the SBOM is valid JSON and has components.
-          components=$(jq '.components | length' sbom.cdx.json)
-          echo "SBOM components: $components"
-          if [ "$components" -lt 1 ]; then
-            echo "::error::SBOM has zero components — aborting"
-            exit 1
-          fi
+- name: Generate CycloneDX SBOM (prod deps)
+  run: |
+    npx --yes @cyclonedx/cyclonedx-npm@latest \
+      --omit dev \
+      --output-format JSON \
+      --output-file sbom.cdx.json
+    # Smoke-check the SBOM is valid JSON and has components.
+    components=$(jq '.components | length' sbom.cdx.json)
+    echo "SBOM components: $components"
+    if [ "$components" -lt 1 ]; then
+      echo "::error::SBOM has zero components — aborting"
+      exit 1
+    fi
 
-      - name: Upload SBOM artefact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom-cyclonedx
-          path: sbom.cdx.json
-          if-no-files-found: error
-          retention-days: 90
+- name: Upload SBOM artefact
+  uses: actions/upload-artifact@v4
+  with:
+    name: sbom-cyclonedx
+    path: sbom.cdx.json
+    if-no-files-found: error
+    retention-days: 90
 ```
 
 (The `@v4` for `upload-artifact` will be pinned to a SHA in Task 9.)
@@ -681,59 +681,59 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 Insert the gates **after `Install dependencies` and before `Type check`**:
 
 ```yaml
-      - name: Install dependencies
-        run: npm ci
-      # <— insert here —>
-      - name: Type check
-        run: npm run typecheck
+- name: Install dependencies
+  run: npm ci
+# <— insert here —>
+- name: Type check
+  run: npm run typecheck
 ```
 
 - [ ] **Step 2: Add the gates**
 
 ```yaml
-      - name: npm audit (prod, Moderate+)
-        run: npm audit --audit-level=moderate --omit=dev
+- name: npm audit (prod, Moderate+)
+  run: npm audit --audit-level=moderate --omit=dev
 
-      - name: OSV-Scanner (lockfile)
-        uses: google/osv-scanner-action@v1.9.0
-        with:
-          scan-args: |-
-            --lockfile=./package-lock.json
-            --format=sarif
-            --output=osv-results.sarif
-        # OSV's default exit code is 1 on any vulnerability found.
-        # We want Moderate+ — filter post-scan via jq to avoid
-        # gating on Low/Unknown. Step itself runs to completion.
-        continue-on-error: true
+- name: OSV-Scanner (lockfile)
+  uses: google/osv-scanner-action@v1.9.0
+  with:
+    scan-args: |-
+      --lockfile=./package-lock.json
+      --format=sarif
+      --output=osv-results.sarif
+  # OSV's default exit code is 1 on any vulnerability found.
+  # We want Moderate+ — filter post-scan via jq to avoid
+  # gating on Low/Unknown. Step itself runs to completion.
+  continue-on-error: true
 
-      - name: Upload OSV SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: osv-results.sarif
-          category: osv-scanner
-        continue-on-error: true
+- name: Upload OSV SARIF
+  if: always()
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: osv-results.sarif
+    category: osv-scanner
+  continue-on-error: true
 
-      - name: Gate on OSV Moderate+
-        run: |
-          if [ ! -f osv-results.sarif ]; then
-            echo "::warning::OSV produced no SARIF — treating as clean."
-            exit 0
-          fi
-          # Severity comes from the rule's properties.severity field.
-          # Moderate, High, Critical → fail. Low / unknown → pass.
-          # Use jq to count Moderate+ findings.
-          mod_plus=$(jq '[.runs[].results[]?
-            | select(
-                ([.properties.severity? // ""
-                  , .level? // ""] | join(" ") | ascii_downcase) as $sev
-                | $sev | test("(moderate|high|critical|error)")
-              )] | length' osv-results.sarif)
-          echo "OSV Moderate+ findings: $mod_plus"
-          if [ "$mod_plus" -gt 0 ]; then
-            echo "::error::OSV found $mod_plus Moderate+ advisory(ies)"
-            exit 1
-          fi
+- name: Gate on OSV Moderate+
+  run: |
+    if [ ! -f osv-results.sarif ]; then
+      echo "::warning::OSV produced no SARIF — treating as clean."
+      exit 0
+    fi
+    # Severity comes from the rule's properties.severity field.
+    # Moderate, High, Critical → fail. Low / unknown → pass.
+    # Use jq to count Moderate+ findings.
+    mod_plus=$(jq '[.runs[].results[]?
+      | select(
+          ([.properties.severity? // ""
+            , .level? // ""] | join(" ") | ascii_downcase) as $sev
+          | $sev | test("(moderate|high|critical|error)")
+        )] | length' osv-results.sarif)
+    echo "OSV Moderate+ findings: $mod_plus"
+    if [ "$mod_plus" -gt 0 ]; then
+      echo "::error::OSV found $mod_plus Moderate+ advisory(ies)"
+      exit 1
+    fi
 ```
 
 (Versions `@v1.9.0`, `@v3`, `@v4` are placeholders — Task 9 replaces
@@ -849,14 +849,14 @@ For each workflow, for each `uses:` line, replace `@v<X>` with `@<SHA>  # v<X.Y.
 
 Example before:
 ```yaml
-      - name: Checkout
-        uses: actions/checkout@v6
+- name: Checkout
+  uses: actions/checkout@v6
 ```
 
 Example after:
 ```yaml
-      - name: Checkout
-        uses: actions/checkout@a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2  # v6.0.0
+- name: Checkout
+  uses: actions/checkout@a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2 # v6.0.0
 ```
 
 Use `sed` for mechanical replacement, then visually re-read the diff.
@@ -912,30 +912,30 @@ floating tag which Task 9 has already replaced if it ran first. Plan
 order has 10 after 9, so this insertion will use the SHA directly.)
 
 ```yaml
-      - name: Resolve Trivy action SHA
-        id: trivy-sha
-        run: |
-          # Pinned at write time; see ADR-0015. Update via Dependabot.
-          echo 'sha=<TRIVY_SHA>' >> "$GITHUB_OUTPUT"
+- name: Resolve Trivy action SHA
+  id: trivy-sha
+  run: |
+    # Pinned at write time; see ADR-0015. Update via Dependabot.
+    echo 'sha=<TRIVY_SHA>' >> "$GITHUB_OUTPUT"
 
-      - name: Scan image with Trivy (warn-only)
-        uses: aquasecurity/trivy-action@<TRIVY_SHA>  # vX.Y.Z
-        with:
-          image-ref: vsizer:smoke
-          format: sarif
-          output: trivy-results.sarif
-          severity: HIGH,CRITICAL
-          exit-code: '0'   # warn-only until promoted to gate (ADR-0015)
-          ignore-unfixed: true
-        continue-on-error: true
+- name: Scan image with Trivy (warn-only)
+  uses: aquasecurity/trivy-action@<TRIVY_SHA> # vX.Y.Z
+  with:
+    image-ref: vsizer:smoke
+    format: sarif
+    output: trivy-results.sarif
+    severity: HIGH,CRITICAL
+    exit-code: "0" # warn-only until promoted to gate (ADR-0015)
+    ignore-unfixed: true
+  continue-on-error: true
 
-      - name: Upload Trivy SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@<CODEQL_SHA>  # v3.x.x
-        with:
-          sarif_file: trivy-results.sarif
-          category: trivy-image
-        continue-on-error: true
+- name: Upload Trivy SARIF
+  if: always()
+  uses: github/codeql-action/upload-sarif@<CODEQL_SHA> # v3.x.x
+  with:
+    sarif_file: trivy-results.sarif
+    category: trivy-image
+  continue-on-error: true
 ```
 
 Resolve `<TRIVY_SHA>` via:
@@ -991,32 +991,31 @@ Insert **after** `Upload SBOM artefact` (Task 7) and **before**
 `Setup Pages`:
 
 ```yaml
-      - name: Upload SBOM artefact
-        # ... (Task 7) ...
+- name: Upload SBOM artefact
+  # ... (Task 7) ...
+# <— insert here —>
 
-      # <— insert here —>
-
-      - name: Setup Pages
-        if: github.event_name != 'pull_request'
+- name: Setup Pages
+  if: github.event_name != 'pull_request'
 ```
 
 - [ ] **Step 2: Add the release-asset step**
 
 ```yaml
-      - name: Attach SBOM to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          tag="${GITHUB_REF#refs/tags/}"
-          # Create the release if it doesn't exist yet (idempotent).
-          if ! gh release view "$tag" >/dev/null 2>&1; then
-            gh release create "$tag" \
-              --title "$tag" \
-              --notes "See CHANGELOG.md for release notes." \
-              --verify-tag
-          fi
-          gh release upload "$tag" sbom.cdx.json --clobber
+- name: Attach SBOM to GitHub Release
+  if: startsWith(github.ref, 'refs/tags/v')
+  env:
+    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  run: |
+    tag="${GITHUB_REF#refs/tags/}"
+    # Create the release if it doesn't exist yet (idempotent).
+    if ! gh release view "$tag" >/dev/null 2>&1; then
+      gh release create "$tag" \
+        --title "$tag" \
+        --notes "See CHANGELOG.md for release notes." \
+        --verify-tag
+    fi
+    gh release upload "$tag" sbom.cdx.json --clobber
 ```
 
 Note: `static.yml` currently triggers only on `push: main` and
@@ -1026,10 +1025,10 @@ To enable release-asset uploads, also extend the trigger:
 ```yaml
 on:
   push:
-    branches: ['main']
-    tags: ['v*']
+    branches: ["main"]
+    tags: ["v*"]
   pull_request:
-    branches: ['main']
+    branches: ["main"]
   workflow_dispatch:
 ```
 
@@ -1039,15 +1038,15 @@ deploys). To avoid double-deploying Pages on tag pushes, narrow the
 deploy conditions:
 
 ```yaml
-      - name: Upload artifact
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+- name: Upload artifact
+  if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
 ```
 
 and similarly on the `deploy` job:
 
 ```yaml
-  deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+deploy:
+  if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
 ```
 
 - [ ] **Step 3: Re-read the diff carefully**

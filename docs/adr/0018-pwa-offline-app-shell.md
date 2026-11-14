@@ -96,12 +96,14 @@ strategy) in **prompt** mode.
 ## Consequences
 
 **Positive.**
+
 - vsizer becomes installable and runs fully offline after first load,
   reinforcing the no-backend product story (ADR-0001 / ADR-0013).
 - Repeat visits are near-instant (cache-first hashed assets).
 - The "Load a sample" path works with no network.
 
 **Negative.**
+
 - A new devDependency tree (`vite-plugin-pwa`, `workbox-build`,
   `workbox-window`, ~300 transitive packages) is now subject to the
   ADR-0016 LOW+ gate; a future advisory anywhere in that tree can
@@ -116,6 +118,7 @@ strategy) in **prompt** mode.
   (ADR-0008). Acceptable; not worth a runtime hack.
 
 **Neutral.**
+
 - Privacy invariants (ADR-0001 / ADR-0004) are unchanged. The SW
   precaches only static, public build assets. Uploaded bytes never
   become a `Request` (File API), so there is nothing for Workbox to

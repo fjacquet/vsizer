@@ -110,6 +110,7 @@ in `vinfoMerge.ts:19` — Ready is undefined for non-running VMs.
 ### 4. Top-N annex slide, conditional, factually titled
 
 For each cluster where `readinessAvailable && vmsAboveReadinessWarning
+
 > 0`, append **one** annex slide immediately after the cluster slide.
 Layout: header rail (mirrors `clusterSlide.ts:82-101`), title
 **`"VMs avec CPU Ready le plus élevé — {{cluster}}"`** (FR) /

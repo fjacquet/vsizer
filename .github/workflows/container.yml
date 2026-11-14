@@ -82,6 +82,9 @@ jobs:
           push: false
           load: true
           tags: vsizer:smoke
+          # Never reuse the runtime stage's cached layers: `apk upgrade` is keyed
+          # on its text + base digest, so a cached layer pins stale Alpine pkgs.
+          no-cache-filters: runtime
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -151,6 +154,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
+          # Never reuse the runtime stage's cached layers: `apk upgrade` is keyed
+          # on its text + base digest, so a cached layer pins stale Alpine pkgs.
+          no-cache-filters: runtime
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: true

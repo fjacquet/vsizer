@@ -85,6 +85,7 @@ Accept N files in a single drop. Implementation:
 ## Consequences
 
 **Positive.**
+
 - The "10 workbooks" workflow becomes a single drop.
 - Mixed RVTools + Live Optics datasets work without preprocessing.
 - Collision resolution is deterministic and auditable
@@ -93,6 +94,7 @@ Accept N files in a single drop. Implementation:
   carry over verbatim.
 
 **Negative.**
+
 - Cluster-name collisions show up in PPTX slide titles as
   `"Prod-A (site-a) "` etc. Cosmetically more visible than a single-file
   setup. Acceptable trade-off vs silent merging.
@@ -105,6 +107,7 @@ Accept N files in a single drop. Implementation:
   no client-side limit changes.
 
 **Neutral.**
+
 - Privacy invariants (ADR-0001 / ADR-0004) are unchanged: parsing
   stays client-side, no persistence, no fetches with workbook bytes.
 - ADR-0010 (extended import formats) is unchanged — every file in

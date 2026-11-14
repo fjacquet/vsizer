@@ -15,8 +15,8 @@
 - [ ] Confirm we're on the branch: `git rev-parse --abbrev-ref HEAD` → `security-audit-supply-chain-hardening`.
 - [ ] Confirm baseline green: `npm audit --audit-level=moderate --omit=dev` → `found 0 vulnerabilities`.
 - [ ] Install a local YAML/Actions linter so each task can be verified before push:
-  `brew install actionlint` (Homebrew). Verify: `actionlint -version`.
-  If `brew` is unavailable, fall back to pushing each commit to a draft PR and watching the CI run.
+      `brew install actionlint` (Homebrew). Verify: `actionlint -version`.
+      If `brew` is unavailable, fall back to pushing each commit to a draft PR and watching the CI run.
 
 ---
 
@@ -39,6 +39,7 @@
 ## Task 1: SECURITY.md disclosure policy
 
 **Files:**
+
 - Create: `SECURITY.md`
 
 - [ ] **Step 1: Write `SECURITY.md`**
@@ -118,6 +119,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ## Task 2: ADR-0015 — Security audit & supply-chain policy
 
 **Files:**
+
 - Create: `docs/adr/0015-security-audit-and-supply-chain-policy.md`
 - Modify: `docs/adr/README.md`
 
@@ -219,6 +221,7 @@ change to the privacy invariant.
 ## Waivers (none today)
 
 When an audit gate forces a waiver, append an entry here with:
+
 - advisory ID, dependency, severity
 - why it can't be fixed today
 - follow-up issue link
@@ -267,6 +270,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ## Task 3: CHANGELOG entry
 
 **Files:**
+
 - Modify: `CHANGELOG.md`
 
 - [ ] **Step 1: Add a `[Unreleased] → Added` entry**
@@ -323,6 +327,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ## Task 4: README — Security section + SBOM badge
 
 **Files:**
+
 - Modify: `README.md`
 
 - [ ] **Step 1: Open `README.md` and locate the badge block at the top**
@@ -388,6 +393,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ## Task 5: Dependabot configuration
 
 **Files:**
+
 - Create: `.github/dependabot.yml`
 
 - [ ] **Step 1: Write `.github/dependabot.yml`**
@@ -486,6 +492,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ## Task 6: CodeQL workflow
 
 **Files:**
+
 - Create: `.github/workflows/codeql.yml`
 
 - [ ] **Step 1: Resolve commit SHAs for the CodeQL actions**
@@ -592,6 +599,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ## Task 7: Static workflow — SBOM generation (additive, no gate)
 
 **Files:**
+
 - Modify: `.github/workflows/static.yml`
 
 This task is **purely additive** — no existing step changes. It adds
@@ -674,6 +682,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ## Task 8: Static workflow — audit + OSV gates
 
 **Files:**
+
 - Modify: `.github/workflows/static.yml`
 
 - [ ] **Step 1: Locate the insertion point**
@@ -777,6 +786,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ## Task 9: Pin all GitHub Action `uses:` references to commit SHAs
 
 **Files:**
+
 - Modify: `.github/workflows/static.yml`
 - Modify: `.github/workflows/container.yml`
 - Modify: `.github/workflows/codeql.yml`
@@ -848,12 +858,14 @@ actions/setup-node@<40-char-sha>  # v6.0.0
 For each workflow, for each `uses:` line, replace `@v<X>` with `@<SHA>  # v<X.Y.Z>`.
 
 Example before:
+
 ```yaml
 - name: Checkout
   uses: actions/checkout@v6
 ```
 
 Example after:
+
 ```yaml
 - name: Checkout
   uses: actions/checkout@a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2 # v6.0.0
@@ -897,6 +909,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ## Task 10: Container workflow — Trivy image scan (warn-only)
 
 **Files:**
+
 - Modify: `.github/workflows/container.yml`
 
 - [ ] **Step 1: Locate the insertion point**
@@ -939,6 +952,7 @@ order has 10 after 9, so this insertion will use the SHA directly.)
 ```
 
 Resolve `<TRIVY_SHA>` via:
+
 ```bash
 gh api repos/aquasecurity/trivy-action/releases/latest --jq '.tag_name'
 gh api repos/aquasecurity/trivy-action/git/refs/tags/<tag> --jq '.object.sha'
@@ -979,6 +993,7 @@ Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
 ## Task 11: Static workflow — attach SBOM to GitHub Releases on `v*` tags
 
 **Files:**
+
 - Modify: `.github/workflows/static.yml`
 
 This step only fires on tag pushes (`refs/tags/v*`), so it is a no-op
@@ -1142,6 +1157,7 @@ gh pr checks --watch
 ```
 
 Triage any failure on the spot:
+
 - `npm audit` failure → fix the dep first; if unfixable, append a
   waiver to ADR-0015 with an expiry date and follow-up issue.
 - OSV failure → same.

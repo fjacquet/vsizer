@@ -102,6 +102,7 @@ Variable name and echo messages are updated to reflect LOW+ wording.
 ## Consequences
 
 **Positive.**
+
 - The 88 Security-tab alerts now block CI until each is resolved or
   explicitly waived in this ADR. The Security tab and CI agree.
 - Dev-only advisories surface as build failures, forcing decisions
@@ -109,6 +110,7 @@ Variable name and echo messages are updated to reflect LOW+ wording.
 - Downstream auditors see a single coherent posture.
 
 **Negative.**
+
 - The first CI run after this lands will likely **fail**. That is the
   point — and is preferable to the present discrepancy. Triage plan:
   fix via Dependabot PRs first, package overrides second, ADR waivers
@@ -122,6 +124,7 @@ Variable name and echo messages are updated to reflect LOW+ wording.
   ADR's revision history rather than a separate workflow).
 
 **Neutral.**
+
 - No change to SBOM contents, no change to container image contents,
   no change to the privacy invariant (ADR-0001) or memory-only state
   invariant (ADR-0004).

@@ -39,6 +39,7 @@ The vsizer codebase uses small focused files; this plan respects that — no fil
 ## Task 1: Author ADR-0013 and update the index
 
 **Files:**
+
 - Create: `docs/adr/0013-container-image-distribution.md`
 - Modify: `docs/adr/README.md`
 
@@ -168,6 +169,7 @@ HTTP layer when the app is served from the container image."
 ## Task 2: Update CHANGELOG and PRD
 
 **Files:**
+
 - Modify: `CHANGELOG.md`
 - Modify: `docs/PRD.md`
 
@@ -222,6 +224,7 @@ git commit -m "docs: changelog + PRD entries for container distribution (ADR-001
 ## Task 3: Externalise the FOUC script
 
 **Files:**
+
 - Create: `public/theme-init.js`
 - Modify: `index.html`
 - Create: `src/index.html.test.ts`
@@ -352,6 +355,7 @@ logic in index.html."
 ## Task 4: Add the container build script and .dockerignore
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `.dockerignore`
 
@@ -456,6 +460,7 @@ build script is unchanged (base='/vsizer/' from vite.config.ts)."
 ## Task 5: Add the Dockerfile and nginx config
 
 **Files:**
+
 - Create: `Dockerfile`
 - Create: `docker/nginx.conf`
 
@@ -621,6 +626,7 @@ docker stop vsizer-smoke
 ## Task 7: Add the GitHub Actions workflow
 
 **Files:**
+
 - Create: `.github/workflows/container.yml`
 
 - [ ] **Step 1: Create the workflow**
@@ -778,6 +784,7 @@ Closes #2."
 ## Task 8: README — "Run with Docker" subsection
 
 **Files:**
+
 - Modify: `README.md`
 
 - [ ] **Step 1: Locate the Quick start section**
@@ -811,6 +818,7 @@ public deploy. Tags:
 
 See [ADR-0013](docs/adr/0013-container-image-distribution.md) for the
 design.
+
 ````
 
 - [ ] **Step 3: Verify markdown renders sanely**
@@ -955,6 +963,7 @@ Design notes: [ADR-0013](https://github.com/fjacquet/vsizer/blob/main/docs/adr/0
 EOF
 
 gh issue comment 2 --body-file /tmp/vsizer-issue2-reply.md
+
 ````
 
 - [ ] **Step 2: Close the issue (the merge will likely auto-close via "Closes #2" in the PR body — verify)**

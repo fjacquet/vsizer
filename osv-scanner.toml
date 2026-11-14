@@ -7,7 +7,7 @@
 
 [[IgnoredVulns]]
 id = "GHSA-4r6h-8v6p-xvw6"
-ignoreUntil = 2027-02-11
+effectiveUntil = 2027-02-11
 reason = """
 SheetJS prototype pollution. GHSA summary says affected range is
 < 0.19.3; we ship xlsx 0.20.3 via the CDN tarball (ADR-0002), so we
@@ -22,7 +22,7 @@ Re-check before 2027-02-11 on the same terms.
 
 [[IgnoredVulns]]
 id = "GHSA-5pgg-2g8v-p4x9"
-ignoreUntil = 2027-02-11
+effectiveUntil = 2027-02-11
 reason = """
 SheetJS ReDoS. GHSA summary says affected range is < 0.20.2; we ship
 xlsx 0.20.3 via the CDN tarball (ADR-0002). Same OSV structured-
@@ -33,7 +33,7 @@ the newest tarball on cdn.sheetjs.com. Re-check before 2027-02-11.
 
 [[IgnoredVulns]]
 id = "GHSA-5p2g-fcmc-qvqq"
-ignoreUntil = 2026-11-08
+effectiveUntil = 2026-11-08
 reason = """
 image-size JXL and HEIF parser infinite-loop denial of service.
 Dependency path: root -> pptxgenjs@4.0.1 -> image-size@^1.2.1 (production).
@@ -55,7 +55,7 @@ release or pptxgenjs stops depending on it.
 
 [[IgnoredVulns]]
 id = "GHSA-w3rx-r6r6-pgpr"
-ignoreUntil = 2026-11-08
+effectiveUntil = 2026-11-08
 reason = """
 image-size ICNS parser infinite-loop denial of service.
 Dependency path: root -> pptxgenjs@4.0.1 -> image-size@^1.2.1 (production).

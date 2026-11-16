@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "fflate": "^0.8.3",
-    "i18next": "^26.5.11",
+    "i18next": "^27.1.1",
     "i18next-browser-languagedetector": "^8.2.3",
     "pptxgenjs": "^4.0.1",
     "react": "^19.3.1",

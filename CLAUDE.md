@@ -12,16 +12,10 @@ ship workbook bytes, no telemetry of parsed contents, no `localStorage` persiste
 ## Commands
 
 ```bash
-npm run dev            # Vite dev server at http://localhost:5173/vsizer/
+npm run dev            # Vite dev server at http://localhost:5173/vsizer/ (note the /vsizer/ base)
 npm run build          # tsc -b && vite build (production bundle into dist/)
-npm run preview        # serve the built bundle
 npm run typecheck      # tsc --noEmit (strict, src/ only — does NOT cover vite.config.ts)
-npm run lint           # biome check .
-npm run lint:fix       # biome check --write .
-npm run format         # biome format --write .
-npm run test           # vitest (watch)
 npm run test:run       # vitest run (CI mode, single pass)
-npm run test:coverage  # vitest run --coverage
 npm run pptx -- <file> # headless CLI: RVTools/LiveOptics file -> light-mode .pptx (see below)
 # Run a single test file or pattern:
 npx vitest run src/engines/aggregation/ghz.test.ts

@@ -58,6 +58,10 @@
     "workbox-window": "^7.4.1"
   },
   "overrides": {
-    "image-size": "^2.0.4"
+    "image-size": "^2.0.4",
+    "workbox-build": {
+      "glob": "^14.0.6",
+      "minimatch": "^11.0.9"
+    }
   }
 }

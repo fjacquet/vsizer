@@ -51,7 +51,7 @@ GitHub Pages. No backend exists. After the app loads:
 - **Backend with auth + transient storage**: rejected. Even with TLS and per-customer
   encryption, the procurement bar to deploy this internally at customer sites raises
   the cost of adoption an order of magnitude. The original script was successful
-  *because* it ran locally.
+  _because_ it ran locally.
 - **Hybrid: client parses, server only stores aggregates for sharing**: rejected for
   V1. Aggregates can still leak cluster names; once we open the door we'd have to
   argue the line. Easier to keep the door closed.

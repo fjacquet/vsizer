@@ -25,14 +25,9 @@ behind published patches (runtime `zod` advisory GHSA-mrhx-c7xc-m3w5).
    the container policy. `connect-src 'self'` preserves ADR-0001.
 3. Keep dependencies current: `npm audit fix` plus in-range and compatible
    major bumps, gated by ADR-0016 and the full typecheck/lint/test/build run.
-   Majors taken: `vite-plugin-pwa` 2, `vitest`/`coverage-v8` 5, `jsdom` 31,
-   `jest-dom` 8, `i18next` 27, `react-i18next` 18, Biome 2.6.
 4. `overrides` pin `glob` ^14 and `minimatch` ^11 under `workbox-build`
    (its latest release still ships the vulnerable ranges). Drop the override
    once `workbox-build` upgrades them.
-5. Biome 2.6 formats Markdown and YAML by default; `biome.json` excludes
-   `**/*.md`, `**/*.yml`, `**/*.yaml` to keep the previous lint scope
-   instead of reformatting the docs in this change.
 
 ## Consequences
 

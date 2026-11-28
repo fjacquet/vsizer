@@ -22,7 +22,7 @@ Field reports surfaced two more shapes that vsizer silently rejected as
    only the sheet labels differ. `detectSource` rejected them because
    `n.startsWith('vhost')` did not match `rvtools_tabvhost`.
 2. **Modern Live Optics layout (Dell exports from 2025+).** The current
-   Dell Live Optics tool ships a *VMWARE* workbook with compact sheet
+   Dell Live Optics tool ships a _VMWARE_ workbook with compact sheet
    names (`VMs`, `ESX Hosts`, `ESX Performance`, `VM Performance`, …)
    instead of the legacy long names. Worse, the static config and
    utilization data are split across two sheets — `ESX Hosts` carries
@@ -82,15 +82,15 @@ Classic takes precedence when (improbably) both layouts coexist.
 
 Modern host rows are assembled from two sheets:
 
-| Field | Source sheet | Source column | Conversion |
-|---|---|---|---|
-| `hostName` | `ESX Hosts` | `Host Name` | none |
-| `cluster` | `ESX Hosts` | `Cluster` | none |
-| `cores` | `ESX Hosts` | `CPU Cores` | trunc, ≥1 |
-| `speedMhz` | `ESX Hosts` | `CPU Clock Speed (GHz)` ⨯1000 | falls back to `CPU Clock Speed (MHz)` if present |
-| `memoryMb` | `ESX Hosts` | `Memory (KiB)` ÷1024 | falls back to `Memory (MiB)` if present |
-| `cpuRatio` | `ESX Performance` | `Average CPU %` | toRatio (÷100 when >1.5) |
-| `ramRatio` | `ESX Performance` | `Average Memory %` | toRatio (÷100 when >1.5) |
+| Field      | Source sheet      | Source column                 | Conversion                                       |
+| ---------- | ----------------- | ----------------------------- | ------------------------------------------------ |
+| `hostName` | `ESX Hosts`       | `Host Name`                   | none                                             |
+| `cluster`  | `ESX Hosts`       | `Cluster`                     | none                                             |
+| `cores`    | `ESX Hosts`       | `CPU Cores`                   | trunc, ≥1                                        |
+| `speedMhz` | `ESX Hosts`       | `CPU Clock Speed (GHz)` ⨯1000 | falls back to `CPU Clock Speed (MHz)` if present |
+| `memoryMb` | `ESX Hosts`       | `Memory (KiB)` ÷1024          | falls back to `Memory (MiB)` if present          |
+| `cpuRatio` | `ESX Performance` | `Average CPU %`               | toRatio (÷100 when >1.5)                         |
+| `ramRatio` | `ESX Performance` | `Average Memory %`            | toRatio (÷100 when >1.5)                         |
 
 The join key is the host name string (full FQDN, identical on both
 sheets in every export observed). `ESX Performance` is treated as
@@ -178,7 +178,7 @@ chunk — negligible next to `vendor-xlsx` (122 KB gzip).
 - Missing `ESX Performance` produces silent zero-utilization rather
   than a loud error. Acceptable because (a) the dashboard headline
   metrics still compute, (b) users running Live Optics with perf
-  disabled get *some* output rather than a blocking failure. We can
+  disabled get _some_ output rather than a blocking failure. We can
   promote this to `errors[]` later if the silent-zero case shows up
   in the field as confusing.
 

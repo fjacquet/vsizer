@@ -28,9 +28,9 @@ Add three fields to `ClusterAggregate` (and their rollup mirrors on
 `GlobalSummary`):
 
 ```ts
-physicalCores: number          // Σ host.cores
-usablePhysicalCores: number    // stretched ? 0.5 × physicalCores : physicalCores
-vcpuPerPcpu: number             // vcpuAllocated / usablePhysicalCores, 0 when divisor is 0
+physicalCores: number // Σ host.cores
+usablePhysicalCores: number // stretched ? 0.5 × physicalCores : physicalCores
+vcpuPerPcpu: number // vcpuAllocated / usablePhysicalCores, 0 when divisor is 0
 ```
 
 `vcpuPerPcpu` is the **DR-aware** figure. We don't keep a parallel "raw"

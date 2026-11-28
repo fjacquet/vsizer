@@ -46,13 +46,13 @@ This is intentional — see [ADR-0006](adr/0006-dashboard-layout.md).
 
 Five tiles at the top:
 
-| Tile             | Meaning                                                     |
-| ---------------- | ----------------------------------------------------------- |
-| Hôtes / Hosts    | Σ ESXi hosts across the parsed estate                       |
-| VMs allumées     | Σ powered-on VMs (powered-off are excluded — see §2.5)      |
-| Capacité physique| Σ physical GHz (cores × clock per host)                     |
-| RAM physique     | Σ host memory in MB → rendered as MB / GB / TB              |
-| CPU moyen utilisé| Capacity-weighted mean of host CPU %, **DR-aware**          |
+| Tile              | Meaning                                                |
+| ----------------- | ------------------------------------------------------ |
+| Hôtes / Hosts     | Σ ESXi hosts across the parsed estate                  |
+| VMs allumées      | Σ powered-on VMs (powered-off are excluded — see §2.5) |
+| Capacité physique | Σ physical GHz (cores × clock per host)                |
+| RAM physique      | Σ host memory in MB → rendered as MB / GB / TB         |
+| CPU moyen utilisé | Capacity-weighted mean of host CPU %, **DR-aware**     |
 
 The CPU mean is `Σ consumedGhz / Σ usableGhz` — see
 [ADR-0011](adr/0011-dr-aware-utilization-ratios.md) for why this differs
@@ -66,11 +66,11 @@ marker), RAM bar (mean + peak marker), GHz available. Three threshold
 colors are used as **status only**, not value judgments — see
 [ADR-0003](adr/0003-factual-only-pptx-output.md):
 
-| Color  | Range       | Meaning                |
-| ------ | ----------- | ---------------------- |
-| Green  | < 40 %      | Low utilization        |
-| Orange | 40–70 %     | Moderate utilization   |
-| Red    | ≥ 70 %      | High utilization       |
+| Color  | Range   | Meaning              |
+| ------ | ------- | -------------------- |
+| Green  | < 40 %  | Low utilization      |
+| Orange | 40–70 % | Moderate utilization |
+| Red    | ≥ 70 %  | High utilization     |
 
 ### 2.3 Cluster card
 
@@ -101,11 +101,11 @@ stretched 2-site cluster. Toggling it on:
 - Subtracts that reservation from `availableGhz` and `availableRamMb`
 - Doubles `vcpuPerPcpu` (the consolidation ratio uses the
   post-reservation cores)
-- Scales every utilization ratio by the DR factor — *the same volume of
-  water in half the bucket reads higher*
+- Scales every utilization ratio by the DR factor — _the same volume of
+  water in half the bucket reads higher_
 
 A cluster consumed past 50 % when stretched will surface a **negative
-"GHz disponibles"** — that's the intended *DR at risk* signal, in red.
+"GHz disponibles"** — that's the intended _DR at risk_ signal, in red.
 The math is documented in [ADR-0007](adr/0007-stretched-cluster-dr-reservation.md).
 
 ### 2.5 Powered-off VMs
@@ -119,8 +119,8 @@ and overcommit ratios.
 
 ## 3. CPU Ready (contention) — new in 1.1.0
 
-**TL;DR**: CPU Ready is the percentage of time a VM is *ready to run
-but waiting* for a physical core. Healthy is < 5 %. Above 10 % means
+**TL;DR**: CPU Ready is the percentage of time a VM is _ready to run
+but waiting_ for a physical core. Healthy is < 5 %. Above 10 % means
 the host scheduler is saturated — VMs are starving even when raw CPU %
 looks fine. This metric exists because a cluster can show **50 %
 consumed CPU** (plenty of "headroom" by capacity math) while a fraction
@@ -145,17 +145,17 @@ the full design rationale.
 - **Each cluster slide** in the exported PPTX carries the same line.
 - **Conditional annex slide** is appended right after each cluster
   slide whenever ≥ 1 VM crosses the 5 % warning threshold:
-  *"VMs avec CPU Ready le plus élevé — {{cluster}}"* — top 10 VMs
+  _"VMs avec CPU Ready le plus élevé — {{cluster}}"_ — top 10 VMs
   sorted by readiness, with the same color coding.
 - **Conditional annex sub-section** mirrors that table on the dashboard
   inside each cluster card.
 
 ### 3.2 Source coverage
 
-| Source                | CPU Ready exposed?           | Where                                       |
-| --------------------- | ---------------------------- | ------------------------------------------- |
-| **RVTools 4.x**       | ✅ Yes                       | `vInfo.Overall Cpu Readiness` column        |
-| **Live Optics 2025+** | ❌ No                        | Workbook does not include the metric        |
+| Source                | CPU Ready exposed?              | Where                                             |
+| --------------------- | ------------------------------- | ------------------------------------------------- |
+| **RVTools 4.x**       | ✅ Yes                          | `vInfo.Overall Cpu Readiness` column              |
+| **Live Optics 2025+** | ❌ No                           | Workbook does not include the metric              |
 | **Older RVTools**     | ⚠️ Sometimes (column-dependent) | Falls back to "non disponible (source : RVTools)" |
 
 The asymmetry is structural — Live Optics' modern workbook layout
@@ -164,15 +164,15 @@ simply doesn't ship the metric. vsizer surfaces this honestly: it
 
 ### 3.3 Threshold semantics (status, not verdict)
 
-| Color  | Range       | Convention                  |
-| ------ | ----------- | --------------------------- |
+| Color  | Range       | Convention                     |
+| ------ | ----------- | ------------------------------ |
 | Green  | < 5 %       | No notable scheduling pressure |
-| Orange | 5 % – 10 %  | Worth surfacing             |
-| Red    | > 10 %      | Sustained scheduling pressure |
-| Grey   | unavailable | Source did not report       |
+| Orange | 5 % – 10 %  | Worth surfacing                |
+| Red    | > 10 %      | Sustained scheduling pressure  |
+| Grey   | unavailable | Source did not report          |
 
-A VM at *exactly* 5 % is colored orange (5 is the *threshold*, not a
-*violation*) but is **not counted** in `VM(s) au-dessus de 5 %` (that
+A VM at _exactly_ 5 % is colored orange (5 is the _threshold_, not a
+_violation_) but is **not counted** in `VM(s) au-dessus de 5 %` (that
 count uses strict `>`). This convention matches every Broadcom / VMware
 sizing guide we surveyed.
 
@@ -186,10 +186,10 @@ sizing guide we surveyed.
 - **Per-VM, not per-host**. The metric is summed across the VM's
   vCPUs by VMware's API; we don't currently roll it up per host.
 - **Corrupted cells**. Excel error sentinels (`#REF!`, `#DIV/0!`, …)
-  and manual placeholders (`N/A`, `-`, …) all collapse to *"no
-  reporter"* — never to *"reporter at 0 %, healthy"*. If your RVTools
+  and manual placeholders (`N/A`, `-`, …) all collapse to _"no
+  reporter"_ — never to _"reporter at 0 %, healthy"_. If your RVTools
   export has a damaged readiness column, the slide will read
-  *"non disponible"* rather than silently mis-attributing the cluster
+  _"non disponible"_ rather than silently mis-attributing the cluster
   as healthy.
 
 ---
@@ -207,7 +207,7 @@ sizing guide we surveyed.
   `Cœurs`, `Mémoire`, etc.) parses out of the box.
 - Use a recent RVTools 4.x build to get the `Overall Cpu Readiness`
   column on `vInfo`. Older builds will still parse — the contention
-  surface degrades gracefully to *"non disponible"*.
+  surface degrades gracefully to _"non disponible"_.
 
 ### 4.2 Live Optics
 
@@ -248,7 +248,7 @@ narrative belongs to you, the speaker. Slide order:
    - **Cluster slide** — header, contention line, 5 KPI tiles, CPU/RAM
      blocks, factual data banner, RAM-available line, footer source
      attribution
-   - *(conditional)* **CPU Ready annex slide** — only when ≥ 1 VM
+   - _(conditional)_ **CPU Ready annex slide** — only when ≥ 1 VM
      crosses the warning threshold, top-10 sorted by readiness
 
 Theme is locked to the Midnight Executive palette regardless of
@@ -263,8 +263,8 @@ The deck opens in PowerPoint 2019+, LibreOffice Impress 7+, Keynote
 - **Languages**: French (default) and English. Switch with
   `?lang=en` / `?lang=fr` in the URL, or via the language toggle in
   the header. The choice is remembered in `localStorage` under
-  `vsizer-lang` — *the only `localStorage` key vsizer ever writes;
-  no dataset rows are ever persisted*.
+  `vsizer-lang` — _the only `localStorage` key vsizer ever writes;
+  no dataset rows are ever persisted_.
 - **Theme**: light / dark / system, three-state toggle in the header.
   The PPTX deck stays Midnight Executive regardless. See
   [ADR-0008](adr/0008-auto-dark-mode.md).
@@ -292,7 +292,7 @@ The deck opens in PowerPoint 2019+, LibreOffice Impress 7+, Keynote
 
 - **Bugs / feature requests**: <https://github.com/fjacquet/vsizer/issues>
 - **Architecture questions**: read the relevant ADR first
-  ([`docs/adr/`](adr/README.md)). They encode the *why* behind every
+  ([`docs/adr/`](adr/README.md)). They encode the _why_ behind every
   non-obvious behavior.
 - **Want to contribute?** See [`CONTRIBUTING.md`](../CONTRIBUTING.md).
 
@@ -300,11 +300,11 @@ The deck opens in PowerPoint 2019+, LibreOffice Impress 7+, Keynote
 
 ## 9. Companion docs
 
-| Doc                                       | What it covers                                              |
-| ----------------------------------------- | ----------------------------------------------------------- |
-| [`README.md`](../README.md)               | Project intro, install/dev scripts, repo tour               |
-| [`docs/PRD.md`](PRD.md)                   | Product requirements, scope (in / out), success criteria    |
-| [`docs/adr/`](adr/README.md)              | Architecture decision records (Nygard format, append-only)  |
-| [`CHANGELOG.md`](../CHANGELOG.md)         | What changed in each release (Keep a Changelog)             |
-| [`CONTRIBUTING.md`](../CONTRIBUTING.md)   | How to contribute, branch / commit conventions, CI gates    |
-| [`CLAUDE.md`](../CLAUDE.md)               | Guidance for AI coding assistants and a contributor's tour  |
+| Doc                                     | What it covers                                             |
+| --------------------------------------- | ---------------------------------------------------------- |
+| [`README.md`](../README.md)             | Project intro, install/dev scripts, repo tour              |
+| [`docs/PRD.md`](PRD.md)                 | Product requirements, scope (in / out), success criteria   |
+| [`docs/adr/`](adr/README.md)            | Architecture decision records (Nygard format, append-only) |
+| [`CHANGELOG.md`](../CHANGELOG.md)       | What changed in each release (Keep a Changelog)            |
+| [`CONTRIBUTING.md`](../CONTRIBUTING.md) | How to contribute, branch / commit conventions, CI gates   |
+| [`CLAUDE.md`](../CLAUDE.md)             | Guidance for AI coding assistants and a contributor's tour |

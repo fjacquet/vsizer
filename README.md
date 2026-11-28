@@ -86,19 +86,19 @@ design.
 
 ## Scripts
 
-| Command                  | Purpose                                          |
-| ------------------------ | ------------------------------------------------ |
-| `npm run dev`            | Vite dev server                                  |
-| `npm run build`          | `tsc -b && vite build` — production bundle       |
-| `npm run preview`        | Serve the built bundle locally                   |
-| `npm run typecheck`      | `tsc --noEmit` (strict, app-only)                |
-| `npm run lint`           | `biome check .`                                  |
-| `npm run lint:fix`       | `biome check --write .`                          |
-| `npm run format`         | `biome format --write .`                         |
-| `npm run test`           | `vitest` (watch)                                 |
-| `npm run test:run`       | `vitest run` (CI mode)                           |
+| Command                  | Purpose                                                        |
+| ------------------------ | -------------------------------------------------------------- |
+| `npm run dev`            | Vite dev server                                                |
+| `npm run build`          | `tsc -b && vite build` — production bundle                     |
+| `npm run preview`        | Serve the built bundle locally                                 |
+| `npm run typecheck`      | `tsc --noEmit` (strict, app-only)                              |
+| `npm run lint`           | `biome check .`                                                |
+| `npm run lint:fix`       | `biome check --write .`                                        |
+| `npm run format`         | `biome format --write .`                                       |
+| `npm run test`           | `vitest` (watch)                                               |
+| `npm run test:run`       | `vitest run` (CI mode)                                         |
 | `npm run test:coverage`  | `vitest run --coverage` (75 % gate on `engines/` and `utils/`) |
-| `npm run pptx -- <file>` | Headless CLI: RVTools/LiveOptics file → light-mode `.pptx` |
+| `npm run pptx -- <file>` | Headless CLI: RVTools/LiveOptics file → light-mode `.pptx`     |
 
 Run a single test file or pattern:
 
@@ -171,31 +171,31 @@ on every push to `main` and publishes `dist/` to GitHub Pages.
 
 This README is intentionally thin — it gets you to the right doc.
 
-| Doc                                                  | Audience                       | Covers                                                                  |
-| ---------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------- |
-| [**`docs/USER-GUIDE.md`**](docs/USER-GUIDE.md)       | end users, presales, partners  | How to use the web app, what each metric means, how to read the deck, source coverage, threshold semantics, caveats |
-| [**`docs/PRD.md`**](docs/PRD.md)                     | product / engineering          | Requirements, in-scope / out-of-scope, success criteria, non-functional targets |
-| [**`docs/adr/`**](docs/adr/README.md)                | engineering, AI assistants     | Architecture Decision Records (Nygard format, append-only). Read the relevant ADR **before** changing non-trivial behaviour — several encode product invariants and domain math (privacy, factual-only deck, DR reservation, DR-aware ratios, asymmetric source for CPU Ready, …) |
-| [**`CHANGELOG.md`**](CHANGELOG.md)                   | everyone                       | What changed in each release (Keep a Changelog format, SemVer)          |
-| [**`CONTRIBUTING.md`**](CONTRIBUTING.md)             | contributors                   | Branch / commit conventions, CI gates, how to file a PR                 |
-| [**`CLAUDE.md`**](CLAUDE.md)                         | AI coding assistants           | Quick tour of layering, conventions, gotchas, MCP usage rules           |
+| Doc                                            | Audience                      | Covers                                                                                                                                                                                                                                                                            |
+| ---------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [**`docs/USER-GUIDE.md`**](docs/USER-GUIDE.md) | end users, presales, partners | How to use the web app, what each metric means, how to read the deck, source coverage, threshold semantics, caveats                                                                                                                                                               |
+| [**`docs/PRD.md`**](docs/PRD.md)               | product / engineering         | Requirements, in-scope / out-of-scope, success criteria, non-functional targets                                                                                                                                                                                                   |
+| [**`docs/adr/`**](docs/adr/README.md)          | engineering, AI assistants    | Architecture Decision Records (Nygard format, append-only). Read the relevant ADR **before** changing non-trivial behaviour — several encode product invariants and domain math (privacy, factual-only deck, DR reservation, DR-aware ratios, asymmetric source for CPU Ready, …) |
+| [**`CHANGELOG.md`**](CHANGELOG.md)             | everyone                      | What changed in each release (Keep a Changelog format, SemVer)                                                                                                                                                                                                                    |
+| [**`CONTRIBUTING.md`**](CONTRIBUTING.md)       | contributors                  | Branch / commit conventions, CI gates, how to file a PR                                                                                                                                                                                                                           |
+| [**`CLAUDE.md`**](CLAUDE.md)                   | AI coding assistants          | Quick tour of layering, conventions, gotchas, MCP usage rules                                                                                                                                                                                                                     |
 
 ### ADR cheat sheet
 
-| ADR                                                                                  | Encodes                                       |
-| ------------------------------------------------------------------------------------ | --------------------------------------------- |
-| [0001](docs/adr/0001-client-side-only-processing.md)                                 | 100 % client-side processing (privacy hard invariant) |
-| [0002](docs/adr/0002-sheetjs-via-official-tarball.md)                                | SheetJS via the official tarball, not the CVE-affected npm pkg |
-| [0003](docs/adr/0003-factual-only-pptx-output.md)                                    | Factual-only PPTX (strip editorial language)  |
-| [0004](docs/adr/0004-memory-only-state.md)                                           | Memory-only state (no `localStorage` of dataset rows) |
-| [0005](docs/adr/0005-coverage-gated-engines-and-utils.md)                            | 75 % coverage gate scoped to `engines/` + `utils/` only |
-| [0006](docs/adr/0006-dashboard-layout.md)                                            | Two-state, single-column dashboard with fixed sidebar |
-| [0007](docs/adr/0007-stretched-cluster-dr-reservation.md)                            | Stretched-cluster DR reservation (50 % CPU + RAM) |
-| [0008](docs/adr/0008-auto-dark-mode.md)                                              | Auto dark mode (3-state toggle), PPTX palette locked |
-| [0009](docs/adr/0009-vcpu-pcpu-consolidation-ratio.md)                               | DR-aware vCPU/pCPU consolidation ratio        |
-| [0010](docs/adr/0010-extended-import-formats.md)                                     | RVTools `RVTools_tab*`, modern Live Optics, `.zip` bundles |
-| [0011](docs/adr/0011-dr-aware-utilization-ratios.md)                                 | DR-aware, capacity-weighted utilization ratios |
-| [0012](docs/adr/0012-cpu-ready-contention-asymmetric-source.md)                      | CPU Ready (contention) from RVTools, asymmetric source |
+| ADR                                                             | Encodes                                                        |
+| --------------------------------------------------------------- | -------------------------------------------------------------- |
+| [0001](docs/adr/0001-client-side-only-processing.md)            | 100 % client-side processing (privacy hard invariant)          |
+| [0002](docs/adr/0002-sheetjs-via-official-tarball.md)           | SheetJS via the official tarball, not the CVE-affected npm pkg |
+| [0003](docs/adr/0003-factual-only-pptx-output.md)               | Factual-only PPTX (strip editorial language)                   |
+| [0004](docs/adr/0004-memory-only-state.md)                      | Memory-only state (no `localStorage` of dataset rows)          |
+| [0005](docs/adr/0005-coverage-gated-engines-and-utils.md)       | 75 % coverage gate scoped to `engines/` + `utils/` only        |
+| [0006](docs/adr/0006-dashboard-layout.md)                       | Two-state, single-column dashboard with fixed sidebar          |
+| [0007](docs/adr/0007-stretched-cluster-dr-reservation.md)       | Stretched-cluster DR reservation (50 % CPU + RAM)              |
+| [0008](docs/adr/0008-auto-dark-mode.md)                         | Auto dark mode (3-state toggle), PPTX palette locked           |
+| [0009](docs/adr/0009-vcpu-pcpu-consolidation-ratio.md)          | DR-aware vCPU/pCPU consolidation ratio                         |
+| [0010](docs/adr/0010-extended-import-formats.md)                | RVTools `RVTools_tab*`, modern Live Optics, `.zip` bundles     |
+| [0011](docs/adr/0011-dr-aware-utilization-ratios.md)            | DR-aware, capacity-weighted utilization ratios                 |
+| [0012](docs/adr/0012-cpu-ready-contention-asymmetric-source.md) | CPU Ready (contention) from RVTools, asymmetric source         |
 
 ## Security
 

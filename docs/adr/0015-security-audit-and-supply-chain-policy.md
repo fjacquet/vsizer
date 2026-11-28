@@ -107,6 +107,7 @@ change to the privacy invariant.
 ## Waivers (none today)
 
 When an audit gate forces a waiver, append an entry here with:
+
 - advisory ID, dependency, severity
 - why it can't be fixed today
 - follow-up issue link

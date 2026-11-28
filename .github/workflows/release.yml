@@ -1,15 +1,15 @@
 name: Release
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
 permissions:
   contents: write
-  packages: write       # web-release npm/docker jobs declare it (validated even when skipped)
-  id-token: write       # OIDC for build-provenance attestation
-  attestations: write   # write the provenance attestation
+  packages: write # web-release npm/docker jobs declare it (validated even when skipped)
+  id-token: write # OIDC for build-provenance attestation
+  attestations: write # write the provenance attestation
 jobs:
   release:
-    uses: fjacquet/ci/.github/workflows/web-release.yml@v1.3.0
+    uses: fjacquet/ci/.github/workflows/web-release.yml@v1.6.0
     with:
       node-version: "24"
       publish-npm: false

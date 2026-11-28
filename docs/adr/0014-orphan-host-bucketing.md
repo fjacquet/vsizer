@@ -148,7 +148,7 @@ not in the aggregation engine.
 ## References
 
 - Issue: [#4 — The problem with the system is that it doesn't have a
-  cluster name](https://github.com/fjacquet/vsizer/issues/4)
+cluster name](https://github.com/fjacquet/vsizer/issues/4)
 - Related: ADR-0007 (stretched-cluster DR reservation — orphan rows
   never inherit it by default).
 - Affects: `engines/parser/` (new `synthesizeOrphanClusters.ts`,

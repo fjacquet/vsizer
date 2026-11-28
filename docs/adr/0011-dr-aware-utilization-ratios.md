@@ -18,7 +18,7 @@ The user's mental model — and the right planning model — is the bucket
 analogy: "the same volume of water in half the bucket is a higher fill
 percentage". The hosts are running the workload they're running; the
 moment we tell ourselves "half of these hosts must stay free for site
-failover", the *effective* utilization against the planning-eligible
+failover", the _effective_ utilization against the planning-eligible
 capacity doubles.
 
 A second, related defect surfaced while planning this work: the
@@ -135,14 +135,13 @@ No new strings needed — the labels stay `Mean CPU` / `Mean RAM`.
   vsizer with a stretched-cluster toggle will see their CPU% and RAM%
   numbers double. Documented as the headline of this ADR's commit
   message; the toggle pill itself signals the shift.
-- Heterogeneous clusters get *slightly different* numbers in
+- Heterogeneous clusters get _slightly different_ numbers in
   non-stretched mode too (capacity-weighted vs host-equal mean). For
   homogeneous fixtures, no visible change. For real-world heterogeneous
   estates, the difference is typically <2 % absolute.
 - Schema cap doubled. If a future feature needs to enforce "ratio
   <= 1.0", it has to clamp explicitly; the schema no longer rejects
-  >100 %.
-
+  > 100 %.
 ## Alternatives considered
 
 - **Two-field model** (`meanCpuRatio` raw + `effectiveMeanCpuRatio`

@@ -19,12 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `glob`/`minimatch` advisories under `workbox-build` are fixed with scoped
   `overrides`. `npm audit` now reports 0 vulnerabilities.
 
-### Changed
-
-- **Majors**: `vite-plugin-pwa` 2, `vitest`/`@vitest/coverage-v8` 5, `jsdom`
-  31, `@testing-library/jest-dom` 8, `i18next` 27, `react-i18next` 18, Biome
-  2.6 (Markdown/YAML excluded from Biome, see ADR-0020).
-
 ## [1.8.1] — 2026-05-25
 
 ### Security
@@ -145,7 +139,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `node:24-alpine` → `node:26-alpine` (builder stage, not shipped)
   - `nginxinc/nginx-unprivileged:1.27-alpine` →
     `nginxinc/nginx-unprivileged:1.29-alpine` (runtime, shipped)
-  These bumps obsolete Dependabot PRs #9 and #10.
+    These bumps obsolete Dependabot PRs #9 and #10.
 
 ### Changed
 
@@ -161,7 +155,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   SheetJS CDN tarball `xlsx@0.20.3` (ADR-0002) trips two GHSA
   advisories whose OSV.dev structured ranges encode the entire
   package as vulnerable (`introduced: 0`, no `first_patched` event)
-  because SheetJS distributes outside npm. The GHSA *summary* text
+  because SheetJS distributes outside npm. The GHSA _summary_ text
   confirms we're past the fix on both: 0.20.3 ≥ the fix ranges
   `< 0.19.3` and `< 0.20.2`. Waived for 90 days via
   `osv-scanner.toml`.

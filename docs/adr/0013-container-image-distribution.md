@@ -117,8 +117,8 @@ responses; there are no endpoints capable of receiving or persisting
 posted bytes. A malicious script that issued
 `fetch('/upload', { method: 'POST', body: workbookBytes })` would hit
 nginx, which has no handler to log the body — the bytes are discarded
-server-side. The runtime guarantee is now *"the bytes cannot leave
-this origin"*, which is materially equivalent to "cannot leave the
+server-side. The runtime guarantee is now _"the bytes cannot leave
+this origin"_, which is materially equivalent to "cannot leave the
 client" given the container's static-only deployment.
 
 **What a future regression would have to look like to defeat this.**

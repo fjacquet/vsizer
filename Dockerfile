@@ -27,9 +27,11 @@ FROM docker.io/nginxinc/nginx-unprivileged:1.31-alpine AS runtime
 # registration, which vsizer (static SPA, wget healthcheck, no libcurl
 # in nginx core) never uses. apk del cascades to the curl-only
 # transitive deps, eliminating 7 curl CVEs at the root (ADR-0019).
+# apk upgrade pulls Alpine security fixes the upstream tag has not been
+# rebuilt with yet (libexpat CVE-2026-93990 on 1.31-alpine, Sept 2026).
 # Kept before the build-arg LABELs so the layer stays cache-stable.
 USER root
-RUN apk --no-cache del curl libcurl
+RUN apk --no-cache del curl libcurl && apk --no-cache upgrade
 USER nginx
 
 # OCI annotations — values are overridden at build time by metadata-action.

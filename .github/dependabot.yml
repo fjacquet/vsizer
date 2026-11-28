@@ -10,7 +10,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: '04:00'
+      time: "04:00"
       timezone: Etc/UTC
     open-pull-requests-limit: 10
     labels:
@@ -30,7 +30,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: '04:00'
+      time: "04:00"
       timezone: Etc/UTC
     open-pull-requests-limit: 5
     labels:
@@ -39,14 +39,14 @@ updates:
     groups:
       actions:
         patterns:
-          - '*'
+          - "*"
 
   - package-ecosystem: docker
     directory: /
     schedule:
       interval: weekly
       day: monday
-      time: '04:00'
+      time: "04:00"
       timezone: Etc/UTC
     open-pull-requests-limit: 3
     labels:

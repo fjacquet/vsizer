@@ -16,21 +16,21 @@
 
 ## File map
 
-| File | Action | Purpose |
-|---|---|---|
-| `docs/adr/0013-container-image-distribution.md` | Create | Nygard ADR recording the decision |
-| `docs/adr/README.md` | Modify | Append row to index table |
-| `CHANGELOG.md` | Modify | Add `[Unreleased] / Added` section |
-| `docs/PRD.md` | Modify | Mention container distribution channel |
-| `README.md` | Modify | "Run with Docker" subsection after Quick start |
-| `public/theme-init.js` | Create | Externalised FOUC script (was inline) |
-| `index.html` | Modify | Replace inline `<script>` with `<script src="/theme-init.js">` |
-| `src/index.html.test.ts` | Create | Vitest asserting the externalisation invariant |
-| `package.json` | Modify | Add `"build:container": "tsc -b && vite build --base=/"` |
-| `.dockerignore` | Create | Keep build context small |
-| `Dockerfile` | Create | Multi-stage build |
-| `docker/nginx.conf` | Create | Hardened server block with CSP/COOP/COEP |
-| `.github/workflows/container.yml` | Create | Build + smoke-test + GHCR publish |
+| File                                            | Action | Purpose                                                        |
+| ----------------------------------------------- | ------ | -------------------------------------------------------------- |
+| `docs/adr/0013-container-image-distribution.md` | Create | Nygard ADR recording the decision                              |
+| `docs/adr/README.md`                            | Modify | Append row to index table                                      |
+| `CHANGELOG.md`                                  | Modify | Add `[Unreleased] / Added` section                             |
+| `docs/PRD.md`                                   | Modify | Mention container distribution channel                         |
+| `README.md`                                     | Modify | "Run with Docker" subsection after Quick start                 |
+| `public/theme-init.js`                          | Create | Externalised FOUC script (was inline)                          |
+| `index.html`                                    | Modify | Replace inline `<script>` with `<script src="/theme-init.js">` |
+| `src/index.html.test.ts`                        | Create | Vitest asserting the externalisation invariant                 |
+| `package.json`                                  | Modify | Add `"build:container": "tsc -b && vite build --base=/"`       |
+| `.dockerignore`                                 | Create | Keep build context small                                       |
+| `Dockerfile`                                    | Create | Multi-stage build                                              |
+| `docker/nginx.conf`                             | Create | Hardened server block with CSP/COOP/COEP                       |
+| `.github/workflows/container.yml`               | Create | Build + smoke-test + GHCR publish                              |
 
 The vsizer codebase uses small focused files; this plan respects that — no file exceeds ~80 lines.
 
@@ -39,6 +39,7 @@ The vsizer codebase uses small focused files; this plan respects that — no fil
 ## Task 1: Author ADR-0013 and update the index
 
 **Files:**
+
 - Create: `docs/adr/0013-container-image-distribution.md`
 - Modify: `docs/adr/README.md`
 
@@ -150,7 +151,7 @@ Publish a hardened multi-arch (amd64 + arm64) OCI image to
 Edit `docs/adr/README.md` — append exactly one row to the index table after the 0012 row:
 
 ```markdown
-| 0013 | Container image distribution via GHCR              | Accepted (reinforces 0001) |
+| 0013 | Container image distribution via GHCR | Accepted (reinforces 0001) |
 ```
 
 - [ ] **Step 3: Commit**
@@ -168,6 +169,7 @@ HTTP layer when the app is served from the container image."
 ## Task 2: Update CHANGELOG and PRD
 
 **Files:**
+
 - Modify: `CHANGELOG.md`
 - Modify: `docs/PRD.md`
 
@@ -222,6 +224,7 @@ git commit -m "docs: changelog + PRD entries for container distribution (ADR-001
 ## Task 3: Externalise the FOUC script
 
 **Files:**
+
 - Create: `public/theme-init.js`
 - Modify: `index.html`
 - Create: `src/index.html.test.ts`
@@ -254,7 +257,7 @@ describe('FOUC script externalisation (ADR-0013)', () => {
 
     expect(js).toContain("localStorage.getItem('vsizer-theme')")
     expect(js).toContain("classList.add('dark')")
-    expect(js).toContain("prefers-color-scheme: dark")
+    expect(js).toContain('prefers-color-scheme: dark')
   })
 })
 ```
@@ -352,6 +355,7 @@ logic in index.html."
 ## Task 4: Add the container build script and .dockerignore
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `.dockerignore`
 
@@ -456,6 +460,7 @@ build script is unchanged (base='/vsizer/' from vite.config.ts)."
 ## Task 5: Add the Dockerfile and nginx config
 
 **Files:**
+
 - Create: `Dockerfile`
 - Create: `docker/nginx.conf`
 
@@ -621,6 +626,7 @@ docker stop vsizer-smoke
 ## Task 7: Add the GitHub Actions workflow
 
 **Files:**
+
 - Create: `.github/workflows/container.yml`
 
 - [ ] **Step 1: Create the workflow**
@@ -632,10 +638,10 @@ name: Container image
 
 on:
   push:
-    branches: ['main']
-    tags: ['v*']
+    branches: ["main"]
+    tags: ["v*"]
   pull_request:
-    branches: ['main']
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
@@ -778,6 +784,7 @@ Closes #2."
 ## Task 8: README — "Run with Docker" subsection
 
 **Files:**
+
 - Modify: `README.md`
 
 - [ ] **Step 1: Locate the Quick start section**
@@ -790,7 +797,7 @@ Pick the heading immediately after the Quick start section. The new subsection g
 
 - [ ] **Step 2: Insert this subsection**
 
-```markdown
+````markdown
 ### Run with Docker
 
 A hardened multi-arch image is published to GHCR with every release:
@@ -798,6 +805,7 @@ A hardened multi-arch image is published to GHCR with every release:
 ```bash
 docker run --rm -p 8080:8080 ghcr.io/fjacquet/vsizer:latest
 ```
+````
 
 Open <http://localhost:8080/>. The image is built from a non-root nginx
 base, ships strict CSP (`connect-src 'none'`) that forbids any outbound
@@ -810,13 +818,14 @@ public deploy. Tags:
 
 See [ADR-0013](docs/adr/0013-container-image-distribution.md) for the
 design.
-```
+
+````
 
 - [ ] **Step 3: Verify markdown renders sanely**
 
 ```bash
 grep -A2 'Run with Docker' README.md | head -10
-```
+````
 
 Expected: the subsection header followed by its intro line.
 
@@ -932,7 +941,7 @@ Expected: pull succeeds, headers as designed.
 
 Write the comment body to a file first, same reason as the PR body:
 
-```bash
+````bash
 cat > /tmp/vsizer-issue2-reply.md <<'EOF'
 Hi @congto — two ways to test now:
 
@@ -942,7 +951,7 @@ Hi @congto — two ways to test now:
 
 ```bash
 docker run --rm -p 8080:8080 ghcr.io/fjacquet/vsizer:latest
-```
+````
 
 Then open <http://localhost:8080/>. The image is multi-arch
 (amd64 + arm64), runs as a non-root user, and ships a strict CSP that
@@ -954,13 +963,14 @@ Design notes: [ADR-0013](https://github.com/fjacquet/vsizer/blob/main/docs/adr/0
 EOF
 
 gh issue comment 2 --body-file /tmp/vsizer-issue2-reply.md
-```
+
+````
 
 - [ ] **Step 2: Close the issue (the merge will likely auto-close via "Closes #2" in the PR body — verify)**
 
 ```bash
 gh issue view 2 --json state -q .state
-```
+````
 
 Expected: `CLOSED`. If still `OPEN`:
 
@@ -972,23 +982,23 @@ gh issue close 2 --reason completed
 
 ## Spec-coverage self-check
 
-| Spec section | Covered by |
-|---|---|
-| §1 Goal | Tasks 5, 7 (Dockerfile + workflow do the shipping) |
-| §2 Non-goals | Plan declines to add Helm, compose, runtime base-path rewriting, cosign |
-| §3 Architecture (two-stage Dockerfile, multi-arch, separate workflow) | Tasks 5, 7 |
-| §4.1 Dockerfile | Task 5 |
-| §4.2 nginx.conf + headers | Task 5 |
-| §4.3 FOUC externalisation | Task 3 (TDD with vitest) |
-| §4.4 `build:container` script | Task 4 |
-| §4.5 `.dockerignore` | Task 4 |
-| §4.6 workflow + smoke test | Task 7 |
-| §5.1 ADR-0013 + index | Task 1 |
-| §5.2 CHANGELOG | Task 2 |
-| §5.3 README "Run with Docker" | Task 8 |
-| §5.4 PRD distribution section | Task 2 |
-| §6 Testing strategy (smoke test in CI, manual local) | Tasks 6, 7 |
-| §7 Risks | Mitigations encoded in Tasks 3, 5, 7 (CSP `worker-src blob:`, `'unsafe-inline'` for `style-src`, FOUC externalisation, smoke test) |
-| §9 What does NOT change (`static.yml` untouched, no engine code changes) | Verified by PR-level reviewer checklist in Task 9 |
+| Spec section                                                             | Covered by                                                                                                                         |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| §1 Goal                                                                  | Tasks 5, 7 (Dockerfile + workflow do the shipping)                                                                                 |
+| §2 Non-goals                                                             | Plan declines to add Helm, compose, runtime base-path rewriting, cosign                                                            |
+| §3 Architecture (two-stage Dockerfile, multi-arch, separate workflow)    | Tasks 5, 7                                                                                                                         |
+| §4.1 Dockerfile                                                          | Task 5                                                                                                                             |
+| §4.2 nginx.conf + headers                                                | Task 5                                                                                                                             |
+| §4.3 FOUC externalisation                                                | Task 3 (TDD with vitest)                                                                                                           |
+| §4.4 `build:container` script                                            | Task 4                                                                                                                             |
+| §4.5 `.dockerignore`                                                     | Task 4                                                                                                                             |
+| §4.6 workflow + smoke test                                               | Task 7                                                                                                                             |
+| §5.1 ADR-0013 + index                                                    | Task 1                                                                                                                             |
+| §5.2 CHANGELOG                                                           | Task 2                                                                                                                             |
+| §5.3 README "Run with Docker"                                            | Task 8                                                                                                                             |
+| §5.4 PRD distribution section                                            | Task 2                                                                                                                             |
+| §6 Testing strategy (smoke test in CI, manual local)                     | Tasks 6, 7                                                                                                                         |
+| §7 Risks                                                                 | Mitigations encoded in Tasks 3, 5, 7 (CSP `worker-src blob:`, `'unsafe-inline'` for `style-src`, FOUC externalisation, smoke test) |
+| §9 What does NOT change (`static.yml` untouched, no engine code changes) | Verified by PR-level reviewer checklist in Task 9                                                                                  |
 
 No spec section is uncovered. No `TBD`/`TODO` markers in this plan. All function/file/script names cross-checked between tasks (`build:container`, `vsizer:smoke`, `public/theme-init.js`, `ghcr.io/fjacquet/vsizer`).

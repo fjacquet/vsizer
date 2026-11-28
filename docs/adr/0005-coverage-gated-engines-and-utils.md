@@ -61,7 +61,7 @@ they don't move the needle.
   - Stores stay thin by convention — they hold state and call engines, never embed
     business logic.
   - Hooks are thin too: a typed wrapper around a store action.
-  - When a wiring bug *does* surface, we add a test on the specific path,
+  - When a wiring bug _does_ surface, we add a test on the specific path,
     accepting that it doesn't gate coverage.
 - A new contributor reading the threshold might think the project is "75 %
   tested" and ship something untested in components. CLAUDE.md and this ADR are

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Lockfile refresh (`npm audit fix`)**: `zod` bumped to 4.6.7, clearing
+  GHSA-mrhx-c7xc-m3w5 (memory exhaustion on oversized collections), the only
+  runtime advisory. Also patches build/dev-only `vite`, `undici`,
+  `source-map-js`, `brace-expansion`, `fast-uri` and `serialize-javascript`.
+  `npm audit --omit=dev` now reports 0 vulnerabilities. Remaining moderate
+  advisories (`glob`/`minimatch` via `workbox-build`) are dev-only and need a
+  `vite-plugin-pwa` major.
+
 ## [1.8.1] — 2026-05-25
 
 ### Security

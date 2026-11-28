@@ -29,3 +29,4 @@ old one and update the old one's `Status` to `Superseded by ADR-NNNN`.
 | 0017 | Multi-file import (RVTools + Live Optics)          | Accepted (builds on 0010, 0014) |
 | 0018 | Installable PWA with offline app-shell service worker | Accepted (reinforces 0001 / 0013) |
 | 0019 | Strip unused curl/libcurl from the runtime image  | Accepted (reinforces 0013 / 0001) |
+| 0020 | CSP `<meta>` for GitHub Pages and dependency currency | Accepted (reinforces 0001 / 0013) |

@@ -9,13 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- **CSP `<meta>` for the GitHub Pages build** (ADR-0020): same
+  `script-src 'self'` / `connect-src 'self'` policy as the container image,
+  injected at build time only.
 - **Lockfile refresh (`npm audit fix`)**: `zod` bumped to 4.6.7, clearing
   GHSA-mrhx-c7xc-m3w5 (memory exhaustion on oversized collections), the only
   runtime advisory. Also patches build/dev-only `vite`, `undici`,
   `source-map-js`, `brace-expansion`, `fast-uri` and `serialize-javascript`.
-  `npm audit --omit=dev` now reports 0 vulnerabilities. Remaining moderate
-  advisories (`glob`/`minimatch` via `workbox-build`) are dev-only and need a
-  `vite-plugin-pwa` major.
+  `glob`/`minimatch` advisories under `workbox-build` are fixed with scoped
+  `overrides`. `npm audit` now reports 0 vulnerabilities.
+
+### Changed
+
+- **Majors**: `vite-plugin-pwa` 2, `vitest`/`@vitest/coverage-v8` 5, `jsdom`
+  31, `@testing-library/jest-dom` 8, `i18next` 27, `react-i18next` 18, Biome
+  2.6 (Markdown/YAML excluded from Biome, see ADR-0020).
 
 ## [1.8.1] — 2026-05-25
 

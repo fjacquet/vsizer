@@ -1,8 +1,25 @@
 import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+
+// ADR-0020: GitHub Pages cannot set headers, so ship the container's CSP
+// (docker/security-headers.conf) as a <meta>. Build only: dev HMR needs ws:.
+// frame-ancestors / report-to are ignored in <meta>, so they are omitted.
+const CSP =
+  "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'"
+const cspMeta = (): Plugin => ({
+  name: 'vsizer-csp-meta',
+  apply: 'build',
+  transformIndexHtml: () => [
+    {
+      tag: 'meta',
+      attrs: { 'http-equiv': 'Content-Security-Policy', content: CSP },
+      injectTo: 'head-prepend',
+    },
+  ],
+})
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -10,6 +27,7 @@ export default defineConfig({
   base: '/vsizer/',
   plugins: [
     react(),
+    cspMeta(),
     tailwindcss(),
     VitePWA({
       // Prompt mode: a new SW waits and the user opts in to reload via a
